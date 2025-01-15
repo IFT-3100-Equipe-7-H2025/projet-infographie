@@ -1,61 +1,131 @@
 #include "GL/glew.h"
 #include "GLFW/glfw3.h"
 #include "glfw/GLFWContext.h"
-#include "linmath.h"
 
-typedef struct Vertex
+#include <iostream>
+
+static unsigned int CompileShader(unsigned int type, const std::string& source)
 {
-    vec2 pos;
-    vec3 col;
-} Vertex;
+    const unsigned int id = glCreateShader(type);
+    const char* src = source.c_str();
+    glShaderSource(id, 1, &src, nullptr);
+    glCompileShader(id);
 
-static const Vertex vertices[3] =
+    int result;
+    glGetShaderiv(id, GL_COMPILE_STATUS, &result);
+    if (!result)
+    {
+        int length;
+        glGetShaderiv(id, GL_INFO_LOG_LENGTH, &length);
+        char* message = static_cast<char*>(alloca(length * sizeof(char)));
+        glGetShaderInfoLog(id, length, &length, message);
+        std::cout << "Failed to compile " << (type == GL_VERTEX_SHADER ? "vertex" : "fragment") << " shader!" << std::endl;
+        std::cout << message << std::endl;
+        glDeleteShader(id);
+        return 0;
+    }
+
+    return id;
+}
+
+static unsigned int CreateShader(const std::string& vertexShader, const std::string& fragmentShader)
 {
-    { { -0.6f, -0.4f }, { 1.f, 0.f, 0.f } },
-    { {  0.6f, -0.4f }, { 0.f, 1.f, 0.f } },
-    { {   0.f,  0.6f }, { 0.f, 0.f, 1.f } }
-};
+    const unsigned int program = glCreateProgram();
+    const unsigned int vs = CompileShader(GL_VERTEX_SHADER, vertexShader);
+    const unsigned int fs = CompileShader(GL_FRAGMENT_SHADER, fragmentShader);
 
-static const char* vertex_shader_text =
-"#version 330\n"
-"uniform mat4 MVP;\n"
-"in vec3 vCol;\n"
-"in vec2 vPos;\n"
-"out vec3 color;\n"
-"void main()\n"
-"{\n"
-"    gl_Position = MVP * vec4(vPos, 0.0, 1.0);\n"
-"    color = vCol;\n"
-"}\n";
+    glAttachShader(program, vs);
+    glAttachShader(program, fs);
+    glLinkProgram(program);
+    glValidateProgram(program);
 
-static const char* fragment_shader_text =
-"#version 330\n"
-"in vec3 color;\n"
-"out vec4 fragment;\n"
-"void main()\n"
-"{\n"
-"    fragment = vec4(color, 1.0);\n"
-"}\n";
+    glDeleteShader(vs);
+    glDeleteShader(fs);
+
+    return program;
+}
 
 constexpr int WIDTH = 640;
 constexpr int HEIGHT = 480;
 
-int main(void)
+int main()
 {
-    GLFWContext context = GLFWContext();
-    context.init_window(WIDTH, HEIGHT, "Hello World");
-    context.init_viewport_from_window();
+    std::cout << "Initializing GLFW" << std::endl;
+    if (!glfwInit())
+    {
+        std::cerr << "Could not init glfw" << std::endl;
+        exit(1);
+    }
+
+    GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "Hello World", nullptr, nullptr);
+    if (!window)
+    {
+        std::cerr << "Could not create window" << std::endl;
+        glfwTerminate();
+        exit(1);
+    }
+
+    glfwMakeContextCurrent(window);
+    if (glewInit() != GLEW_OK)
+    {
+        std::cout << "Could not init glew" << std::endl;
+        glfwDestroyWindow(window);
+        glfwTerminate();
+        exit(1);
+    }
+
+    constexpr float positions[6] = {
+        -0.5f, -0.5f,
+         0.0f,  0.5f,
+         0.5f, -0.5f
+    };
+
+    unsigned int buffer;
+    glGenBuffers(1, &buffer);
+    glBindBuffer(GL_ARRAY_BUFFER, buffer);
+    glBufferData(GL_ARRAY_BUFFER, 6 * sizeof(float), positions, GL_STATIC_DRAW);
+
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, nullptr);
 
 
+    std::string vertexShader =
+        "#version 330 core\n"
+        "\n"
+        "layout(location = 0) in vec4 position;\n"
+        "\n"
+        "void main()\n"
+        "{\n"
+        "   gl_Position = position;\n"
+        "}\n";
+    std::string fragmentShader =
+        "#version 330 core\n"
+        "\n"
+        "layout(location = 0) out vec4 color;\n"
+        "\n"
+        "void main()\n"
+        "{\n"
+        "   color = vec4(1.0, 0.0, 0.0, 1.0);\n"
+        "}\n";
 
-    while (!context.window_should_close())
+    unsigned int shader = CreateShader(vertexShader, fragmentShader);
+    glUseProgram(shader);
+
+
+    while (!glfwWindowShouldClose(window))
     {
         glClear(GL_COLOR_BUFFER_BIT);
 
-        context.swap_buffers();
+        glDrawArrays(GL_TRIANGLES, 0, 3);
+
+
+        glfwSwapBuffers(window);
         glfwPollEvents();
     }
 
+    glDeleteProgram(shader);
+
+    glfwDestroyWindow(window);
     glfwTerminate();
     return 0;
 }
