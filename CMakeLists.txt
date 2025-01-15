@@ -6,8 +6,8 @@ set(CMAKE_CXX_STANDARD 23)
 add_executable(
         ${PROJECT_NAME}
         src/main.cpp
-        src/GLFWContext.h
-        src/GLFWContext.cpp
+        src/glfw/GLFWContext.h
+        src/glfw/GLFWContext.cpp
 )
 
 target_include_directories(
@@ -27,7 +27,12 @@ endif ()
 # Dependencies ========================================================================================
 include(cmake/CPM.cmake)
 
-# OpenGL/glfw =========================================================================================
+# OpenGL ==============================================================================================
+find_package(OpenGL REQUIRED)
+target_link_libraries(${PROJECT_NAME} PRIVATE OpenGL::GL)
+# =====================================================================================================
+
+# glfw ================================================================================================
 if (NOT TARGET glfw)
     CPMAddPackage(
             NAME glfw
@@ -38,8 +43,33 @@ if (NOT TARGET glfw)
 endif()
 
 target_link_libraries(${PROJECT_NAME} PRIVATE glfw)
+# =====================================================================================================
 
-# Compile definitions ==================================================================================
+# linmath =============================================================================================
+if (NOT TARGET linmath)
+    CPMAddPackage(
+            NAME linmath
+            GITHUB_REPOSITORY datenwolf/linmath.h
+            GIT_TAG master
+    )
+endif()
+
+target_include_directories(${PROJECT_NAME} PRIVATE ${linmath_SOURCE_DIR})
+# =====================================================================================================
+
+# glew ================================================================================================
+if (NOT TARGET libglew_static)
+    CPMAddPackage(
+            NAME "GLEW"
+            GITHUB_REPOSITORY "Perlmint/glew-cmake"
+            GIT_TAG "glew-cmake-2.2.0"
+    )
+endif ()
+
+target_link_libraries(${PROJECT_NAME} PRIVATE libglew_static)
+# =====================================================================================================
+
+# Compile definitions =================================================================================
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     target_compile_definitions(${PROJECT_NAME} PRIVATE __DEBUG__)
 endif ()
