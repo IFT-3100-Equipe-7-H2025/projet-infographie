@@ -6,8 +6,6 @@ set(CMAKE_CXX_STANDARD 23)
 add_executable(
         ${PROJECT_NAME}
         src/main.cpp
-        src/glfw/GLFWContext.h
-        src/glfw/GLFWContext.cpp
 )
 
 target_include_directories(
@@ -43,18 +41,6 @@ if (NOT TARGET glfw)
 endif()
 
 target_link_libraries(${PROJECT_NAME} PRIVATE glfw)
-# =====================================================================================================
-
-# linmath =============================================================================================
-if (NOT TARGET linmath)
-    CPMAddPackage(
-            NAME linmath
-            GITHUB_REPOSITORY datenwolf/linmath.h
-            GIT_TAG master
-    )
-endif()
-
-target_include_directories(${PROJECT_NAME} PRIVATE ${linmath_SOURCE_DIR})
 # =====================================================================================================
 
 # glew ================================================================================================
