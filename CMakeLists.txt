@@ -6,6 +6,10 @@ set(CMAKE_CXX_STANDARD 23)
 add_executable(
         ${PROJECT_NAME}
         src/main.cpp
+        src/context/GLFWContext.cpp
+        src/context/GLFWContext.h
+        src/shader.h
+        src/opengl_include.h
 )
 
 target_include_directories(
