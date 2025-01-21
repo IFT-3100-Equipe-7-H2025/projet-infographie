@@ -18,6 +18,21 @@ target_include_directories(
         src
 )
 
+# checks if x11 is the display server, used to disable wayland
+if (LINUX)
+    execute_process(
+        COMMAND bash -c "loginctl show-session $(loginctl | grep $(whoami) | awk '{print $1}') -p Type"
+        OUTPUT_VARIABLE result_display_server
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+    if ("${result_display_server}" STREQUAL "Type=x11")
+        set(display_server_x11 TRUE)
+    else()
+        set(display_server_x11 FALSE)
+    endif()
+endif()
+
+
 if (MSVC)
     # Set the app as solution startup project
     set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${PROJECT_NAME})
@@ -36,12 +51,21 @@ target_link_libraries(${PROJECT_NAME} PRIVATE OpenGL::GL)
 
 # glfw ================================================================================================
 if (NOT TARGET glfw)
-    CPMAddPackage(
-            NAME glfw
-            GITHUB_REPOSITORY glfw/glfw
-            GIT_TAG 3.4
-            OPTIONS "GLFW_BUILD_DOCS OFF" "GLFW_BUILD_TESTS OFF" "GLFW_BUILD_EXAMPLES OFF"
-    )
+    if (display_server_x11)
+        CPMAddPackage(
+                NAME glfw
+                GITHUB_REPOSITORY glfw/glfw
+                GIT_TAG 3.4
+                OPTIONS "GLFW_BUILD_DOCS OFF" "GLFW_BUILD_TESTS OFF" "GLFW_BUILD_EXAMPLES OFF" "GLFW_BUILD_WAYLAND OFF"
+        )
+    else()
+        CPMAddPackage(
+                NAME glfw
+                GITHUB_REPOSITORY glfw/glfw
+                GIT_TAG 3.4
+                OPTIONS "GLFW_BUILD_DOCS OFF" "GLFW_BUILD_TESTS OFF" "GLFW_BUILD_EXAMPLES OFF"
+        )
+    endif()
 endif()
 
 target_link_libraries(${PROJECT_NAME} PRIVATE glfw)
