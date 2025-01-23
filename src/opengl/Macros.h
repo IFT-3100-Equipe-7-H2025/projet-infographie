@@ -2,8 +2,11 @@
 
 #include "opengl/opengl_include.h"
 
+#include "debug-trap.h"
 #include <iostream>
 
+#define GLAssert(x) \
+    if (!(x)) psnip_trap();
 
 inline static void GLClearError()
 {
@@ -24,4 +27,4 @@ static bool GLLogCall(const char* function, const char* file, const int line)
 #define GLCall(x)   \
     GLClearError(); \
     x;              \
-    GLLogCall(#x, __FILE__, __LINE__);
+    GLAssert(GLLogCall(#x, __FILE__, __LINE__));

@@ -1,4 +1,4 @@
-// Greatly inspired by TheCherno's opengl tutorial series: https://www.youtube.com/watch?v=W3gAzLwfIP0&list=PLlrATfBNZ98foTJPJ_Ev03o2oq3-GGOS2
+// Greatly inspired by TheCherno's opengl tutorial series: https://www.youtube.com/watch?v=W2gAzLwfIP0&list=PLlrATfBNZ98foTJPJ_Ev03o2oq3-GGOS2
 #include "Shader.h"
 #include "opengl/Macros.h"
 
@@ -7,7 +7,7 @@
 #include <sstream>
 
 
-Shader::Shader(const std::string& filename) : id(0)
+Shader::Shader(const std::string& filename) : id(0), filename(filename)
 {
     auto [vertexShader, fragmentShader] = ParseShaders(filename);
 
@@ -108,4 +108,29 @@ ShaderSource Shader::ParseShaders(const std::string& filename)
     shaders.fragmentShader = ss[1].str();
 
     return shaders;
+}
+
+void Shader::SetUniform4f(const std::string& name, float v0, float v1, float v2, float v3)
+{
+    unsigned int location = this->GetUniformLocation(name);
+    GLCall(glUniform4f(location, v0, v1, v2, v3));
+}
+
+unsigned int Shader::GetUniformLocation(const std::string& name)
+{
+    if (const auto location = this->uniformLocationCache.find(name); location != this->uniformLocationCache.end())
+    {
+        return location->second;
+    }
+
+    GLCall(const int location = glGetUniformLocation(this->id, name.c_str()));
+
+    if (location == -1)
+    {
+        std::cerr << "Warning: uniform '" << name << "' doesn't exist!" << std::endl;
+    }
+
+    this->uniformLocationCache.insert({name, location});
+
+    return location;
 }

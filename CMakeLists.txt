@@ -15,7 +15,16 @@ add_executable(
         src/opengl/rendering/Shader.h
         src/opengl/rendering/Renderer.cpp
         src/opengl/rendering/Renderer.h
-        src/shader.h
+        src/opengl/rendering/VertexArray.cpp
+        src/opengl/rendering/VertexArray.h
+        src/opengl/rendering/VertexBuffer.cpp
+        src/opengl/rendering/VertexBuffer.h
+        src/opengl/rendering/IndexBuffer.cpp
+        src/opengl/rendering/IndexBuffer.h
+        src/opengl/rendering/VertexArrayObject.cpp
+        src/opengl/rendering/VertexArrayObject.h
+        src/opengl/rendering/VertexBufferLayout.h
+        src/debug-trap.h
 )
 
 target_include_directories(
@@ -87,6 +96,18 @@ if (NOT TARGET libglew_static)
 endif ()
 
 target_link_libraries(${PROJECT_NAME} PRIVATE libglew_static)
+# =====================================================================================================
+
+# glm =================================================================================================
+if (NOT TARGET glm)
+    CPMAddPackage(
+            NAME glm
+            GITHUB_REPOSITORY g-truc/glm
+            GIT_TAG "1.0.1"
+    )
+endif ()
+
+target_link_libraries(${PROJECT_NAME} PRIVATE glm::glm)
 # =====================================================================================================
 
 # Compile definitions =================================================================================

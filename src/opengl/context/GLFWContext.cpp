@@ -58,6 +58,8 @@ GLFWContext::GLFWContext(const int width, const int height, const char* title, G
         exit(1);
     }
 
+    glfwSwapInterval(1);
+
     this->window = window;
 }
 
