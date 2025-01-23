@@ -2,6 +2,7 @@
 #include "Shader.h"
 #include "opengl/Macros.h"
 
+
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -116,7 +117,19 @@ void Shader::SetUniform4f(const std::string& name, float v0, float v1, float v2,
     GLCall(glUniform4f(location, v0, v1, v2, v3));
 }
 
-unsigned int Shader::GetUniformLocation(const std::string& name)
+void Shader::SetUniform3f(const std::string& name, float v0, float v1, float v2)
+{
+    unsigned int location = this->GetUniformLocation(name);
+    GLCall(glUniform3f(location, v0, v1, v2));
+}
+
+void Shader::SetUniformMatrix4f(const std::string& name, glm::mat4 matrix)
+{
+    unsigned int location = this->GetUniformLocation(name);
+    GLCall(glUniformMatrix4fv(location, 1, GL_FALSE, &matrix[0][0]));
+}
+
+UniformLocation Shader::GetUniformLocation(const std::string& name)
 {
     if (const auto location = this->uniformLocationCache.find(name); location != this->uniformLocationCache.end())
     {
