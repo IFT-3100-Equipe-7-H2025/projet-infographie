@@ -61,6 +61,7 @@ GLFWContext::GLFWContext(const int width, const int height, const char* title, G
     glfwSwapInterval(1);
 
     this->window = window;
+    std::cout << "GLFW window initialized with OpenGL version: " << glGetString(GL_VERSION) << std::endl;
 }
 
 GLFWContext::~GLFWContext()
