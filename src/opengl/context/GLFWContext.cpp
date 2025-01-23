@@ -2,19 +2,26 @@
 // Created by thierrycd on 2025-01-16.
 //
 #include "GLFWContext.h"
+#include "GLFW/glfw3.h"
 
 #include <iostream>
 
 void error_callback(const int error, const char* description)
 {
-    std::cerr << "Error {" << error << "}: " << description << std::endl;
+    std::cerr << "GLFW Error {" << error << "}: " << description << std::endl;
 }
 
 static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-    std::cout << "Key callback: " << key << "," << std::endl;
+    const char* key_name = glfwGetKeyName(key, scancode);
+
+    std::cout << "GLFW Key callback: " << key << ", "
+              << (key == GLFW_KEY_ESCAPE ? "ESC" : key_name) << std::endl;
+
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+    {
         glfwSetWindowShouldClose(window, GLFW_TRUE);
+    }
 }
 
 GLFWContext::GLFWContext(const int width, const int height, const char* title, GLFWmonitor* monitor, GLFWwindow* share)
@@ -34,6 +41,10 @@ GLFWContext::GLFWContext(const int width, const int height, const char* title, G
         exit(1);
     }
 
+
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwSetWindowCloseCallback(window, [](GLFWwindow*) {
         std::cout << "Window closed" << std::endl;
     });

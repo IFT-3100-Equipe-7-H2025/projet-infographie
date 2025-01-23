@@ -7,10 +7,15 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 add_executable(
         ${PROJECT_NAME}
         src/main.cpp
-        src/context/GLFWContext.cpp
-        src/context/GLFWContext.h
+        src/opengl/context/GLFWContext.cpp
+        src/opengl/context/GLFWContext.h
+        src/opengl/opengl_include.h
+        src/opengl/Macros.h
+        src/opengl/rendering/Shader.cpp
+        src/opengl/rendering/Shader.h
+        src/opengl/rendering/Renderer.cpp
+        src/opengl/rendering/Renderer.h
         src/shader.h
-        src/opengl_include.h
 )
 
 target_include_directories(
@@ -91,4 +96,14 @@ endif ()
 if (CMAKE_BUILD_TYPE STREQUAL "Release")
     target_compile_definitions(${PROJECT_NAME} PRIVATE __RELEASE__ PRIVATE __NDEBUG__)
 endif ()
+# =====================================================================================================
+
+# Copy res folder to target dir on compile  ===========================================================
+# (find another way to make it not copy every time project is compiles)
+add_custom_command(
+        TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_SOURCE_DIR}/res
+        $<TARGET_FILE_DIR:${PROJECT_NAME}>/res
+)
 # =====================================================================================================

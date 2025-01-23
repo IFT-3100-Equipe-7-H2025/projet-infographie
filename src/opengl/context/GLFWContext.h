@@ -3,7 +3,7 @@
 //
 
 #pragma once
-#include "opengl_include.h"
+#include "opengl/opengl_include.h"
 
 class GLFWContext
 {

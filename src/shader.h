@@ -3,7 +3,7 @@
 //
 
 #pragma once
-#include "opengl_include.h"
+#include "opengl/opengl_include.h"
 #include <iostream>
 #include <string>
 
@@ -52,8 +52,7 @@ namespace shader {
     constexpr float positions[6] = {
             -0.5f, -0.5f,
             0.0f, 0.5f,
-            0.5f, -0.5f
-    };
+            0.5f, -0.5f};
 
     inline std::string vertexShader =
             "#version 330 core\n"
