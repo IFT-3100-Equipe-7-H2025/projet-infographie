@@ -12,6 +12,7 @@ public:
     ~GLFWContext();
 
     [[nodiscard]] GLFWwindow* GetWindow() const { return window; }
+    [[nodiscard]] int GetWindowAttrib(int attrib) const { return glfwGetWindowAttrib(window, attrib); }
 
 private:
     GLFWwindow* window;

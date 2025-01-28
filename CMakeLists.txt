@@ -9,6 +9,8 @@ add_executable(
         src/main.cpp
         src/opengl/context/GLFWContext.cpp
         src/opengl/context/GLFWContext.h
+        src/opengl/context/IMGUIContext.h
+        src/opengl/context/IMGUIContext.cpp
         src/opengl/opengl_include.h
         src/opengl/Macros.h
         src/opengl/rendering/Shader.cpp
@@ -131,13 +133,13 @@ if (NOT TARGET imgui)
     CPMAddPackage(
                 NAME imgui
                 GITHUB_REPOSITORY ocornut/imgui
-                GIT_TAG master
+                GIT_TAG docking
         )
 endif()
 
 # Add ImGui source files
 target_sources(${PROJECT_NAME}
-    PRIVATE
+        PRIVATE
         ${imgui_SOURCE_DIR}/imgui.cpp
         ${imgui_SOURCE_DIR}/imgui_demo.cpp
         ${imgui_SOURCE_DIR}/imgui_draw.cpp

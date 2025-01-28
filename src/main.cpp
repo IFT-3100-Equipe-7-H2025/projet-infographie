@@ -1,12 +1,11 @@
 // clang-format off
-#include <imgui.h>
-#include <backends/imgui_impl_glfw.h>
-#include <backends/imgui_impl_opengl3.h>
-#include <imfilebrowser.h>
+
 // clang-format on
 
 #include "glm/ext/matrix_transform.hpp"
 #include "glm/ext/vector_float3.hpp"
+#include "imgui.h"
+#include "opengl/context/IMGUIContext.h"
 #include "opengl/opengl_include.h"
 
 
@@ -58,7 +57,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 
 int main()
 {
-    const GLFWContext context = GLFWContext(WINDOW_WIDTH, WINDOW_HEIGHT, "Hello World", nullptr, nullptr);
+    GLFWContext glfwContext = GLFWContext(WINDOW_WIDTH, WINDOW_HEIGHT, "Hello World", nullptr, nullptr);
 
     glClear(GL_COLOR_BUFFER_BIT);
 
@@ -77,30 +76,12 @@ int main()
     Shader shader = Shader("res/shaders/Texture.glsl");
     shader.Bind();
 
-    GLFWwindow* window = context.GetWindow();
+    GLFWwindow* window = glfwContext.GetWindow();
 
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     Renderer renderer = Renderer();
 
-    IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
-    ImGuiIO& io = ImGui::GetIO();
-    (void) io;
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;// Enable Keyboard Controls
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad; // Enable Gamepad Controls
-
-    // Setup Dear ImGui style
-    ImGui::StyleColorsDark();
-    //ImGui::StyleColorsLight();
-
-    // Setup Platform/Renderer backends
-    ImGui_ImplGlfw_InitForOpenGL(window, true);
-    ImGui_ImplOpenGL3_Init("#version 330 core");
-
-
-    bool show_demo_window = true;
-    bool show_another_window = false;
-    ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+    IMGUIContext imguiContext = IMGUIContext(&glfwContext);
 
     ImGui::FileBrowser fileDialog;
 
@@ -108,7 +89,6 @@ int main()
     fileDialog.SetTitle("title");
     fileDialog.SetTypeFilters({".png", ".jpg"});
 
-    std::string filename = "";
     Texture texture;
 
     glm::mat4 proj = glm::ortho(0.0f,
@@ -119,27 +99,28 @@ int main()
                                 1.0f);
     glm::mat4 view = glm::translate(glm::mat4(1.0f), glm::vec3(10, 10, 0));
     glm::mat4 mvp;
+
+    ImGuiIO& io = imguiContext.GetIO();
+
     while (!glfwWindowShouldClose(window))
     {
-        glfwPollEvents();
-        if (glfwGetWindowAttrib(window, GLFW_ICONIFIED) != 0)
+        if (!imguiContext.NewFrame())
         {
-            ImGui_ImplGlfw_Sleep(10);
             continue;
         }
 
-        ImGui_ImplOpenGL3_NewFrame();
-        ImGui_ImplGlfw_NewFrame();
-        ImGui::NewFrame();
+        ImGui::DockSpaceOverViewport(0, ImGui::GetMainViewport(), ImGuiDockNodeFlags_PassthruCentralNode);
+
+        glfwPollEvents();
 
         {
             static float f = 0.0f;
             static int counter = 0;
 
-            ImGui::Begin("Hello, world!");
+            ImGui::Begin("Image import");
+            // ImGui::ShowDemoWindow();
 
-            ImGui::Text("This is some useful text.");
-            if (ImGui::Button("Open file dialog"))
+            if (ImGui::Button("Choose image to render"))
             {
                 fileDialog.Open();
             }
@@ -157,7 +138,7 @@ int main()
             }
         }
 
-        glClearColor(clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w);
+        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
         if (texture.IsLoaded())
@@ -170,20 +151,10 @@ int main()
             renderer.Draw(va, ib, shader);
         }
 
-        // Rendering
-        ImGui::Render();
-        int display_w, display_h;
-        glfwGetFramebufferSize(window, &display_w, &display_h);
-        glViewport(0, 0, display_w, display_h);
-        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-
+        imguiContext.Render();
 
         glfwSwapBuffers(window);
     }
-
-    ImGui_ImplOpenGL3_Shutdown();
-    ImGui_ImplGlfw_Shutdown();
-    ImGui::DestroyContext();
 
     return 0;
 }
