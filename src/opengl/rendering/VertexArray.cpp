@@ -1,14 +1,20 @@
 #include "VertexArray.h"
 #include "opengl/Macros.h"
 
-VertexArray::VertexArray() : id(0) {}
-VertexArray::~VertexArray() {}
+VertexArray::VertexArray() : id(0)
+{
+    GLCall(glGenVertexArrays(1, &this->id));
+}
+
+VertexArray::~VertexArray()
+{
+    GLCall(glDeleteVertexArrays(1, &this->id));
+}
 
 void VertexArray::Bind() const
 {
     GLCall(glBindVertexArray(this->id));
 }
-
 
 void VertexArray::AddBuffer(const VertexBuffer& vb, const VertexBufferLayout& layout) const
 {

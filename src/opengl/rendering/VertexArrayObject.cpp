@@ -3,7 +3,7 @@
 
 VertexArrayObject::VertexArrayObject() : id(0)
 {
-    GLCall(glGenVertexArrays(1, &id));
+    GLCall(glGenVertexArrays(1, &this->id));
 }
 
 VertexArrayObject::~VertexArrayObject()

@@ -15,6 +15,7 @@ add_executable(
         src/opengl/rendering/Shader.h
         src/opengl/rendering/Renderer.cpp
         src/opengl/rendering/Renderer.h
+        src/opengl/rendering/RendererId.h
         src/opengl/rendering/VertexArray.cpp
         src/opengl/rendering/VertexArray.h
         src/opengl/rendering/VertexBuffer.cpp
@@ -24,7 +25,10 @@ add_executable(
         src/opengl/rendering/VertexArrayObject.cpp
         src/opengl/rendering/VertexArrayObject.h
         src/opengl/rendering/VertexBufferLayout.h
+        src/opengl/rendering/Texture.cpp
+        src/opengl/rendering/Texture.h
         src/debug-trap.h
+        src/stb_image.cpp
 )
 
 target_include_directories(
@@ -110,6 +114,53 @@ endif ()
 target_link_libraries(${PROJECT_NAME} PRIVATE glm::glm)
 # =====================================================================================================
 
+# stb_image ===========================================================================================
+if (NOT TARGET stb_image)
+    CPMAddPackage(
+            NAME stb_image
+            GITHUB_REPOSITORY nothings/stb
+            GIT_TAG master
+    )
+endif()
+
+target_include_directories(${PROJECT_NAME} PRIVATE ${stb_image_SOURCE_DIR})
+# =====================================================================================================
+#
+# imgui ===============================================================================================
+if (NOT TARGET imgui)
+    CPMAddPackage(
+                NAME imgui
+                GITHUB_REPOSITORY ocornut/imgui
+                GIT_TAG master
+        )
+endif()
+
+# Add ImGui source files
+target_sources(${PROJECT_NAME}
+    PRIVATE
+        ${imgui_SOURCE_DIR}/imgui.cpp
+        ${imgui_SOURCE_DIR}/imgui_demo.cpp
+        ${imgui_SOURCE_DIR}/imgui_draw.cpp
+        ${imgui_SOURCE_DIR}/imgui_tables.cpp
+        ${imgui_SOURCE_DIR}/imgui_widgets.cpp
+        ${imgui_SOURCE_DIR}/backends/imgui_impl_glfw.cpp
+        ${imgui_SOURCE_DIR}/backends/imgui_impl_opengl3.cpp
+)
+target_include_directories(${PROJECT_NAME} PRIVATE ${imgui_SOURCE_DIR})
+# =====================================================================================================
+
+# imgui file explorer =================================================================================
+if (NOT TARGET imgui_filedialog)
+    CPMAddPackage(
+            NAME imgui_filedialog
+            GITHUB_REPOSITORY AirGuanZ/imgui-filebrowser
+            GIT_TAG master
+    )
+endif()
+
+target_include_directories(${PROJECT_NAME} PRIVATE ${imgui_filedialog_SOURCE_DIR})
+# =====================================================================================================
+#
 # Compile definitions =================================================================================
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     target_compile_definitions(${PROJECT_NAME} PRIVATE __DEBUG__)
@@ -119,12 +170,12 @@ if (CMAKE_BUILD_TYPE STREQUAL "Release")
 endif ()
 # =====================================================================================================
 
-# Copy res folder to target dir on compile  ===========================================================
-# (find another way to make it not copy every time project is compiles)
+# Symlink resources folder into build directory =======================================================
 add_custom_command(
         TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_directory
-        ${CMAKE_SOURCE_DIR}/res
-        $<TARGET_FILE_DIR:${PROJECT_NAME}>/res
+        COMMAND ${CMAKE_COMMAND} -E create_symlink
+        ${CMAKE_CURRENT_SOURCE_DIR}/res $<TARGET_FILE_DIR:${PROJECT_NAME}>/res
+        DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/res
+        COMMENT "Creating symlink to res folder"
 )
 # =====================================================================================================

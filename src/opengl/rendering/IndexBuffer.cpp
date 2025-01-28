@@ -1,7 +1,7 @@
 #include "IndexBuffer.h"
 #include "opengl/Macros.h"
 
-IndexBuffer::IndexBuffer(const unsigned int* data, unsigned int count) : id(0)
+IndexBuffer::IndexBuffer(const unsigned int* data, unsigned int count) : id(0), count(count)
 {
     GLCall(glGenBuffers(1, &this->id));
     GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->id));

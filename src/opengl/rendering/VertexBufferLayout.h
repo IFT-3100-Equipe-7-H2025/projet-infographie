@@ -29,12 +29,11 @@ struct VertexBufferElement
 class VertexBufferLayout
 {
 public:
-    VertexBufferLayout() : elements(), stride(0) {}
+    VertexBufferLayout() : elements(std::vector<VertexBufferElement>()), stride(0) {}
 
     template<typename T>
     void Push(unsigned int count)
     {
-        static_assert(false);
     }
 
 

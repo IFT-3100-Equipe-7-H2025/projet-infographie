@@ -1,6 +1,6 @@
 #pragma once
 
-#include "opengl/rendering/Renderer.h"
+#include "RendererId.h"
 #include "opengl/rendering/VertexBuffer.h"
 #include "opengl/rendering/VertexBufferLayout.h"
 

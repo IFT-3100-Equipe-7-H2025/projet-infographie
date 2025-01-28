@@ -1,6 +1,6 @@
 #pragma once
 
-#include "opengl/rendering/Renderer.h"
+#include "RendererId.h"
 
 class VertexArrayObject
 {
