@@ -10,10 +10,11 @@ build/*
 .sln
 .vcxproj
 .vcxproj.filters
-addons.cmake
-config.cmake
+addons.make
+config.make
 icon.rc
 .vscode
+Makefile
 
 #.gitignore is a file which makes git ignore files which should
 # not go into version control in the first place
