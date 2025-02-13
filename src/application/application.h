@@ -3,7 +3,6 @@
 #include "ImportImportExportScene.h"
 #include "RotatingCubeScene.h"
 #include "ofMain.h"
-#include "ofxPanel.h"
 #include "renderer/renderer.h"
 
 class Application : public ofBaseApp

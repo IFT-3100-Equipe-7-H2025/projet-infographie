@@ -1,7 +1,6 @@
 ﻿#pragma once
 #include "Scene.h"
 #include "ofMain.h"
-#include "ofxPanel.h"
 
 struct Image
 {

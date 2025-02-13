@@ -16,6 +16,9 @@
     <ClCompile Include="src\renderer\scenes\ImportImportExportScene.cpp">
       <Filter>src\renderer\scenes</Filter>
     </ClCompile>
+    <ClCompile Include="src\renderer\scenes\Scenes.cpp">
+      <Filter>src\renderer\scenes</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\addons\ofxAssimpModelLoader\src\ofxAssimpAnimation.cpp">
       <Filter>addons\ofxAssimpModelLoader\src</Filter>
     </ClCompile>
@@ -27,36 +30,6 @@
     </ClCompile>
     <ClCompile Include="..\..\addons\ofxAssimpModelLoader\src\ofxAssimpTexture.cpp">
       <Filter>addons\ofxAssimpModelLoader\src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\addons\ofxGui\src\ofxBaseGui.cpp">
-      <Filter>addons\ofxGui\src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\addons\ofxGui\src\ofxButton.cpp">
-      <Filter>addons\ofxGui\src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\addons\ofxGui\src\ofxColorPicker.cpp">
-      <Filter>addons\ofxGui\src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\addons\ofxGui\src\ofxGuiGroup.cpp">
-      <Filter>addons\ofxGui\src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\addons\ofxGui\src\ofxInputField.cpp">
-      <Filter>addons\ofxGui\src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\addons\ofxGui\src\ofxLabel.cpp">
-      <Filter>addons\ofxGui\src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\addons\ofxGui\src\ofxPanel.cpp">
-      <Filter>addons\ofxGui\src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\addons\ofxGui\src\ofxSlider.cpp">
-      <Filter>addons\ofxGui\src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\addons\ofxGui\src\ofxSliderGroup.cpp">
-      <Filter>addons\ofxGui\src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\addons\ofxGui\src\ofxToggle.cpp">
-      <Filter>addons\ofxGui\src</Filter>
     </ClCompile>
     <ClCompile Include="..\..\addons\ofxImGui\src\BaseEngine.cpp">
       <Filter>addons\ofxImGui\src</Filter>
@@ -94,74 +67,67 @@
     <ClCompile Include="..\..\addons\ofxImGui\libs\imgui\src\imgui_widgets.cpp">
       <Filter>addons\ofxImGui\libs\imgui\src</Filter>
     </ClCompile>
-    <ClCompile Include="src\renderer\scenes\Scenes.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">
       <UniqueIdentifier>{d8376475-7454-4a24-b08a-aac121d3ad6f}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\application">
-      <UniqueIdentifier>{B08B2A15--255-0-4C-32-A-9D2-E13E1575147F}</UniqueIdentifier>
+      <UniqueIdentifier>{798B86C1--6DF-2-41-4F-B-FA5-1BE9FCB33920}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\opengl">
-      <UniqueIdentifier>{580DA945--4F0-2-44-4C-B-5CF-A5197CF542E8}</UniqueIdentifier>
+      <UniqueIdentifier>{52C95451--B02-7-47-7B-8-DF5-AF37E755312A}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\renderer">
-      <UniqueIdentifier>{47573409--61E-8-48-E3-8-6D1-5649CC1F62BF}</UniqueIdentifier>
+      <UniqueIdentifier>{12A43C4C--FDE-8-40-B2-9-DF8-DDD697E0B926}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\renderer\scenes">
-      <UniqueIdentifier>{84932967--98B-8-4A-CB-A-62B-C9ED3FB73A51}</UniqueIdentifier>
+      <UniqueIdentifier>{A178EF2C--2D7-7-4B-60-9-20D-A4DFFFB58363}</UniqueIdentifier>
     </Filter>
     <Filter Include="addons">
-      <UniqueIdentifier>{5848E340--D4A-1-45-13-B-B46-5AA91EAE8C20}</UniqueIdentifier>
+      <UniqueIdentifier>{59E45F47--C82-F-4E-DC-9-C2F-414DA73DF7F3}</UniqueIdentifier>
     </Filter>
     <Filter Include="addons\ofxAssimpModelLoader">
-      <UniqueIdentifier>{2EABB8DD--B51-D-40-12-8-C24-FB6F4D5F725E}</UniqueIdentifier>
+      <UniqueIdentifier>{6DD76CCA--5C4-2-49-B1-8-303-73A3FBBDFC24}</UniqueIdentifier>
     </Filter>
     <Filter Include="addons\ofxAssimpModelLoader\src">
-      <UniqueIdentifier>{7CCF3E6B--C8D-D-44-89-B-260-04983C2B1534}</UniqueIdentifier>
+      <UniqueIdentifier>{BF63A43C--02D-5-46-0F-8-D92-62F2A7483205}</UniqueIdentifier>
     </Filter>
     <Filter Include="addons\ofxAssimpModelLoader\libs">
-      <UniqueIdentifier>{7892D98A--DAD-5-48-A2-9-31D-B94A1C919880}</UniqueIdentifier>
+      <UniqueIdentifier>{9F7BD6BB--FC0-F-4C-8E-9-599-3C532880B328}</UniqueIdentifier>
     </Filter>
     <Filter Include="addons\ofxAssimpModelLoader\libs\assimp">
-      <UniqueIdentifier>{3B7CEFEA--488-7-4F-1B-9-EDE-EE85C00D4D98}</UniqueIdentifier>
+      <UniqueIdentifier>{DEADC2E4--97C-C-4A-30-B-427-46D28E18A441}</UniqueIdentifier>
     </Filter>
     <Filter Include="addons\ofxAssimpModelLoader\libs\assimp\include">
-      <UniqueIdentifier>{7F2EFAD0--920-0-4A-86-8-D3F-B4918A7F97BA}</UniqueIdentifier>
+      <UniqueIdentifier>{FB958A1F--F19-A-44-1A-9-88E-682F9E059461}</UniqueIdentifier>
     </Filter>
     <Filter Include="addons\ofxAssimpModelLoader\libs\assimp\include\assimp">
-      <UniqueIdentifier>{E71F9DB2--F0F-E-44-69-8-AA2-925216B5A69E}</UniqueIdentifier>
+      <UniqueIdentifier>{6879C75D--999-0-41-EA-B-445-1EDADC212E20}</UniqueIdentifier>
     </Filter>
     <Filter Include="addons\ofxAssimpModelLoader\libs\assimp\include\assimp\Compiler">
-      <UniqueIdentifier>{39AD08B2--3E5-2-41-D2-8-8F8-CFF2FB32B87D}</UniqueIdentifier>
+      <UniqueIdentifier>{E3CA1682--0DA-7-46-52-9-5D8-5C003892E4C3}</UniqueIdentifier>
     </Filter>
     <Filter Include="addons\ofxAssimpModelLoader\libs\assimp\include\assimp\port">
-      <UniqueIdentifier>{87A4E5FC--429-A-4C-A8-9-8CC-282EBA0AB909}</UniqueIdentifier>
+      <UniqueIdentifier>{167F1713--A59-1-4A-4E-8-893-76639BFAF16F}</UniqueIdentifier>
     </Filter>
     <Filter Include="addons\ofxAssimpModelLoader\libs\assimp\include\assimp\port\AndroidJNI">
-      <UniqueIdentifier>{50FEB66A--AB3-C-45-14-8-198-200C03332F05}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="addons\ofxGui">
-      <UniqueIdentifier>{3A9D6E56--8A4-7-4C-FB-A-E86-8352C69F9088}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="addons\ofxGui\src">
-      <UniqueIdentifier>{D23ACC5A--075-8-4E-29-B-B19-788BCAC71580}</UniqueIdentifier>
+      <UniqueIdentifier>{2CD8F3C2--E81-5-4E-96-9-69A-A40959514CBD}</UniqueIdentifier>
     </Filter>
     <Filter Include="addons\ofxImGui">
-      <UniqueIdentifier>{12E6BB8B--B6B-3-4B-0F-8-427-822A54A4EFEC}</UniqueIdentifier>
+      <UniqueIdentifier>{27055AC3--66F-0-4A-60-9-CD1-59F400E95F9C}</UniqueIdentifier>
     </Filter>
     <Filter Include="addons\ofxImGui\src">
-      <UniqueIdentifier>{5FF79A48--ADC-C-48-CF-9-550-6F4F2DBB3CC2}</UniqueIdentifier>
+      <UniqueIdentifier>{769F76B4--EED-3-49-36-A-042-F436641EFCBF}</UniqueIdentifier>
     </Filter>
     <Filter Include="addons\ofxImGui\libs">
-      <UniqueIdentifier>{34766B45--BCD-3-4B-BF-9-D2A-7BE79F0C9008}</UniqueIdentifier>
+      <UniqueIdentifier>{822B7290--8F4-6-42-E6-B-3FC-DC92EA296872}</UniqueIdentifier>
     </Filter>
     <Filter Include="addons\ofxImGui\libs\imgui">
-      <UniqueIdentifier>{95FF35DD--5A4-4-49-4B-8-3F8-2D225BA6A807}</UniqueIdentifier>
+      <UniqueIdentifier>{38430588--700-9-44-B4-9-F1D-983727D56BF2}</UniqueIdentifier>
     </Filter>
     <Filter Include="addons\ofxImGui\libs\imgui\src">
-      <UniqueIdentifier>{F3C9F882--A3A-D-46-8D-8-062-46D4AEDEAED7}</UniqueIdentifier>
+      <UniqueIdentifier>{9AE1DE56--280-3-41-D3-8-86F-B7550B27506C}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -178,6 +144,9 @@
       <Filter>src\renderer</Filter>
     </ClInclude>
     <ClInclude Include="src\renderer\scenes\ImportImportExportScene.h">
+      <Filter>src\renderer\scenes</Filter>
+    </ClInclude>
+    <ClInclude Include="src\renderer\scenes\RotatingCubeScene.h">
       <Filter>src\renderer\scenes</Filter>
     </ClInclude>
     <ClInclude Include="src\renderer\scenes\Scene.h">
@@ -447,42 +416,6 @@
     <ClInclude Include="..\..\addons\ofxAssimpModelLoader\libs\assimp\include\assimp\ZipArchiveIOSystem.h">
       <Filter>addons\ofxAssimpModelLoader\libs\assimp\include\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\addons\ofxGui\src\ofxBaseGui.h">
-      <Filter>addons\ofxGui\src</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\addons\ofxGui\src\ofxButton.h">
-      <Filter>addons\ofxGui\src</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\addons\ofxGui\src\ofxColorPicker.h">
-      <Filter>addons\ofxGui\src</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\addons\ofxGui\src\ofxGui.h">
-      <Filter>addons\ofxGui\src</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\addons\ofxGui\src\ofxGuiGroup.h">
-      <Filter>addons\ofxGui\src</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\addons\ofxGui\src\ofxGuiUtils.h">
-      <Filter>addons\ofxGui\src</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\addons\ofxGui\src\ofxInputField.h">
-      <Filter>addons\ofxGui\src</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\addons\ofxGui\src\ofxLabel.h">
-      <Filter>addons\ofxGui\src</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\addons\ofxGui\src\ofxPanel.h">
-      <Filter>addons\ofxGui\src</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\addons\ofxGui\src\ofxSlider.h">
-      <Filter>addons\ofxGui\src</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\addons\ofxGui\src\ofxSliderGroup.h">
-      <Filter>addons\ofxGui\src</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\addons\ofxGui\src\ofxToggle.h">
-      <Filter>addons\ofxGui\src</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\addons\ofxImGui\src\BaseEngine.h">
       <Filter>addons\ofxImGui\src</Filter>
     </ClInclude>
@@ -531,7 +464,6 @@
     <ClInclude Include="..\..\addons\ofxImGui\libs\imgui\src\imstb_truetype.h">
       <Filter>addons\ofxImGui\libs\imgui\src</Filter>
     </ClInclude>
-    <ClInclude Include="src\renderer\scenes\RotatingCubeScene.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="icon.rc" />
