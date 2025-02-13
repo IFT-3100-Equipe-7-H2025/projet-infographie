@@ -1,10 +1,11 @@
 #pragma once
 
-#include "opengl/opengl_include.h"
 
 #include "debug-trap.h"
 #include <iostream>
+#include <GL/glew.h>
 
+// Macro to assert OpenGL calls, uses psnip_trap() to put a breakpoint if the call fails
 #define GLAssert(x) \
     if (!(x)) psnip_trap();
 
