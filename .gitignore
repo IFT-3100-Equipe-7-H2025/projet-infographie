@@ -15,6 +15,7 @@ config.make
 icon.rc
 .vscode
 Makefile
+compile_commands.json
 
 #.gitignore is a file which makes git ignore files which should
 # not go into version control in the first place

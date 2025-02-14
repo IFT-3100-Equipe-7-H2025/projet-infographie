@@ -5,7 +5,7 @@ Projet infographie -- Équipe 7 -- IFT-3100
 - [openframeworks 0.12.x](https://openframeworks.cc/download/) (recommended Visual Studio on Windows, Xcode on MacOS, qtcreator on Linux)
 
 ### Steps (for Windows):
-1. Clone the [`ofxImGui`](https://github.com/jvcleave/ofxImGui) repository inside your `/addons` folder of your openframewroks installation.
+1. Clone the [`ofxImGui`](https://github.com/jvcleave/ofxImGui) repository inside your `/addons` folder of your openframeworks installation.
 2. Clone this repository in the `/apps` folder of your openframeworks installation.
 3. Open the `projectGenerator` tool in the `/projectGenerator` folder of your openframeworks installation.
 4. Go to the `create / update` tab.
@@ -73,4 +73,30 @@ git clone -b develop https://github.com/jvcleave/ofxImGui.git
 ```sh
 make -j4
 make run
+```
+
+16. If you want to use vscode, you can do the following setup:
+- Install `compiledb` with pip:
+```sh
+pip install compiledb
+```
+if you get the error `error: externally-managed-environment`, rerun the pip install command with the `--break-system-packages` flag.
+
+- Generate the `compile_commands.json` file with (while being at the root of the project):
+```sh
+python -m compiledb make
+```
+
+- Install the `C/C++` vscode extension.
+- Open the file `./.vscode/c_cpp_properties.json` file and add the `compileCommands` entry in the `Linux` configuration part with the value `"compileCommands": "${workspaceFolder}/compile_commands.json"`. See this page and search for `compileCommands` in the file example if you are unsure about what this means: [https://code.visualstudio.com/docs/cpp/c-cpp-properties-schema-reference](https://code.visualstudio.com/docs/cpp/c-cpp-properties-schema-reference)
+
+- You should now have proper highlighting and file resolution for openframeworks.
+
+- To build and run the application, you can run the script:
+```sh
+./build_and_run.sh
+```
+or simply:
+```sh
+make -j4 && make run
 ```
