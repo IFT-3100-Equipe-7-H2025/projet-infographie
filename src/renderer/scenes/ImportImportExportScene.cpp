@@ -8,11 +8,11 @@
 void ImportImportExportScene::draw()
 {
     ImGui::Begin(this->GetName().c_str());
-    if ( ImGui::Button("Import image") ) { this->ImportImageButtonPressed(); }
-    if ( ImGui::Button("Export image") ) { this->ExportImageButtonPressed(); }
+    if (ImGui::Button("Import image")) { this->ImportImageButtonPressed(); }
+    if (ImGui::Button("Export image")) { this->ExportImageButtonPressed(); }
     ImGui::End();
 
-    for ( auto& [image, position]: images )
+    for (auto& [image, position]: images)
     {
         image.draw(position);
     }
@@ -20,7 +20,7 @@ void ImportImportExportScene::draw()
 
 void ImportImportExportScene::ImportImageButtonPressed()
 {
-    if ( const ofFileDialogResult result = ofSystemLoadDialog("Import image", false, "."); result.bSuccess )
+    if (const ofFileDialogResult result = ofSystemLoadDialog("Import image", false, "."); result.bSuccess)
     {
         ofLog() << "Successfully imported image: " << result.filePath;
 
@@ -48,7 +48,7 @@ void ImportImportExportScene::ExportImage(const std::string& path)
 void ImportImportExportScene::ExportImageButtonPressed()
 {
     // there is a bug in the current version of openFrameworks that causes the parameters to not be used on Windows
-    if ( const ofFileDialogResult result = ofSystemSaveDialog("test.png", "Export image"); result.bSuccess )
+    if (const ofFileDialogResult result = ofSystemSaveDialog("test.png", "Export image"); result.bSuccess)
     {
         ofLog() << "Successfully exported image: " << result.filePath;
         this->ExportImage(result.filePath);

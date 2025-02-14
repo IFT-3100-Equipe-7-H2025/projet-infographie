@@ -21,5 +21,5 @@ public:
     ofxImGui::Gui gui{};
 
     std::shared_ptr<ImportImportExportScene> importExportImageScene;
-    std::shared_ptr<RotatingCubeScene>       rotatingCubeScene;
+    std::shared_ptr<RotatingCubeScene> rotatingCubeScene;
 };
