@@ -1,6 +1,6 @@
 #include "application.h"
 
-#include "renderer/scenes/ImportImportExportScene.h"
+#include <Macros.h>
 
 void Application::setup()
 {
@@ -12,7 +12,7 @@ void Application::setup()
 
     renderer.Setup();
 
-    this->importExportImageScene = std::make_shared<ImportImportExportScene>();
+    this->importExportImageScene = std::make_shared<ImportImageScene>();
     this->importExportImageScene->setup();
     renderer.scenes.AddScene(this->importExportImageScene);
 
@@ -24,6 +24,8 @@ void Application::setup()
 void Application::draw()
 {
     gui.begin();
+
+    this->ShowMainMenuBar();
 
     renderer.Draw();
 
@@ -55,3 +57,37 @@ void Application::exit()
 }
 
 void Application::SelectScene(SceneId id) { renderer.scenes.SelectScene(id); }
+
+void Application::ShowMainMenuBar()
+{
+    if (ImGui::BeginMainMenuBar())
+    {
+        // if (ImGui::BeginMenu("Export"))
+        // {
+        if (ImGui::Button("Export screen as image"))
+        {
+            this->ExportImageButtonPressed();
+        }
+
+        //     ImGui::EndMenu();
+        // }
+
+        ImGui::EndMainMenuBar();
+    }
+}
+
+void Application::ExportImage(const std::string& path)
+{
+    GLCall(glReadBuffer(GL_FRONT));
+    ofSaveScreen(path);
+}
+
+void Application::ExportImageButtonPressed()
+{
+    // there is a bug in the current version of openFrameworks that causes the parameters to not be used
+    if (const ofFileDialogResult result = ofSystemSaveDialog("test.png", "Export image"); result.bSuccess)
+    {
+        ofLog() << "Successfully exported image: " << result.filePath;
+        this->ExportImage(result.filePath);
+    }
+}

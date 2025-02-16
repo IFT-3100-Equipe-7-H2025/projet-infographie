@@ -9,7 +9,7 @@ struct Image
 };
 
 
-class ImportImportExportScene : public Scene
+class ImportImageScene : public Scene
 {
 public:
     void draw() override;
@@ -17,10 +17,7 @@ public:
     void ImportImage(const std::string& path);
     void ImportImageButtonPressed();
 
-    void ExportImage(const std::string& path);
-    void ExportImageButtonPressed();
-
-    std::string GetName() override { return "Image importing and exporting"; }
+    std::string GetName() override { return "Image importing"; }
 
 private:
     std::vector<Image> images{};

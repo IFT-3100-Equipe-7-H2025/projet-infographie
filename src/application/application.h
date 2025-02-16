@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ImportImportExportScene.h"
+#include "ImportImageScene.h"
 #include "RotatingCubeScene.h"
 #include "ofMain.h"
 #include "renderer/renderer.h"
@@ -17,9 +17,13 @@ public:
     void exit() override;
 
     void SelectScene(SceneId id);
+    void ShowMainMenuBar();
+
+    void ExportImage(const std::string& path);
+    void ExportImageButtonPressed();
 
     ofxImGui::Gui gui{};
 
-    std::shared_ptr<ImportImportExportScene> importExportImageScene;
+    std::shared_ptr<ImportImageScene> importExportImageScene;
     std::shared_ptr<RotatingCubeScene> rotatingCubeScene;
 };
