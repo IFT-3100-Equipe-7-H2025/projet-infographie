@@ -14,7 +14,7 @@ public:
 
     void Draw() const;
 
-    [[nodiscard]] const std::string& GetName() const;
+    [[nodiscard]] std::string GetName() const;
 
     [[nodiscard]] const std::vector<std::shared_ptr<Node>>& GetChildren() const;
 

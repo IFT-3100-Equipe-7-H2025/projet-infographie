@@ -20,7 +20,7 @@ void Node::Draw() const
     }
 }
 
-[[nodiscard]] const std::string& Node::GetName() const { return name; }
+[[nodiscard]] std::string Node::GetName() const { return name + " " + std::to_string(id); }
 
 [[nodiscard]] const std::vector<std::shared_ptr<Node>>& Node::GetChildren() const { return children; }
 
