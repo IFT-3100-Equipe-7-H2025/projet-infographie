@@ -29,15 +29,6 @@ void Application::draw()
 
     renderer.Draw();
 
-    ImGui::Begin("Scene selection");
-    for (const auto& scene: renderer.scenes.GetScenes())
-    {
-        SceneId id = scene.first;
-        std::string name = scene.second->GetName();
-        if (ImGui::Button(name.c_str())) { this->SelectScene(id); }
-    }
-    ImGui::End();
-
     gui.end();
 }
 
@@ -62,15 +53,24 @@ void Application::ShowMainMenuBar()
 {
     if (ImGui::BeginMainMenuBar())
     {
-        // if (ImGui::BeginMenu("Export"))
-        // {
+        if (ImGui::BeginMenu("Scene selection"))
+        {
+            for (const auto& scene: renderer.scenes.GetScenes())
+            {
+                SceneId id = scene.first;
+                std::string name = scene.second->GetName();
+                if (ImGui::MenuItem(name.c_str()))
+                {
+                    this->SelectScene(id);
+                }
+            }
+            ImGui::EndMenu();
+        }
+
         if (ImGui::Button("Export screen as image"))
         {
             this->ExportImageButtonPressed();
         }
-
-        //     ImGui::EndMenu();
-        // }
 
         ImGui::EndMainMenuBar();
     }
