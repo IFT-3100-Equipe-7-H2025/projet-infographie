@@ -2,7 +2,6 @@
 #include "Scene.h"
 
 #include <memory>
-#include <stdexcept>
 #include <unordered_map>
 
 class Scenes

@@ -2,7 +2,7 @@
 
 #include "ImportImageScene.h"
 #include "RotatingCubeScene.h"
-#include "ofMain.h"
+#include "Scene3D.h"
 #include "renderer/renderer.h"
 
 class Application : public ofBaseApp
@@ -26,4 +26,5 @@ public:
 
     std::shared_ptr<ImportImageScene> importExportImageScene;
     std::shared_ptr<RotatingCubeScene> rotatingCubeScene;
+    std::shared_ptr<Scene3D> scene3D;
 };
