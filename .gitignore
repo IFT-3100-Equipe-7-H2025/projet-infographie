@@ -7,9 +7,10 @@ cmake_install*
 CMakeFiles/*
 _deps/*
 build/*
-.sln
-.vcxproj
-.vcxproj.filters
+*.sln
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
 addons.make
 config.make
 icon.rc
