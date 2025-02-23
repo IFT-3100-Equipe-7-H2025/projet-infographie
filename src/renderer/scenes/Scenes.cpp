@@ -22,3 +22,11 @@ void Scenes::DrawSelectedScene()
 
 const std::shared_ptr<Scene>& Scenes::GetScene(const SceneId id) { return scenes[id]; }
 const std::unordered_map<SceneId, std::shared_ptr<Scene>>& Scenes::GetScenes() { return scenes; }
+
+std::shared_ptr<Scene> Scenes::GetSelectedScene() const {
+    auto it = scenes.find(selectedScene);
+    if (it == scenes.end()) {
+        throw std::runtime_error("Selected scene does not exist");
+    }
+    return it->second;
+}
