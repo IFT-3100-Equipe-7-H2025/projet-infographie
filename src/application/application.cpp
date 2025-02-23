@@ -1,4 +1,5 @@
 #include "application.h"
+#include "imgui.h"
 
 #include <Macros.h>
 
@@ -11,7 +12,7 @@ void Application::setup()
 
     ofLog() << "<app::setup>";
 
-    gui.setup();
+    gui.setup(nullptr, true, ImGuiConfigFlags_DockingEnable, true);
 
     renderer.Setup();
 
@@ -31,29 +32,45 @@ void Application::setup()
 void Application::draw()
 {
     gui.begin();
+    ImGui::DockSpaceOverViewport(0, ImGui::GetMainViewport(), ImGuiDockNodeFlags_PassthruCentralNode);
     this->ShowMainMenuBar();
     renderer.Draw();
     gui.end();
 
-    if (ImGui::GetIO().WantCaptureMouse) {
+    if (ImGui::GetIO().WantCaptureMouse)
+    {
         cursorManager.setState(CursorState::HoverButton);
-    } else {
+    }
+    else
+    {
         auto currentScene = renderer.scenes.GetSelectedScene();
-        if (currentScene) {
+        if (currentScene)
+        {
             auto primitiveScene = dynamic_cast<PrimitiveScene*>(currentScene.get());
-            if (primitiveScene) {
-                if (primitiveScene->getIsWaitingForSecondClick()) {
+            if (primitiveScene)
+            {
+                if (primitiveScene->getIsWaitingForSecondClick())
+                {
                     cursorManager.setState(CursorState::WaitingSecondClick);
-                } else if (primitiveScene->getIsAdding()) {
-                    if (primitiveScene->getSelectedType() == PrimitiveType::Point) {
+                }
+                else if (primitiveScene->getIsAdding())
+                {
+                    if (primitiveScene->getSelectedType() == PrimitiveType::Point)
+                    {
                         cursorManager.setState(CursorState::DrawPoint);
-                    } else {
+                    }
+                    else
+                    {
                         cursorManager.setState(CursorState::DrawPrimitive);
                     }
-                } else {
+                }
+                else
+                {
                     cursorManager.setState(CursorState::Default);
                 }
-            } else {
+            }
+            else
+            {
                 cursorManager.setState(CursorState::Default);
             }
         }
@@ -74,12 +91,15 @@ void Application::mouseReleased(int x, int y, int button)
 
 void Application::mousePressed(int x, int y, int button)
 {
-    try {
+    try
+    {
         auto selectedScene = renderer.scenes.GetSelectedScene();
-        if (selectedScene) {
+        if (selectedScene)
+        {
             selectedScene->mousePressed(x, y, button);
         }
-    } catch (std::exception &e) {
+    } catch (std::exception& e)
+    {
         ofLog() << "Aucune scène sélectionnée pour mousePressed : " << e.what();
     }
 }
