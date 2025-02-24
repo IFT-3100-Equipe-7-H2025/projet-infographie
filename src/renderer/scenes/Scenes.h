@@ -15,6 +15,8 @@ public:
     [[nodiscard]] const std::shared_ptr<Scene>& GetScene(SceneId id);
     [[nodiscard]] const std::unordered_map<SceneId, std::shared_ptr<Scene>>& GetScenes();
 
+    [[nodiscard]] std::shared_ptr<Scene> GetSelectedScene() const;
+
 private:
     SceneId selectedScene = -1;
     std::unordered_map<SceneId, std::shared_ptr<Scene>> scenes{};
