@@ -16,6 +16,8 @@ void CursorManager::setup() {
     if(!loaded) {
         ofLogError("CursorManager") << "Erreur de chargement d'images de curseurs";
     }
+
+    ofEnableArbTex();
 }
 
 void CursorManager::draw() {}
