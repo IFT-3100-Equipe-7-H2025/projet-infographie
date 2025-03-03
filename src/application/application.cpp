@@ -5,14 +5,16 @@
 
 void Application::setup()
 {
-    ofSetWindowTitle("Bonjour Monde");
+    ofSetWindowTitle("Projet Infographie - 3D Editor");
 
     ofHideCursor();
     cursorManager.setup();
 
     ofLog() << "<app::setup>";
 
-    gui.setup(nullptr, true, ImGuiConfigFlags_DockingEnable, true);
+    gui.setup(nullptr, true, ImGuiConfigFlags_DockingEnable, false);
+    ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NoMouseCursorChange;
+
 
     renderer.Setup();
 
@@ -35,7 +37,6 @@ void Application::draw()
     ImGui::DockSpaceOverViewport(0, ImGui::GetMainViewport(), ImGuiDockNodeFlags_PassthruCentralNode);
     this->ShowMainMenuBar();
     renderer.Draw();
-    gui.end();
 
     if (ImGui::GetIO().WantCaptureMouse)
     {
@@ -76,7 +77,9 @@ void Application::draw()
         }
     }
 
-    cursorManager.draw();
+    cursorManager.drawForeground();
+
+    gui.end();
 }
 
 void Application::keyReleased(int key)

@@ -14,6 +14,7 @@ public:
     CursorManager();
     void setup();
     void draw();
+    void drawForeground();
 
     void setState(CursorState newState);
     CursorState getState() const;
