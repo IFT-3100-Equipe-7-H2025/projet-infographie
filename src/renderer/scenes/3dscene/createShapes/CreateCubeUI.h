@@ -26,7 +26,7 @@ public:
             if (ImGui::Button("Add"))
             {
                 auto cube = ofBoxPrimitive(width, height, depth);
-                for (int i = 0; i < 6; i++) { cube.setSideColor(i, ofColor(sharedParams->color[0] * 255, sharedParams->color[1] * 255, sharedParams->color[2] * 255, sharedParams->color[3] * 255)); }
+                for (int i = 0; i < 6; i++) { cube.setSideColor(i, ofFloatColor(sharedParams->color[0], sharedParams->color[1], sharedParams->color[2], sharedParams->color[3])); }
                 auto cube_ptr = std::make_shared<Node>("Cube", std::make_shared<ofBoxPrimitive>(cube));
 
                 history.executeCommand(std::make_shared<AddChildToNodeCommand>(*sharedParams->selectedNode, cube_ptr));

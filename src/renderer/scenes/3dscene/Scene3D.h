@@ -24,9 +24,12 @@ public:
     void AddNode(std::shared_ptr<Node> node) { graph.AddNode(std::move(node)); }
     void ShowChildren(const std::shared_ptr<Node>& node);
 
-    void DrawSceneGraphUI();
-    void DrawSelectedNodeUI();
-    void DrawCommandHistoryUI();
+    void DrawSceneGraphWindow();
+
+    void DrawSelectedNodeWindow();
+    void DrawModifyNodeSliders(const std::shared_ptr<Node>& node);
+
+    void DrawCommandHistoryWindow();
 
 private:
     CommandHistory history;
@@ -34,10 +37,11 @@ private:
     SceneGraph graph;
     std::shared_ptr<std::shared_ptr<Node>> selectedNode;
 
-    float translateX = 0.0f;
-    float translateY = 0.0f;
-    float translateZ = 0.0f;
+    float translate[3] = {0.0f, 0.0f, 0.0f};
     glm::vec3 initialPosition;// Used to store the initial position of the selected node when using the sliders, so that we can undo the change in a single command
+
+    float scale[3] = {1.0f, 1.0f, 1.0f};
+    glm::vec3 initialScale;// Used to store the initial scale of the selected node when using the sliders, so that we can undo the change in a single command
 
     std::shared_ptr<SharedShapeCreationParams> sharedParams;
 

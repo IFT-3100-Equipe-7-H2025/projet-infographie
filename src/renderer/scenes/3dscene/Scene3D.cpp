@@ -1,6 +1,7 @@
 #include "Scene3D.h"
 
 #include "3dscene/commands/SetPositionCommand.h"
+#include "3dscene/commands/SetScaleCommand.h"
 #include "3dscene/createShapes/CreateCubeUI.h"
 #include "3dscene/createShapes/CreateLightUI.h"
 #include "3dscene/createShapes/CreateSphereUI.h"
@@ -43,16 +44,16 @@ void Scene3D::setup()
 
 void Scene3D::draw()
 {
-    this->DrawSceneGraphUI();
-    this->DrawSelectedNodeUI();
-    this->DrawCommandHistoryUI();
+    this->DrawSceneGraphWindow();
+    this->DrawSelectedNodeWindow();
+    this->DrawCommandHistoryWindow();
 
     material.begin();
     graph.Draw();
     material.end();
 }
 
-void Scene3D::DrawSceneGraphUI()
+void Scene3D::DrawSceneGraphWindow()
 {
     ImGui::SetNextWindowPos(ImVec2(10, 30), ImGuiCond_FirstUseEver);
     ImGui::SetNextWindowSize(ImVec2(300, 400), ImGuiCond_FirstUseEver);
@@ -61,7 +62,7 @@ void Scene3D::DrawSceneGraphUI()
     ImGui::End();
 }
 
-void Scene3D::DrawSelectedNodeUI()
+void Scene3D::DrawSelectedNodeWindow()
 {
     if ((*this->selectedNode) != nullptr)
     {
@@ -70,47 +71,7 @@ void Scene3D::DrawSelectedNodeUI()
 
         if (ImGui::Begin((*this->selectedNode)->GetName().c_str()))
         {
-            const std::shared_ptr<ofNode>& inner = (*this->selectedNode)->GetInner();
-            const glm::vec3 currentPosition = inner->getPosition();
-
-            if (ImGui::SliderFloat("TranslateX", &this->translateX, -static_cast<float>(ofGetWidth()), static_cast<float>(ofGetWidth())))
-            {
-                inner->setPosition(this->translateX, currentPosition.y, currentPosition.z);
-            }
-            if (ImGui::IsItemActivated())
-            {
-                this->initialPosition = currentPosition;
-            }
-            if (ImGui::IsItemDeactivatedAfterEdit())
-            {
-                this->history.executeCommand(std::make_unique<SetPositionCommand>(*this->selectedNode, glm::vec3(this->translateX, currentPosition.y, currentPosition.z), this->initialPosition));
-            }
-
-            if (ImGui::SliderFloat("TranslateY", &this->translateY, -static_cast<float>(ofGetHeight()), static_cast<float>(ofGetHeight())))
-            {
-                inner->setPosition(currentPosition.x, this->translateY, currentPosition.z);
-            }
-            if (ImGui::IsItemActivated())
-            {
-                this->initialPosition = currentPosition;
-            }
-            if (ImGui::IsItemDeactivatedAfterEdit())
-            {
-                this->history.executeCommand(std::make_unique<SetPositionCommand>(*this->selectedNode, glm::vec3(currentPosition.x, this->translateY, currentPosition.z), this->initialPosition));
-            }
-
-            if (ImGui::SliderFloat("TranslateZ", &this->translateZ, -static_cast<float>(ofGetWidth()), static_cast<float>(ofGetWidth())))
-            {
-                inner->setPosition(currentPosition.x, currentPosition.y, this->translateZ);
-            }
-            if (ImGui::IsItemActivated())
-            {
-                this->initialPosition = currentPosition;
-            }
-            if (ImGui::IsItemDeactivatedAfterEdit())
-            {
-                this->history.executeCommand(std::make_unique<SetPositionCommand>(*this->selectedNode, glm::vec3(currentPosition.x, currentPosition.y, this->translateZ), this->initialPosition));
-            }
+            this->DrawModifyNodeSliders(*this->selectedNode);
 
             if (ImGui::CollapsingHeader("Add child", ImGuiTreeNodeFlags_DefaultOpen))
             {
@@ -127,7 +88,43 @@ void Scene3D::DrawSelectedNodeUI()
     }
 }
 
-void Scene3D::DrawCommandHistoryUI()
+void Scene3D::DrawModifyNodeSliders(const std::shared_ptr<Node>& node)
+{
+    const std::shared_ptr<ofNode>& inner = node->GetInner();
+
+    // Positions
+    const glm::vec3 currentPosition = inner->getPosition();
+    if (ImGui::SliderFloat3("Translate", this->translate, -static_cast<float>(ofGetWidth()), static_cast<float>(ofGetWidth())))
+    {
+        inner->setPosition(this->translate[0], this->translate[1], this->translate[2]);
+    }
+    if (ImGui::IsItemActivated())
+    {
+        this->initialPosition = currentPosition;
+    }
+    if (ImGui::IsItemDeactivatedAfterEdit())
+    {
+        this->history.executeCommand(std::make_shared<SetPositionCommand>(node, glm::vec3(this->translate[0], this->translate[1], this->translate[2]), this->initialPosition));
+    }
+
+    // Rotations
+    // Scales
+    const glm::vec3 currentScale = inner->getScale();
+    if (ImGui::SliderFloat3("Scale", this->scale, 0.0f, 100.0f))
+    {
+        inner->setScale(this->scale[0], this->scale[1], this->scale[2]);
+    }
+    if (ImGui::IsItemActivated())
+    {
+        this->initialScale = currentScale;
+    }
+    if (ImGui::IsItemDeactivatedAfterEdit())
+    {
+        this->history.executeCommand(std::make_shared<SetScaleCommand>(node, glm::vec3(this->scale[0], this->scale[1], this->scale[2]), this->initialScale));
+    }
+}
+
+void Scene3D::DrawCommandHistoryWindow()
 {
     ImGui::SetNextWindowPos(ImVec2(10, 440), ImGuiCond_FirstUseEver);
     ImGui::SetNextWindowSize(ImVec2(300, 400), ImGuiCond_FirstUseEver);
@@ -183,9 +180,15 @@ void Scene3D::SelectNode(const std::shared_ptr<Node>& node)
 {
     *selectedNode = node;
 
-    glm::vec3 currentPosition = node->GetInner()->getPosition();
-    translateX = currentPosition.x;
-    translateY = currentPosition.y;
+    const glm::vec3 currentPosition = node->GetInner()->getPosition();
+    translate[0] = currentPosition.x;
+    translate[1] = currentPosition.y;
+    translate[2] = currentPosition.z;
+
+    const glm::vec3 currentScale = node->GetInner()->getScale();
+    scale[0] = currentScale.x;
+    scale[1] = currentScale.y;
+    scale[2] = currentScale.z;
 
     node->SetOpen(!node->IsOpen());
 }

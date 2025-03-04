@@ -119,7 +119,11 @@ void Application::exit()
     ofLog() << "<app::exit>";
 }
 
-void Application::SelectScene(SceneId id) { renderer.scenes.SelectScene(id); }
+void Application::SelectScene(SceneId id)
+{
+    renderer.scenes.SelectScene(id);
+    this->selectedScene = renderer.scenes.GetSelectedScene();
+}
 
 void Application::ShowMainMenuBar()
 {

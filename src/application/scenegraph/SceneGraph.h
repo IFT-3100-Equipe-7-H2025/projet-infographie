@@ -17,7 +17,6 @@ public:
     [[nodiscard]] std::shared_ptr<Node> GetRoot() const;
     [[nodiscard]] std::optional<std::shared_ptr<Node>> GetNode(NodeId id) const;
 
-
 private:
     [[nodiscard]] std::optional<std::shared_ptr<Node>> GetNodeInternal(const std::shared_ptr<Node>& node, NodeId id) const;
 
