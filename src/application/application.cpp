@@ -1,4 +1,5 @@
 #include "application.h"
+#include "GeometryScene.h"
 #include "imgui.h"
 
 #include <Macros.h>
@@ -29,6 +30,10 @@ void Application::setup()
     this->primitiveScene = std::make_shared<PrimitiveScene>();
     this->primitiveScene->setup();
     renderer.scenes.AddScene(this->primitiveScene);
+
+    this->geometryScene = std::make_shared<GeometryScene>();
+    this->geometryScene->setup();
+    renderer.scenes.AddScene(this->geometryScene);
 }
 
 void Application::draw()
