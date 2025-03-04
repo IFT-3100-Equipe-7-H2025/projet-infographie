@@ -112,6 +112,28 @@ void Application::keyPressed(int key)
     }
 }
 
+void Application::dragEvent(ofDragInfo dragInfo)
+{
+
+    ofLog() << "<app::dragged: >";
+    ofLog() << "<app::ofDragInfo file[0]: " << dragInfo.files.at(0)
+            << " at : " << dragInfo.position << ">";
+    try
+    {
+        auto selectedScene = renderer.scenes.GetSelectedScene();
+        if (selectedScene)
+        {
+            selectedScene->dragEvent(dragInfo);
+        }
+    } catch (std::exception& e)
+    {
+        ofLog() << "Aucune scène sélectionnée pour keyReleased : " << e.what();
+    }
+
+
+
+}
+
 void Application::keyReleased(int key)
 {
     ofLog() << "<app::keyReleased: " << key << ">";

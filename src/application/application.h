@@ -23,6 +23,8 @@ public:
     void draw() override;
     void keyPressed(int key) override;
     void keyReleased(int key) override;
+    void dragEvent(ofDragInfo dragInfo) override;
+
     void mouseReleased(int x, int y, int button) override;
     void mousePressed(int x, int y, int button) override;
     void exit() override;
