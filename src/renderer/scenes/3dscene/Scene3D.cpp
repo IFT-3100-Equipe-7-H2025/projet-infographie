@@ -51,14 +51,16 @@ void Scene3D::DrawSelectedNodeUI()
 
         if (ImGui::Begin((*this->selectedNode)->GetName().c_str()))
         {
+            const std::shared_ptr<ofNode>& inner = (*this->selectedNode)->GetInner();
+            const glm::vec3 currentPosition = inner->getPosition();
             if (ImGui::SliderFloat("TranslateX", &this->translateX, -static_cast<float>(ofGetWidth()), static_cast<float>(ofGetWidth())))
             {
-                (*this->selectedNode)->GetInner()->setPosition(this->translateX, (*this->selectedNode)->GetInner()->getPosition().y, (*this->selectedNode)->GetInner()->getPosition().z);
+                inner->setPosition(this->translateX, currentPosition.y, currentPosition.z);
             }
 
             if (ImGui::SliderFloat("TranslateY", &translateY, -static_cast<float>(ofGetHeight()), static_cast<float>(ofGetHeight())))
             {
-                (*this->selectedNode)->GetInner()->setPosition((*this->selectedNode)->GetInner()->getPosition().x, translateY, (*this->selectedNode)->GetInner()->getPosition().z);
+                inner->setPosition(currentPosition.x, translateY, currentPosition.z);
             }
 
             if (ImGui::CollapsingHeader("Add child", ImGuiTreeNodeFlags_DefaultOpen))
@@ -139,8 +141,9 @@ void Scene3D::SelectNode(const std::shared_ptr<Node>& node)
 {
     *selectedNode = node;
 
-    translateX = node->GetInner()->getPosition().x;
-    translateY = node->GetInner()->getPosition().y;
+    glm::vec3 currentPosition = node->GetInner()->getPosition();
+    translateX = currentPosition.x;
+    translateY = currentPosition.y;
 
     node->SetOpen(!node->IsOpen());
 }

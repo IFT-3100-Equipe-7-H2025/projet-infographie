@@ -1,5 +1,6 @@
 #include "SceneGraph.h"
 #include "of3dPrimitives.h"
+#include <stack>
 
 SceneGraph::SceneGraph() : root(std::make_shared<Node>("World", std::make_shared<ofBoxPrimitive>(ofBoxPrimitive(0, 0, 0)))) {}
 
@@ -20,30 +21,22 @@ void SceneGraph::Draw() const
 
 [[nodiscard]] std::optional<std::shared_ptr<Node>> SceneGraph::GetNode(NodeId id) const
 {
-    if (root->GetId() == id)
-    {
-        return root;
-    }
-    else if (auto node = GetNodeInternal(root, id))
-    {
-        return node;
-    }
+    std::stack<Node*> nodes;
+    nodes.push(root.get());
 
-    return std::nullopt;
-}
-
-
-[[nodiscard]] std::optional<std::shared_ptr<Node>> SceneGraph::GetNodeInternal(const std::shared_ptr<Node>& node, NodeId id) const
-{
-    for (const auto& child: node->GetChildren())
+    while (!nodes.empty())
     {
-        if (child->GetId() == id)
+        Node* current = nodes.top();
+        nodes.pop();
+
+        if (current->GetId() == id)
         {
-            return child;
+            return std::shared_ptr<Node>(current);
         }
-        else if (auto node = GetNodeInternal(child, id))
+
+        for (const auto& child: current->GetChildren())
         {
-            return node;
+            nodes.push(child.get());
         }
     }
 
