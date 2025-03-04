@@ -35,6 +35,7 @@ private:
 
     float translateX = 0.0f;
     float translateY = 0.0f;
+    glm::vec3 initialPosition;// Used to store the initial position of the selected node when using the sliders, so that we can undo the change in a single command
 
     std::shared_ptr<SharedShapeCreationParams> sharedParams;
 

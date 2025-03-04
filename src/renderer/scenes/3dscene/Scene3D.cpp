@@ -1,5 +1,6 @@
 #include "Scene3D.h"
 
+#include "3dscene/commands/SetPositionCommand.h"
 #include "3dscene/createShapes/CreateCubeUI.h"
 #include "imgui.h"
 #include "ofAppRunner.h"
@@ -53,14 +54,31 @@ void Scene3D::DrawSelectedNodeUI()
         {
             const std::shared_ptr<ofNode>& inner = (*this->selectedNode)->GetInner();
             const glm::vec3 currentPosition = inner->getPosition();
+
             if (ImGui::SliderFloat("TranslateX", &this->translateX, -static_cast<float>(ofGetWidth()), static_cast<float>(ofGetWidth())))
             {
                 inner->setPosition(this->translateX, currentPosition.y, currentPosition.z);
             }
-
-            if (ImGui::SliderFloat("TranslateY", &translateY, -static_cast<float>(ofGetHeight()), static_cast<float>(ofGetHeight())))
+            if (ImGui::IsItemActivated())
             {
-                inner->setPosition(currentPosition.x, translateY, currentPosition.z);
+                this->initialPosition = currentPosition;
+            }
+            if (ImGui::IsItemDeactivatedAfterEdit())
+            {
+                this->history.executeCommand(std::make_unique<SetPositionCommand>(*this->selectedNode, glm::vec3(this->translateX, currentPosition.y, currentPosition.z), this->initialPosition));
+            }
+
+            if (ImGui::SliderFloat("TranslateY", &this->translateY, -static_cast<float>(ofGetHeight()), static_cast<float>(ofGetHeight())))
+            {
+                inner->setPosition(currentPosition.x, this->translateY, currentPosition.z);
+            }
+            if (ImGui::IsItemActivated())
+            {
+                this->initialPosition = currentPosition;
+            }
+            if (ImGui::IsItemDeactivatedAfterEdit())
+            {
+                this->history.executeCommand(std::make_unique<SetPositionCommand>(*this->selectedNode, glm::vec3(currentPosition.x, this->translateY, currentPosition.z), this->initialPosition));
             }
 
             if (ImGui::CollapsingHeader("Add child", ImGuiTreeNodeFlags_DefaultOpen))
@@ -86,9 +104,8 @@ void Scene3D::DrawCommandHistoryUI()
     ImGui::SetNextWindowSize(ImVec2(300, 400), ImGuiCond_FirstUseEver);
     ImGui::Begin("Command history");
 
-    // Buttons
-    bool undoDisabled = this->history.GetUndoStack().size() == 0;
-    ImGui::BeginDisabled(undoDisabled);
+    // Buttons for undo and redo
+    ImGui::BeginDisabled(this->history.GetUndoStack().size() == 0);
     if (ImGui::Button("Undo"))
     {
         this->history.undo();
@@ -96,9 +113,7 @@ void Scene3D::DrawCommandHistoryUI()
     ImGui::EndDisabled();
 
     ImGui::SameLine();
-
-    bool redoDisabled = this->history.GetRedoStack().size() == 0;
-    ImGui::BeginDisabled(redoDisabled);
+    ImGui::BeginDisabled(this->history.GetRedoStack().size() == 0);
     if (ImGui::Button("Redo"))
     {
         this->history.redo();
@@ -112,7 +127,7 @@ void Scene3D::DrawCommandHistoryUI()
     {
         if (ImGui::TableNextColumn())
         {
-            ImGui::TextUnformatted("Undo");
+            ImGui::TextUnformatted("Undo history");
 
             auto& undoStack = this->history.GetUndoStack();
             for (auto& it: std::ranges::reverse_view(undoStack))
@@ -123,7 +138,7 @@ void Scene3D::DrawCommandHistoryUI()
 
         if (ImGui::TableNextColumn())
         {
-            ImGui::TextUnformatted("Redo");
+            ImGui::TextUnformatted("Redo history");
 
             auto& redoStack = this->history.GetRedoStack();
             for (auto& it: std::ranges::reverse_view(redoStack))
