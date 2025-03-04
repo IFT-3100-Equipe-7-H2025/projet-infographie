@@ -4,6 +4,7 @@
 #include "Scene.h"
 #include "createShapes/CreateShapeUI.h"
 #include "createShapes/SharedShapeCreationParams.h"
+#include "ofLight.h"
 #include "scenegraph/SceneGraph.h"
 #include <ofxAssimpModelLoader.h>
 
@@ -35,9 +36,12 @@ private:
 
     float translateX = 0.0f;
     float translateY = 0.0f;
+    float translateZ = 0.0f;
     glm::vec3 initialPosition;// Used to store the initial position of the selected node when using the sliders, so that we can undo the change in a single command
 
     std::shared_ptr<SharedShapeCreationParams> sharedParams;
 
     std::vector<std::unique_ptr<CreateShapeUI>> createShapeUIs;
+
+    ofMaterial material;
 };

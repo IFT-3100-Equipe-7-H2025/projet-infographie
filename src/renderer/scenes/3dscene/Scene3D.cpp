@@ -2,8 +2,11 @@
 
 #include "3dscene/commands/SetPositionCommand.h"
 #include "3dscene/createShapes/CreateCubeUI.h"
+#include "3dscene/createShapes/CreateLightUI.h"
+#include "3dscene/createShapes/CreateSphereUI.h"
 #include "imgui.h"
 #include "ofAppRunner.h"
+#include "ofGraphics.h"
 #include <ranges>
 
 Scene3D::Scene3D() : history(CommandHistory()),
@@ -20,6 +23,22 @@ void Scene3D::setup()
     this->SelectNode(this->graph.GetRoot());
 
     this->createShapeUIs.push_back(std::make_unique<CreateCubeUI>(CreateCubeUI(this->sharedParams, this->history)));
+    this->createShapeUIs.emplace_back(std::make_unique<CreateSphereUI>(CreateSphereUI(this->sharedParams, this->history)));
+    this->createShapeUIs.emplace_back(std::make_unique<CreateLightUI>(CreateLightUI(this->sharedParams, this->history)));
+
+    material.setDiffuseColor(ofFloatColor(1.0, 0.5, 0.5));
+    material.setSpecularColor(ofFloatColor(1.0, 1.0, 1.0));
+    material.setShininess(64);
+
+    // Add base light
+    auto light = ofLight();
+    light.enable();
+    light.setDiffuseColor(ofFloatColor(1.0, 1.0, 1.0));
+    light.setSpecularColor(ofFloatColor(1.0, 1.0, 1.0));
+    light.setAmbientColor(ofFloatColor(0.2, 0.2, 0.2));
+    light.lookAt(ofVec3f((float) ofGetWidth() / 2.0f, (float) ofGetHeight() / 2.0f, 0));
+    auto light_ptr = std::make_shared<Node>("Light", std::make_shared<ofLight>(light));
+    this->graph.AddNode(light_ptr);
 }
 
 void Scene3D::draw()
@@ -28,18 +47,17 @@ void Scene3D::draw()
     this->DrawSelectedNodeUI();
     this->DrawCommandHistoryUI();
 
+    material.begin();
     graph.Draw();
+    material.end();
 }
 
 void Scene3D::DrawSceneGraphUI()
 {
-    ImGui::SetNextWindowPos(ImVec2(10, 10), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowPos(ImVec2(10, 30), ImGuiCond_FirstUseEver);
     ImGui::SetNextWindowSize(ImVec2(300, 400), ImGuiCond_FirstUseEver);
     ImGui::Begin("3D scene graph");
-
     this->ShowChildren(this->graph.GetRoot());
-
-
     ImGui::End();
 }
 
@@ -47,7 +65,7 @@ void Scene3D::DrawSelectedNodeUI()
 {
     if ((*this->selectedNode) != nullptr)
     {
-        ImGui::SetNextWindowPos(ImVec2(320, 10), ImGuiCond_FirstUseEver);
+        ImGui::SetNextWindowPos(ImVec2(320, 30), ImGuiCond_FirstUseEver);
         ImGui::SetNextWindowSize(ImVec2(300, 400), ImGuiCond_FirstUseEver);
 
         if (ImGui::Begin((*this->selectedNode)->GetName().c_str()))
@@ -81,11 +99,22 @@ void Scene3D::DrawSelectedNodeUI()
                 this->history.executeCommand(std::make_unique<SetPositionCommand>(*this->selectedNode, glm::vec3(currentPosition.x, this->translateY, currentPosition.z), this->initialPosition));
             }
 
+            if (ImGui::SliderFloat("TranslateZ", &this->translateZ, -static_cast<float>(ofGetWidth()), static_cast<float>(ofGetWidth())))
+            {
+                inner->setPosition(currentPosition.x, currentPosition.y, this->translateZ);
+            }
+            if (ImGui::IsItemActivated())
+            {
+                this->initialPosition = currentPosition;
+            }
+            if (ImGui::IsItemDeactivatedAfterEdit())
+            {
+                this->history.executeCommand(std::make_unique<SetPositionCommand>(*this->selectedNode, glm::vec3(currentPosition.x, currentPosition.y, this->translateZ), this->initialPosition));
+            }
+
             if (ImGui::CollapsingHeader("Add child", ImGuiTreeNodeFlags_DefaultOpen))
             {
-                if (ImGui::SliderFloat("r", &this->sharedParams->r, 0, 255)) { this->sharedParams->r = std::clamp(this->sharedParams->r, 0.0f, 255.0f); }
-                if (ImGui::SliderFloat("g", &this->sharedParams->g, 0, 255)) { this->sharedParams->g = std::clamp(this->sharedParams->g, 0.0f, 255.0f); }
-                if (ImGui::SliderFloat("b", &this->sharedParams->b, 0, 255)) { this->sharedParams->b = std::clamp(this->sharedParams->b, 0.0f, 255.0f); }
+                ImGui::ColorEdit4("Color", sharedParams->color);
 
                 for (auto& createShapeUI: this->createShapeUIs)
                 {
@@ -100,7 +129,7 @@ void Scene3D::DrawSelectedNodeUI()
 
 void Scene3D::DrawCommandHistoryUI()
 {
-    ImGui::SetNextWindowPos(ImVec2(10, 420), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowPos(ImVec2(10, 440), ImGuiCond_FirstUseEver);
     ImGui::SetNextWindowSize(ImVec2(300, 400), ImGuiCond_FirstUseEver);
     ImGui::Begin("Command history");
 
@@ -120,14 +149,12 @@ void Scene3D::DrawCommandHistoryUI()
     }
     ImGui::EndDisabled();
 
-    ImGui::Separator();
-
     // Undo and redo history
     if (ImGui::BeginTable("UndoRedoTable", 2, ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_Resizable))
     {
         if (ImGui::TableNextColumn())
         {
-            ImGui::TextUnformatted("Undo history");
+            ImGui::SeparatorText("Undo history");
 
             auto& undoStack = this->history.GetUndoStack();
             for (auto& it: std::ranges::reverse_view(undoStack))
@@ -138,7 +165,7 @@ void Scene3D::DrawCommandHistoryUI()
 
         if (ImGui::TableNextColumn())
         {
-            ImGui::TextUnformatted("Redo history");
+            ImGui::SeparatorText("Redo history");
 
             auto& redoStack = this->history.GetRedoStack();
             for (auto& it: std::ranges::reverse_view(redoStack))
