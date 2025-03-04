@@ -19,6 +19,10 @@ void Application::setup()
 
     renderer.Setup();
 
+    this->geometryScene = std::make_shared<GeometryScene>();
+    this->geometryScene->setup();
+    renderer.scenes.AddScene(this->geometryScene);
+
     this->importExportImageScene = std::make_shared<ImportImageScene>();
     this->importExportImageScene->setup();
     renderer.scenes.AddScene(this->importExportImageScene);
@@ -31,9 +35,7 @@ void Application::setup()
     this->primitiveScene->setup();
     renderer.scenes.AddScene(this->primitiveScene);
 
-    this->geometryScene = std::make_shared<GeometryScene>();
-    this->geometryScene->setup();
-    renderer.scenes.AddScene(this->geometryScene);
+    
 }
 
 void Application::draw()
