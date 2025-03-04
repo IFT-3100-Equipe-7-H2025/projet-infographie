@@ -19,7 +19,7 @@ public:
     Renderer renderer;
 
     void setup() override;
-    void update() override; 
+    void update() override;
     void draw() override;
     void keyPressed(int key) override;
     void keyReleased(int key) override;
@@ -43,5 +43,7 @@ public:
     std::shared_ptr<RotatingCubeScene> rotatingCubeScene;
     std::shared_ptr<PrimitiveScene> primitiveScene;
     std::shared_ptr<Scene3D> scene3D;
+
+    std::weak_ptr<Scene> selectedScene;
     std::shared_ptr<GeometryScene> geometryScene;
 };

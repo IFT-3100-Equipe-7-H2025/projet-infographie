@@ -4,6 +4,10 @@ Node::Node(std::string name, std::shared_ptr<ofNode> node) : inner(std::move(nod
 
 void Node::AddChild(std::shared_ptr<Node> node)
 {
+    if (node->GetId() == this->id)
+    {
+        throw std::runtime_error("Cannot add a node as a child of itself");
+    }
     node->inner->setParent(*this->inner);
     children.push_back(std::move(node));
 }

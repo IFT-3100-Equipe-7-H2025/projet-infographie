@@ -1,7 +1,6 @@
 #pragma once
 #include "3dscene/commands/CommandHistory.h"
 #include "SharedShapeCreationParams.h"
-#include "scenegraph/Node.h"
 
 class CreateShapeUI
 {

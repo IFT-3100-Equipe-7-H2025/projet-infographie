@@ -16,17 +16,17 @@ public:
 
     void Execute() override
     {
-        node->AddChild(child);
+        this->node->AddChild(child);
     }
 
     void Undo() override
     {
-        node->RemoveChild(child->GetId());
+        this->node->RemoveChild(child->GetId());
     }
 
     [[nodiscard]] std::string DisplayName() const override
     {
-        return name;
+        return this->name;
     }
 
 private:
