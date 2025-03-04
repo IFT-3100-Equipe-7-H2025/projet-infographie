@@ -108,9 +108,12 @@ void GeometryScene::draw()
     ofColor bgColor(backgroundColor[0] * 255, backgroundColor[1] * 255, backgroundColor[2] * 255, backgroundColor[3] * 255);
     ofClear(bgColor);
     auto triangle = createTriangle();
+    auto sphere = createSphere(30, 30);
 
     triangle.setPosition(0, 0, -500);
     triangle.setScale(1000, 1000, 1000);
+    sphere.setPosition(0, 0, -500);
+    sphere.setScale(1000, 1000, 1000);
 
     ofMatrix4x4 projMatrix;
     projMatrix.makePerspectiveMatrix(90, (double) ofGetWidth() / (double) ofGetHeight(), 10, 1000);
@@ -134,6 +137,7 @@ void GeometryScene::draw()
     ofFloatColor myColor = ofFloatColor(0.0, 1.0, 0.0, 1.0);// Green
     shader.setUniform4f("inputColor", myColor);
     triangle.draw();
+    sphere.drawWireframe();
 
     for (int i = 0; i < objects.size(); i++)
     {
