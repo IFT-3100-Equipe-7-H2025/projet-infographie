@@ -19,7 +19,9 @@ public:
     Renderer renderer;
 
     void setup() override;
+    void update() override; 
     void draw() override;
+    void keyPressed(int key) override;
     void keyReleased(int key) override;
     void mouseReleased(int x, int y, int button) override;
     void mousePressed(int x, int y, int button) override;

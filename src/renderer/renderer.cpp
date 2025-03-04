@@ -11,6 +11,11 @@ void Renderer::Setup()
     ofEnableLighting();
 }
 
+void Renderer::Update()
+{
+    this->scenes.UpdateSelectedScene();
+}
+
 void Renderer::Draw()
 {
     ofClear(0, 0, 0, 255);

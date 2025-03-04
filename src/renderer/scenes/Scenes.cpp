@@ -14,6 +14,11 @@ void Scenes::SelectScene(const SceneId id)
     this->selectedScene = id;
 }
 
+void Scenes::UpdateSelectedScene() {
+    if (scenes.find(selectedScene) == scenes.end()) { throw std::runtime_error("Selected scene does not exist"); }
+    scenes[selectedScene]->update();
+}
+
 void Scenes::DrawSelectedScene()
 {
     if (scenes.find(selectedScene) == scenes.end()) { throw std::runtime_error("Selected scene does not exist"); }

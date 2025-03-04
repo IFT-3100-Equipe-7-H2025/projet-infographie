@@ -40,6 +40,11 @@ void Application::setup()
     renderer.scenes.AddScene(this->primitiveScene);
 }
 
+void Application::update()
+{
+    renderer.Update();
+}
+
 void Application::draw()
 {
     gui.begin();
@@ -91,9 +96,36 @@ void Application::draw()
     gui.end();
 }
 
+void Application::keyPressed(int key)
+{
+    ofLog() << "<app::keyPressed: " << key << ">";
+    try
+    {
+        auto selectedScene = renderer.scenes.GetSelectedScene();
+        if (selectedScene)
+        {
+            selectedScene->keyPressed(key);
+        }
+    } catch (std::exception& e)
+    {
+        ofLog() << "Aucune scène sélectionnée pour keyPressed : " << e.what();
+    }
+}
+
 void Application::keyReleased(int key)
 {
     ofLog() << "<app::keyReleased: " << key << ">";
+    try
+    {
+        auto selectedScene = renderer.scenes.GetSelectedScene();
+        if (selectedScene)
+        {
+            selectedScene->keyReleased(key);
+        }
+    } catch (std::exception& e)
+    {
+        ofLog() << "Aucune scène sélectionnée pour keyReleased : " << e.what();
+    }
 }
 
 void Application::mouseReleased(int x, int y, int button)

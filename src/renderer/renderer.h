@@ -10,6 +10,6 @@ class Renderer
 public:
     void Setup();
     void Draw();
-
+    void Update();
     Scenes scenes{};
 };
