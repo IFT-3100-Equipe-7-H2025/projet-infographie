@@ -4,8 +4,8 @@
 #include "of3dPrimitives.h"
 #include "ofMain.h"
 #include "ofMesh.h"
-#include <vector>
 #include <ofxAssimpModelLoader.h>
+#include <vector>
 
 
 class GeometryScene : public Scene
@@ -65,4 +65,6 @@ private:
 
     float backgroundColor[4] = {0.1f, 0.1f, 0.1f, 1.0f};
     static of3dPrimitive createTriangle();
+    static of3dPrimitive createCube();
+    static of3dPrimitive createSphere(int lat, int longi);
 };

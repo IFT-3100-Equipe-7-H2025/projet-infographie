@@ -1,5 +1,6 @@
 
 #include "GeometryScene.h"
+#include "of3dPrimitives.h"
 #include "ofGraphics.h"
 #include "ofGraphicsConstants.h"
 #include "ofShader.h"
@@ -11,10 +12,11 @@
 ofShader shader;
 void GeometryScene::setup()
 {
-    for (int i = 0; i < 6; i++) {
+    for (int i = 0; i < 6; i++)
+    {
         ofCamera new_cam;
         //new_cam.setPosition(0, 500, 500);
-        new_cam.lookAt(ofVec3f(0,0,0));
+        new_cam.lookAt(ofVec3f(0, 0, 0));
         cameras.push_back(new_cam);
     }
 
@@ -28,7 +30,8 @@ void GeometryScene::setup()
     shader.load("shader.vert", "shader.frag");
 }
 
-void GeometryScene::update() {
+void GeometryScene::update()
+{
     time_current = ofGetElapsedTimef();
     time_elapsed = time_current - time_last;
     time_last = time_current;
@@ -37,23 +40,27 @@ void GeometryScene::update() {
     speed_translation = translate_speed * time_elapsed;
     speed_rotation = rotate_speed * time_elapsed;
 
-    // déplacement sur le plan XZ en fonction de l'état des flèches du clavier
-    if (is_key_press_w) {
+    // d?placement sur le plan XZ en fonction de l'?tat des fl?ches du clavier
+    if (is_key_press_w)
+    {
         camera->boom(speed_translation);
         ofLog() << "boom boom";
         //offset_y += speed_translation;
     }
-    if (is_key_press_s) {
+    if (is_key_press_s)
+    {
         camera->boom(-speed_translation);
         ofLog() << "boom down";
         //offset_y -= speed_translation;
     }
-    if (is_key_press_a) {
+    if (is_key_press_a)
+    {
         ofLog() << "left";
         camera->truck(-speed_translation);
         //offset_x -= speed_translation;
     }
-    if (is_key_press_d) {
+    if (is_key_press_d)
+    {
         ofLog() << "right";
         camera->truck(speed_translation);
         //offset_x += speed_translation;
@@ -85,7 +92,6 @@ void GeometryScene::update() {
     if (is_key_press_e)
     {
         camera->dolly(-speed_translation);
-
     }
     if (is_key_press_f)
     {
@@ -103,13 +109,14 @@ void GeometryScene::draw()
     ofClear(bgColor);
     auto triangle = createTriangle();
 
+    triangle.setPosition(0, 0, -500);
     triangle.setScale(1000, 1000, 1000);
 
     ofMatrix4x4 projMatrix;
     projMatrix.makePerspectiveMatrix(90, (double) ofGetWidth() / (double) ofGetHeight(), 10, 1000);
 
     camera->begin();
-    
+
     //camera->setPosition(ofVec3f(offset_x, offset_y, 1000));
     //camera->setOrientation(ofVec3f(angle_x, angle_y, 0));
     ofMatrix4x4 viewMatrix = camera->getModelViewMatrix();
@@ -128,7 +135,7 @@ void GeometryScene::draw()
     shader.setUniform4f("inputColor", myColor);
     triangle.draw();
 
-    for (int i = 0; i < objects.size();i++)
+    for (int i = 0; i < objects.size(); i++)
     {
         ofPushStyle();
         objects[i]->drawFaces();
@@ -139,19 +146,6 @@ void GeometryScene::draw()
     ofPopStyle();
     ofPopMatrix();
     camera->end();
-}
-
-of3dPrimitive GeometryScene::createTriangle()
-{
-    ofMesh triangle;
-    triangle.setMode(OF_PRIMITIVE_TRIANGLES);
-    auto p1 = ofPoint(0.5, 0, -0.5);
-    auto p2 = ofPoint(0, 0.5, -0.5);
-    auto p3 = ofPoint(-0.5, 0, -0.5);
-    triangle.addVertex(p1);
-    triangle.addVertex(p2);
-    triangle.addVertex(p3);
-    return of3dPrimitive{triangle};
 }
 
 
@@ -267,18 +261,16 @@ void GeometryScene::keyReleased(int key)
             nextCam();
             break;
     }
-
-
-    
-
 }
 
-void GeometryScene::nextCam() {
+void GeometryScene::nextCam()
+{
     current_cam = ++current_cam < cameras.size() ? current_cam : 0;
     camera = &cameras[current_cam];
 }
 
-void GeometryScene::previousCam() {
+void GeometryScene::previousCam()
+{
     current_cam = --current_cam >= 0 ? current_cam : cameras.size() - 1;
     camera = &cameras[current_cam];
 }
@@ -304,4 +296,183 @@ void GeometryScene::dragEvent(ofDragInfo dragInfo)
     ofLog() << "<GeometryScene::dragEvent: >";
     ofLog() << "<GeometryScene::ofDragInfo file[0]: " << dragInfo.files.at(0)
             << " at : " << dragInfo.position << ">";
+}
+
+of3dPrimitive GeometryScene::createTriangle()
+{
+    ofMesh triangle;
+    triangle.setMode(OF_PRIMITIVE_TRIANGLES);
+    auto p1 = ofPoint(0.5, 0, -0.5);
+    auto p2 = ofPoint(0, 0.5, -0.5);
+    auto p3 = ofPoint(-0.5, 0, -0.5);
+    triangle.addVertex(p1);
+    triangle.addVertex(p2);
+    triangle.addVertex(p3);
+    return of3dPrimitive{triangle};
+}
+
+of3dPrimitive GeometryScene::createCube()
+{
+    ofMesh cube;
+    cube.setMode(OF_PRIMITIVE_TRIANGLES);
+
+    auto p1 = ofPoint(-1, -1, -1);// 0
+    auto p2 = ofPoint(1, -1, -1); // 1
+    auto p3 = ofPoint(1, 1, -1);  // 2
+    auto p4 = ofPoint(-1, 1, -1); // 3
+    auto p5 = ofPoint(-1, -1, 1); // 4
+    auto p6 = ofPoint(1, -1, 1);  // 5
+    auto p7 = ofPoint(1, 1, 1);   // 6
+    auto p8 = ofPoint(-1, 1, 1);  // 7
+
+    // Add all vertices
+    cube.addVertex(p1);// 0
+    cube.addVertex(p2);// 1
+    cube.addVertex(p3);// 2
+    cube.addVertex(p4);// 3
+    cube.addVertex(p5);// 4
+    cube.addVertex(p6);// 5
+    cube.addVertex(p7);// 6
+    cube.addVertex(p8);// 7
+
+    // Front face (p5, p6, p7, p8)
+    cube.addIndex(4);
+    cube.addIndex(5);
+    cube.addIndex(6);
+    cube.addIndex(4);
+    cube.addIndex(6);
+    cube.addIndex(7);
+
+    // Back face (p1, p2, p3, p4)
+    cube.addIndex(0);
+    cube.addIndex(1);
+    cube.addIndex(2);
+    cube.addIndex(0);
+    cube.addIndex(2);
+    cube.addIndex(3);
+
+    // Left face (p1, p5, p8, p4)
+    cube.addIndex(0);
+    cube.addIndex(4);
+    cube.addIndex(7);
+    cube.addIndex(0);
+    cube.addIndex(7);
+    cube.addIndex(3);
+
+    // Right face (p2, p6, p7, p3)
+    cube.addIndex(1);
+    cube.addIndex(5);
+    cube.addIndex(6);
+    cube.addIndex(1);
+    cube.addIndex(6);
+    cube.addIndex(2);
+
+    // Top face (p4, p3, p7, p8)
+    cube.addIndex(3);
+    cube.addIndex(2);
+    cube.addIndex(6);
+    cube.addIndex(3);
+    cube.addIndex(6);
+    cube.addIndex(7);
+
+    // Bottom face (p1, p2, p6, p5)
+    cube.addIndex(0);
+    cube.addIndex(1);
+    cube.addIndex(5);
+    cube.addIndex(0);
+    cube.addIndex(5);
+    cube.addIndex(4);
+
+    return of3dPrimitive{cube};
+}
+
+of3dPrimitive GeometryScene::createSphere(int lat, int longi)
+{
+    ofMesh sphere;
+    sphere.setMode(OF_PRIMITIVE_TRIANGLES);
+
+    float r = 1.0f;
+    ofPoint top = ofPoint{0.0f, 1.0f, 0.0f};
+    sphere.addVertex(top);
+    assert(longi >= 3);
+    assert(lat >= 1);
+
+    float delta_phi = 180.0f / (float) (lat + 1);
+    float delta_theta = 360.0f / (float) longi;
+
+    std::vector<ofPoint> topLayer = std::vector<ofPoint>();
+    float phi_tl = 90.0f - delta_phi;
+    float y_tl = r * (float) sin(phi_tl * numbers::pi / 180.0f);
+
+    // Adding top layer positions
+    for (int i = 0; i < longi; i++)
+    {
+        float theta = delta_theta * (float) i;
+        float hor_proj = r * (float) cos(phi_tl * numbers::pi / 180.0f);
+        float x_tl = hor_proj * (float) cos(theta * numbers::pi / 180.0f);
+        float z_tl = hor_proj * (float) sin(theta * numbers::pi / 180.0f);
+        sphere.addVertex(ofPoint(x_tl, y_tl, z_tl));
+    }
+
+    // Adding top layer faces
+    for (int i = 0; i < longi; i++)
+    {
+        int top = 0;
+        int left = i + 1;
+        int right = (i + 1) % longi + 1;
+
+        sphere.addIndex(left);
+        sphere.addIndex(right);
+        sphere.addIndex(top);
+    }
+
+    //Middle layer
+    for (int i = 1; i < lat; i++)
+    {
+        float phi_bl = phi_tl - delta_phi;
+        for (int j = 0; j < longi; j++)
+        {
+            float theta = delta_theta * (float) j;
+            float hor_proj = r * (float) cos(phi_bl * numbers::pi / 180.0f);
+            float x_bl = hor_proj * (float) cos(theta * numbers::pi / 180.0f);
+            float y_bl = r * (float) sin(phi_bl * numbers::pi / 180.0f);
+            float z_bl = hor_proj * (float) sin(theta * numbers::pi / 180.0f);
+            sphere.addVertex(ofPoint(x_bl, y_bl, z_bl));
+        }
+
+
+        // TODO change < 1 for < longi
+        for (int j = 0; j < longi; j++)
+        {
+            int top_left = (i - 1) * longi + j + 1;
+            int top_right = (i - 1) * longi + (j + 1) % longi + 1;
+            int bottom_left = i * longi + j + 1;
+            int bottom_right = i * longi + (j + 1) % longi + 1;
+
+            sphere.addIndex(top_left);
+            sphere.addIndex(bottom_left);
+            sphere.addIndex(bottom_right);
+
+            sphere.addIndex(top_left);
+            sphere.addIndex(bottom_right);
+            sphere.addIndex(top_right);
+        }
+
+        phi_tl = phi_bl;
+    }
+    sphere.addVertex(ofPoint(0, -1, 0));
+
+    //bottom layer
+    for (int j = 0; j < longi; j++)
+    {
+        int top_left = (lat - 1) * longi + j + 1;
+        int top_right = (lat - 1) * longi + (j + 1) % longi + 1;
+        int bottom = lat * longi + 1;
+        sphere.addIndex(top_left);
+        sphere.addIndex(bottom);
+        sphere.addIndex(top_right);
+    }
+
+
+    return of3dPrimitive{sphere};
 }
