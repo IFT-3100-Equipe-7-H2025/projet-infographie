@@ -1,6 +1,3 @@
-// IFT3100H25_BonjourMonde/renderer.h
-// Classe responsable du rendu de l'application.
-
 #pragma once
 
 #include "Gui.h"

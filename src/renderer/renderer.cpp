@@ -1,10 +1,14 @@
 #include "renderer.h"
+#include "ofGraphics.h"
 
 void Renderer::Setup()
 {
     ofSetFrameRate(60);
 
-    ofSetWindowShape(512, 512);
+    ofSetWindowShape(1600, 900);
+
+    ofEnableDepthTest();
+    ofEnableLighting();
 }
 
 void Renderer::Draw()
