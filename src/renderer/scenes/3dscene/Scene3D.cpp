@@ -1,7 +1,9 @@
 #include "Scene3D.h"
+
 #include "3dscene/createShapes/CreateCubeUI.h"
 #include "imgui.h"
 #include "ofAppRunner.h"
+#include <ranges>
 
 Scene3D::Scene3D() : history(CommandHistory()),
                      graph(SceneGraph()),
@@ -35,6 +37,7 @@ void Scene3D::DrawSceneGraphUI()
     ImGui::Begin("3D scene graph");
 
     this->ShowChildren(this->graph.GetRoot());
+
 
     ImGui::End();
 }
@@ -81,32 +84,52 @@ void Scene3D::DrawCommandHistoryUI()
     ImGui::SetNextWindowSize(ImVec2(300, 400), ImGuiCond_FirstUseEver);
     ImGui::Begin("Command history");
 
+    // Buttons
+    bool undoDisabled = this->history.GetUndoStack().size() == 0;
+    ImGui::BeginDisabled(undoDisabled);
     if (ImGui::Button("Undo"))
     {
         this->history.undo();
     }
+    ImGui::EndDisabled();
+
+    ImGui::SameLine();
 
     bool redoDisabled = this->history.GetRedoStack().size() == 0;
-    if (redoDisabled)
-    {
-        ImGui::BeginDisabled();
-        ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
-    }
-
+    ImGui::BeginDisabled(redoDisabled);
     if (ImGui::Button("Redo"))
     {
         this->history.redo();
     }
+    ImGui::EndDisabled();
 
-    if (redoDisabled)
-    {
-        ImGui::PopStyleVar();
-        ImGui::EndDisabled();
-    }
+    ImGui::Separator();
 
-    for (const auto& command: this->history.GetUndoStack())
+    // Undo and redo history
+    if (ImGui::BeginTable("UndoRedoTable", 2, ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_Resizable))
     {
-        ImGui::Text(command->DisplayName().c_str());
+        if (ImGui::TableNextColumn())
+        {
+            ImGui::TextUnformatted("Undo");
+
+            auto& undoStack = this->history.GetUndoStack();
+            for (auto& it: std::ranges::reverse_view(undoStack))
+            {
+                ImGui::TextUnformatted(it->DisplayName().c_str());
+            }
+        }
+
+        if (ImGui::TableNextColumn())
+        {
+            ImGui::TextUnformatted("Redo");
+
+            auto& redoStack = this->history.GetRedoStack();
+            for (auto& it: std::ranges::reverse_view(redoStack))
+            {
+                ImGui::TextUnformatted(it->DisplayName().c_str());
+            }
+        }
+        ImGui::EndTable();
     }
 
     ImGui::End();

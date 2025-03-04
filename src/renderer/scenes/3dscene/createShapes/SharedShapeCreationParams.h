@@ -1,4 +1,5 @@
 #pragma once
+
 #include "scenegraph/Node.h"
 
 #include <memory>

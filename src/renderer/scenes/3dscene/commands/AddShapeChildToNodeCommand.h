@@ -10,7 +10,7 @@ public:
     AddChildToNodeCommand(std::shared_ptr<Node> node, std::shared_ptr<Node> child) : node(std::move(node)), child(std::move(child))
     {
         std::stringstream ss;
-        ss << "Add child " << " to node ";
+        ss << "Add child {" << this->child->GetName() << "}" << " to node {" << this->node->GetName() << "}";
         this->name = ss.str();
     }
 
