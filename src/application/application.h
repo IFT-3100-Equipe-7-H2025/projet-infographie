@@ -1,11 +1,11 @@
 #pragma once
 
-#include "ImportImageScene.h"
-#include "PrimitiveScene.h"
-#include "RotatingCubeScene.h"
-#include "Scene3D.h"
 #include "renderer/cursor/CursorManager.h"
 #include "renderer/renderer.h"
+#include "renderer/scenes/3dscene/Scene3D.h"
+#include "renderer/scenes/ImportImageScene.h"
+#include "renderer/scenes/PrimitiveScene.h"
+#include "renderer/scenes/RotatingCubeScene.h"
 
 class Application : public ofBaseApp
 {

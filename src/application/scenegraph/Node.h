@@ -1,6 +1,5 @@
 #pragma once
 
-#include "of3dPrimitives.h"
 #include "ofNode.h"
 
 typedef int NodeId;
@@ -8,9 +7,10 @@ typedef int NodeId;
 class Node
 {
 public:
-    explicit Node(std::string name, std::shared_ptr<of3dPrimitive> primitive);
+    explicit Node(std::string name, std::shared_ptr<ofNode> node);
 
     void AddChild(std::shared_ptr<Node> node);
+    void RemoveChild(NodeId id);
 
     void Draw() const;
 

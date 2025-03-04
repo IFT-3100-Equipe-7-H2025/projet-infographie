@@ -1,11 +1,23 @@
 #include "Node.h"
 
-Node::Node(std::string name, std::shared_ptr<of3dPrimitive> primitive) : inner(std::move(primitive)), name(std::move(name)), id(nextId++) {}
+Node::Node(std::string name, std::shared_ptr<ofNode> node) : inner(std::move(node)), name(std::move(name)), id(nextId++) {}
 
 void Node::AddChild(std::shared_ptr<Node> node)
 {
     node->inner->setParent(*this->inner);
     children.push_back(std::move(node));
+}
+
+void Node::RemoveChild(NodeId id)
+{
+    for (auto it = children.begin(); it != children.end(); ++it)
+    {
+        if ((*it)->GetId() == id)
+        {
+            children.erase(it);
+            return;
+        }
+    }
 }
 
 void Node::Draw() const

@@ -1,11 +1,12 @@
 #pragma once
+#include "3dscene/commands/CommandHistory.h"
 #include "SharedShapeCreationParams.h"
 #include "scenegraph/Node.h"
 
 class CreateShapeUI
 {
 public:
-    CreateShapeUI(std::shared_ptr<SharedShapeCreationParams> sharedParams) : sharedParams(std::move(sharedParams)) {}
+    CreateShapeUI(std::shared_ptr<SharedShapeCreationParams> sharedParams, CommandHistory& history) : sharedParams(std::move(sharedParams)), history(history) {}
     virtual void Draw() = 0;
 
     void SetPosition(float x, float y)
@@ -14,8 +15,8 @@ public:
         SetPositionY(y);
     }
 
-    void                SetPositionX(float x) { positionX = x; }
-    void                SetPositionY(float y) { positionY = y; }
+    void SetPositionX(float x) { positionX = x; }
+    void SetPositionY(float y) { positionY = y; }
     [[nodiscard]] float GetPositionX() const { return positionX; }
     [[nodiscard]] float GetPositionY() const { return positionY; }
 
@@ -24,4 +25,5 @@ protected:
     float positionY = 0.0f;
 
     std::shared_ptr<SharedShapeCreationParams> sharedParams;
+    CommandHistory& history;
 };
