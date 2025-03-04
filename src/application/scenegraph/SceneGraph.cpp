@@ -42,3 +42,33 @@ void SceneGraph::Draw() const
 
     return std::nullopt;
 }
+
+void SceneGraph::RemoveNode(NodeId id)
+{
+    if (id == this->root->GetId())
+    {
+        ofLogError() << "Cannot remove the root node";
+        return;
+    }
+
+    std::stack<Node*> nodes;
+    nodes.push(root.get());
+
+    while (!nodes.empty())
+    {
+        Node* current = nodes.top();
+        nodes.pop();
+
+        if (current->GetId() == id)
+        {
+            ofLog() << "Removing node " << current->GetName();
+            current->Delete();
+            return;
+        }
+
+        for (const auto& child: current->GetChildren())
+        {
+            nodes.push(child.get());
+        }
+    }
+}

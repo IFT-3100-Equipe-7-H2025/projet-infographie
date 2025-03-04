@@ -20,7 +20,7 @@ public:
 
     void SelectNode(const std::shared_ptr<Node>& node);
 
-    void AddNode(std::shared_ptr<Node> node) { graph.AddNode(std::move(node)); }
+    void AddNode(std::shared_ptr<Node> node) { sceneGraph.AddNode(std::move(node)); }
     void ShowChildren(const std::shared_ptr<Node>& node);
 
     void DrawSceneGraphWindow();
@@ -33,7 +33,7 @@ public:
 private:
     CommandHistory history;
 
-    SceneGraph graph;
+    SceneGraph sceneGraph;
     std::shared_ptr<std::shared_ptr<Node>> selectedNode;
 
     float translate[3] = {0.0f, 0.0f, 0.0f};

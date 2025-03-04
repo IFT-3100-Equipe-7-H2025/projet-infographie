@@ -1,6 +1,8 @@
 #include "renderer.h"
 #include "ofGraphics.h"
+#include "ofLog.h"
 
+// NOLINTNEXTLINE(readability-convert-member-functions-to-static)
 void Renderer::Setup()
 {
     ofSetFrameRate(60);
@@ -9,6 +11,8 @@ void Renderer::Setup()
 
     ofEnableDepthTest();
     ofEnableLighting();
+
+    ofSetLogLevel(ofLogLevel::OF_LOG_VERBOSE);
 }
 
 void Renderer::Draw()
