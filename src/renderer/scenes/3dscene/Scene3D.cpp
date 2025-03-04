@@ -1,6 +1,7 @@
 #include "Scene3D.h"
 
 #include "3dscene/commands/SetPositionCommand.h"
+#include "3dscene/commands/SetRotationCommand.h"
 #include "3dscene/commands/SetScaleCommand.h"
 #include "3dscene/createShapes/CreateCubeUI.h"
 #include "3dscene/createShapes/CreateLightUI.h"
@@ -108,9 +109,25 @@ void Scene3D::DrawModifyNodeSliders(const std::shared_ptr<Node>& node)
     }
 
     // Rotations
+    const glm::quat currentRotation = inner->getOrientationQuat();
+    if (ImGui::SliderFloat3("Rotate", this->rotate, -360.0f, 360.0f))
+    {
+        glm::quat newRotation = glm::quat(glm::radians(glm::vec3(this->rotate[0], this->rotate[1], this->rotate[2])));
+        inner->setOrientation(newRotation);
+    }
+    if (ImGui::IsItemActivated())
+    {
+        this->initialRotation = currentRotation;
+    }
+    if (ImGui::IsItemDeactivatedAfterEdit())
+    {
+        glm::quat newRotation = glm::quat(glm::radians(glm::vec3(this->rotate[0], this->rotate[1], this->rotate[2])));
+        this->history.executeCommand(std::make_shared<SetRotationCommand>(node, newRotation, this->initialRotation));
+    }
+
     // Scales
     const glm::vec3 currentScale = inner->getScale();
-    if (ImGui::SliderFloat3("Scale", this->scale, 0.0f, 100.0f))
+    if (ImGui::SliderFloat3("Scale", this->scale, 0.001f, 100.0f))
     {
         inner->setScale(this->scale[0], this->scale[1], this->scale[2]);
     }
@@ -131,18 +148,23 @@ void Scene3D::DrawCommandHistoryWindow()
     ImGui::Begin("Command history");
 
     // Buttons for undo and redo
-    ImGui::BeginDisabled(this->history.GetUndoStack().size() == 0);
+    auto& undoStack = this->history.GetUndoStack();
+    auto& redoStack = this->history.GetRedoStack();
+
+    ImGui::BeginDisabled(undoStack.size() == 0);
     if (ImGui::Button("Undo"))
     {
         this->history.undo();
+        this->ResetParams(*this->selectedNode);
     }
     ImGui::EndDisabled();
 
     ImGui::SameLine();
-    ImGui::BeginDisabled(this->history.GetRedoStack().size() == 0);
+    ImGui::BeginDisabled(redoStack.size() == 0);
     if (ImGui::Button("Redo"))
     {
         this->history.redo();
+        this->ResetParams(*this->selectedNode);
     }
     ImGui::EndDisabled();
 
@@ -153,7 +175,6 @@ void Scene3D::DrawCommandHistoryWindow()
         {
             ImGui::SeparatorText("Undo history");
 
-            auto& undoStack = this->history.GetUndoStack();
             for (auto& it: std::ranges::reverse_view(undoStack))
             {
                 ImGui::TextUnformatted(it->DisplayName().c_str());
@@ -164,7 +185,6 @@ void Scene3D::DrawCommandHistoryWindow()
         {
             ImGui::SeparatorText("Redo history");
 
-            auto& redoStack = this->history.GetRedoStack();
             for (auto& it: std::ranges::reverse_view(redoStack))
             {
                 ImGui::TextUnformatted(it->DisplayName().c_str());
@@ -180,15 +200,7 @@ void Scene3D::SelectNode(const std::shared_ptr<Node>& node)
 {
     *selectedNode = node;
 
-    const glm::vec3 currentPosition = node->GetInner()->getPosition();
-    translate[0] = currentPosition.x;
-    translate[1] = currentPosition.y;
-    translate[2] = currentPosition.z;
-
-    const glm::vec3 currentScale = node->GetInner()->getScale();
-    scale[0] = currentScale.x;
-    scale[1] = currentScale.y;
-    scale[2] = currentScale.z;
+    this->ResetParams(*this->selectedNode);
 
     node->SetOpen(!node->IsOpen());
 }
@@ -220,4 +232,25 @@ void Scene3D::ShowChildren(const std::shared_ptr<Node>& node)
         }
         ImGui::TreePop();
     }
+}
+
+void Scene3D::ResetParams(const std::shared_ptr<Node>& node)
+{
+    const std::shared_ptr<ofNode>& inner = node->GetInner();
+
+    const glm::vec3 currentPosition = inner->getPosition();
+    translate[0] = currentPosition.x;
+    translate[1] = currentPosition.y;
+    translate[2] = currentPosition.z;
+
+    const glm::vec3 currentScale = inner->getScale();
+    scale[0] = currentScale.x;
+    scale[1] = currentScale.y;
+    scale[2] = currentScale.z;
+
+    const glm::quat currentRotation = inner->getOrientationQuat();
+    glm::vec3 eulerRotation = glm::degrees(glm::eulerAngles(currentRotation));
+    rotate[0] = eulerRotation.x;
+    rotate[1] = eulerRotation.y;
+    rotate[2] = eulerRotation.z;
 }

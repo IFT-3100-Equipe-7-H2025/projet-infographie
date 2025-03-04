@@ -35,6 +35,8 @@ void Application::setup()
     this->primitiveScene = std::make_shared<PrimitiveScene>();
     this->primitiveScene->setup();
     renderer.scenes.AddScene(this->primitiveScene);
+
+    this->SelectScene(scene3D->getId());
 }
 
 void Application::draw()
@@ -129,7 +131,9 @@ void Application::ShowMainMenuBar()
 {
     if (ImGui::BeginMainMenuBar())
     {
-        if (ImGui::BeginMenu("Scene selection"))
+        std::shared_ptr<Scene> scene = this->selectedScene.lock();
+        std::string sceneName = scene ? scene->GetName() : "No scene selected";
+        if (ImGui::BeginMenu(("Scene: " + sceneName).c_str()))
         {
             for (const auto& scene: renderer.scenes.GetScenes())
             {

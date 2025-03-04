@@ -4,7 +4,6 @@
 #include "Scene.h"
 #include "createShapes/CreateShapeUI.h"
 #include "createShapes/SharedShapeCreationParams.h"
-#include "ofLight.h"
 #include "scenegraph/SceneGraph.h"
 #include <ofxAssimpModelLoader.h>
 
@@ -25,11 +24,11 @@ public:
     void ShowChildren(const std::shared_ptr<Node>& node);
 
     void DrawSceneGraphWindow();
-
     void DrawSelectedNodeWindow();
     void DrawModifyNodeSliders(const std::shared_ptr<Node>& node);
-
     void DrawCommandHistoryWindow();
+
+    void ResetParams(const std::shared_ptr<Node>& node);
 
 private:
     CommandHistory history;
@@ -42,6 +41,9 @@ private:
 
     float scale[3] = {1.0f, 1.0f, 1.0f};
     glm::vec3 initialScale;// Used to store the initial scale of the selected node when using the sliders, so that we can undo the change in a single command
+
+    float rotate[3] = {0.0f, 0.0f, 0.0f};
+    glm::quat initialRotation;// Used to store the initial rotation of the selected node when using the sliders, so that we can undo the change in a single command
 
     std::shared_ptr<SharedShapeCreationParams> sharedParams;
 
