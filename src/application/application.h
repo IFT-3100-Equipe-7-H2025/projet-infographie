@@ -1,11 +1,11 @@
 #pragma once
 
-#include "ImportImageScene.h"
-#include "RotatingCubeScene.h"
-#include "ofMain.h"
-#include "renderer/renderer.h"
-#include "PrimitiveScene.h"
 #include "renderer/cursor/CursorManager.h"
+#include "renderer/renderer.h"
+#include "renderer/scenes/3dscene/Scene3D.h"
+#include "renderer/scenes/ImportImageScene.h"
+#include "renderer/scenes/PrimitiveScene.h"
+#include "renderer/scenes/RotatingCubeScene.h"
 
 class Application : public ofBaseApp
 {
@@ -32,4 +32,5 @@ public:
     std::shared_ptr<ImportImageScene> importExportImageScene;
     std::shared_ptr<RotatingCubeScene> rotatingCubeScene;
     std::shared_ptr<PrimitiveScene> primitiveScene;
+    std::shared_ptr<Scene3D> scene3D;
 };

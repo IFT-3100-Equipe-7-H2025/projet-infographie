@@ -1,5 +1,7 @@
 #include "application.h"
 #include "imgui.h"
+#include "ofAppRunner.h"
+
 
 #include <Macros.h>
 
@@ -18,6 +20,10 @@ void Application::setup()
 
     renderer.Setup();
 
+    this->scene3D = std::make_shared<Scene3D>();
+    this->scene3D->setup();
+    renderer.scenes.AddScene(this->scene3D);
+
     this->importExportImageScene = std::make_shared<ImportImageScene>();
     this->importExportImageScene->setup();
     renderer.scenes.AddScene(this->importExportImageScene);
@@ -33,6 +39,7 @@ void Application::setup()
 
 void Application::draw()
 {
+
     gui.begin();
     ImGui::DockSpaceOverViewport(0, ImGui::GetMainViewport(), ImGuiDockNodeFlags_PassthruCentralNode);
     this->ShowMainMenuBar();
