@@ -31,8 +31,12 @@ public:
     bool getIsAdding() const { return adding; }
     PrimitiveType getSelectedType() const { return selectedType; }
 
+    void undo();
+    void redo();
+
 private:
     std::vector<Primitive> primitives;
+    std::vector<Primitive> redoStack;
 
     bool adding = false;
     PrimitiveType selectedType = PrimitiveType::Point;
@@ -48,7 +52,20 @@ private:
     float currentFillColor[4]   = {1.0f, 1.0f, 1.0f, 1.0f};
     float backgroundColor[4] = {0.1f, 0.1f, 0.1f, 1.0f};
 
+    bool modeHSBActivated = false;
+    float hueContour = 0.0f;
+    float satContour = 0.0f;
+    float briContour = 0.0f;
+    float hueFill = 0.0f;
+    float satFill = 0.0f;
+    float briFill = 0.0f;
+    float hueBG = 0.0f;
+    float satBG = 0.0f;
+    float briBG = 0.0f;
+
     static void drawThickLine(const ofVec2f & p1, const ofVec2f & p2, float thickness, ofColor color);
 
     static void drawThickPolygon(const std::vector<ofVec2f>& vertices, float thickness, ofColor color);
+
+    static void colorUpdate(float currentColor[4], ofColor hsbColor);
 };

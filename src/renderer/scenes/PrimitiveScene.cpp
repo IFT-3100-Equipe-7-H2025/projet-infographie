@@ -33,7 +33,6 @@ void PrimitiveScene::drawThickPolygon(const std::vector<ofVec2f>& vertices, floa
 }
 
 void PrimitiveScene::draw() {
-    // Dark Mode vu que le reste du projet est en DM, à voir si on veut rester en dark mode ou passer en mode clair
     ofColor bgColor(backgroundColor[0]*255, backgroundColor[1]*255, backgroundColor[2]*255, backgroundColor[3]*255);
     ofClear(bgColor);
 
@@ -128,21 +127,21 @@ void PrimitiveScene::draw() {
         ofDrawCircle(pendingLineStart, 5);
     }
 
-    ImGui::Begin("Contrôle des Primitives");
+    ImGui::Begin("Toolbox");
 
-    if (ImGui::Button("Point")) {
+    if (ImGui::Button("Dot")) {
         selectedType = PrimitiveType::Point;
         adding = true;
         waitingForLineSecondClick = false;
     }
     ImGui::SameLine();
-    if (ImGui::Button("Ligne")) {
+    if (ImGui::Button("Line")) {
         selectedType = PrimitiveType::Ligne;
         adding = true;
         waitingForLineSecondClick = false;
     }
     ImGui::SameLine();
-    if (ImGui::Button("Carré")) {
+    if (ImGui::Button("Square")) {
         selectedType = PrimitiveType::Carre;
         adding = true;
         waitingForLineSecondClick = false;
@@ -159,32 +158,95 @@ void PrimitiveScene::draw() {
         adding = true;
         waitingForLineSecondClick = false;
     }
-
+    ImGui::Checkbox("Mode HSB", &modeHSBActivated);
     ImGui::Separator();
-    ImGui::Text("Outils de dessin:");
-    ImGui::SliderFloat("Épaisseur du contour", &currentStrokeThickness, 1.0f, 10.0f);
-    ImGui::ColorEdit4("Couleur du contour", currentStrokeColor);
-    ImGui::ColorEdit4("Couleur de remplissage", currentFillColor);
-    ImGui::ColorEdit4("Couleur d'arrière-plan", backgroundColor);
+    if (!modeHSBActivated)
+    {
+        ImGui::Text("Drawing tools RGBA:");
+        ImGui::SliderFloat("Border thickness", &currentStrokeThickness, 1.0f, 10.0f);
+        ImGui::ColorEdit4("Border color", currentStrokeColor);
+        ImGui::ColorEdit4("Fill color", currentFillColor);
+        ImGui::ColorEdit4("Background color", backgroundColor);
+    }
+    else
+    {
+        ofColor selectedStrokeColor(currentStrokeColor[0] * 255, currentStrokeColor[1] * 255, currentStrokeColor[2] * 255, currentStrokeColor[3] * 255);
+        ofColor selectedFillColor(currentFillColor[0] * 255, currentFillColor[1] * 255, currentFillColor[2] * 255, currentFillColor[3] * 255);
+        ofColor selectedBGColor(backgroundColor[0] * 255, backgroundColor[1] * 255, backgroundColor[2] * 255, backgroundColor[3] * 255);
+
+        ImVec4 strokeColorVec = ImVec4(currentStrokeColor[0],
+                                       currentStrokeColor[1],
+                                       currentStrokeColor[2],
+                                       currentStrokeColor[3]);
+
+        ImVec4 fillColorVec = ImVec4(currentFillColor[0],
+                                     currentFillColor[1],
+                                     currentFillColor[2],
+                                     currentFillColor[3]);
+
+        ImVec4 bgColorVec = ImVec4(backgroundColor[0],
+                                   backgroundColor[1],
+                                   backgroundColor[2],
+                                   backgroundColor[3]);
+
+        ImGui::Text("Drawing tools HSB:");
+        ImGui::SliderFloat("Border thickness", &currentStrokeThickness, 1.0f, 10.0f);
+
+        hueContour = selectedStrokeColor.getHue();
+        satContour = selectedStrokeColor.getSaturation();
+        briContour = selectedStrokeColor.getBrightness();
+        ImGui::Text("Border color");
+        ImGui::ColorButton("Preview##Contour", strokeColorVec, ImGuiColorEditFlags_NoPicker, ImVec2(50, 50));
+        ImGui::SliderFloat("Hue##Contour", &hueContour, 0.0f, 255.0f);
+        ImGui::SliderFloat("Saturation##Contour", &satContour, 0.0f, 255.0f);
+        ImGui::SliderFloat("Brightness##Contour", &briContour, 0.0f, 255.0f);
+        selectedStrokeColor.setHsb(hueContour, satContour, briContour);
+        colorUpdate(currentStrokeColor, selectedStrokeColor);
+
+
+        hueFill = selectedFillColor.getHue();
+        satFill = selectedFillColor.getSaturation();
+        briFill = selectedFillColor.getBrightness();
+        ImGui::Text("Fill color");
+        ImGui::ColorButton("Preview##Remplissage", fillColorVec, ImGuiColorEditFlags_NoPicker, ImVec2(50, 50));
+        ImGui::SliderFloat("Hue##Remplissage", &hueFill, 0.0f, 255.0f);
+        ImGui::SliderFloat("Saturation##Remplissage", &satFill, 0.0f, 255.0f);
+        ImGui::SliderFloat("Brightness##Remplissage", &briFill, 0.0f, 255.0f);
+        selectedFillColor.setHsb(hueFill, satFill, briFill);
+        colorUpdate(currentFillColor, selectedFillColor);
+
+        hueBG = selectedBGColor.getHue();
+        satBG = selectedBGColor.getSaturation();
+        briBG = selectedBGColor.getBrightness();
+        ImGui::Text("Background color");
+        ImGui::ColorButton("Preview##BG", bgColorVec, ImGuiColorEditFlags_NoPicker, ImVec2(50, 50));
+        ImGui::SliderFloat("Hue##BG", &hueBG, 0.0f, 255.0f);
+        ImGui::SliderFloat("Saturation##BG", &satBG, 0.0f, 255.0f);
+        ImGui::SliderFloat("Brightness##BG", &briBG, 0.0f, 255.0f);
+        selectedBGColor.setHsb(hueBG, satBG, briBG);
+        colorUpdate(backgroundColor, selectedBGColor);
+    }
     ImGui::Separator();
 
     if (adding) {
         if (selectedType == PrimitiveType::Ligne) {
             if (!waitingForLineSecondClick) {
-                ImGui::Text("Cliquez pour définir le point de départ de la ligne");
+                ImGui::Text("Click to define starting point of the line");
             } else {
-                ImGui::Text("Cliquez pour définir le point d'arrivée de la ligne");
+                ImGui::Text("Click to define ending point of the line");
             }
         } else {
-            ImGui::Text("Cliquez dans la scène pour ajouter la primitive");
+            ImGui::Text("Click on the scene to add primitive");
         }
     }
 
-    if (ImGui::Button("Supprimer dernière primitive (undo)")) {
-        if (!primitives.empty()) {
-            primitives.pop_back();
-            waitingForLineSecondClick = false;
-        }
+    if (ImGui::Button("Undo")) {
+        undo();
+    }
+    ImGui::SameLine();
+
+    if (ImGui::Button("Redo")) {
+        redo();
     }
 
     ImGui::End();
@@ -229,4 +291,26 @@ void PrimitiveScene::mousePressed(int x, int y, int button) {
         primitives.push_back(prim);
         adding = false;
     }
+}
+
+void PrimitiveScene::undo() {
+    if (!primitives.empty()) {
+        redoStack.push_back(primitives.back());
+        primitives.pop_back();
+        waitingForLineSecondClick = false;
+    }
+}
+
+void PrimitiveScene::redo() {
+    if (!redoStack.empty()) {
+        primitives.push_back(redoStack.back());
+        redoStack.pop_back();
+    }
+}
+
+void PrimitiveScene::colorUpdate(float currentColor[4], ofColor hsbColor){
+    currentColor[0] = hsbColor.r / 255.0f;
+    currentColor[1] = hsbColor.g / 255.0f;
+    currentColor[2] = hsbColor.b / 255.0f;
+    currentColor[3] = hsbColor.a / 255.0f;
 }
