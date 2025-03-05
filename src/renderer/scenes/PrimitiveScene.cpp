@@ -180,11 +180,13 @@ void PrimitiveScene::draw() {
         }
     }
 
-    if (ImGui::Button("Supprimer dernière primitive (undo)")) {
-        if (!primitives.empty()) {
-            primitives.pop_back();
-            waitingForLineSecondClick = false;
-        }
+    if (ImGui::Button("Undo")) {
+        undo();
+    }
+    ImGui::SameLine();
+
+    if (ImGui::Button("Redo")) {
+        redo();
     }
 
     ImGui::End();
@@ -228,5 +230,20 @@ void PrimitiveScene::mousePressed(int x, int y, int button) {
         }
         primitives.push_back(prim);
         adding = false;
+    }
+}
+
+void PrimitiveScene::undo() {
+    if (!primitives.empty()) {
+        redoStack.push_back(primitives.back());
+        primitives.pop_back();
+        waitingForLineSecondClick = false;
+    }
+}
+
+void PrimitiveScene::redo() {
+    if (!redoStack.empty()) {
+        primitives.push_back(redoStack.back());
+        redoStack.pop_back();
     }
 }

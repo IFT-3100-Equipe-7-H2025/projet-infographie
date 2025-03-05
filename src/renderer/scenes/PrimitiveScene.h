@@ -31,8 +31,12 @@ public:
     bool getIsAdding() const { return adding; }
     PrimitiveType getSelectedType() const { return selectedType; }
 
+    void undo();
+    void redo();
+
 private:
     std::vector<Primitive> primitives;
+    std::vector<Primitive> redoStack;
 
     bool adding = false;
     PrimitiveType selectedType = PrimitiveType::Point;
