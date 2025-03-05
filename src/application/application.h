@@ -27,6 +27,7 @@ public:
 
     void mouseReleased(int x, int y, int button) override;
     void mousePressed(int x, int y, int button) override;
+    void mouseDragged(int x, int y, int button) override;
     void exit() override;
 
     void SelectScene(SceneId id);

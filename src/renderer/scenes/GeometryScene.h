@@ -4,8 +4,9 @@
 #include "of3dPrimitives.h"
 #include "ofMain.h"
 #include "ofMesh.h"
-#include <vector>
 #include <ofxAssimpModelLoader.h>
+#include <vector>
+#include "PrimitiveCreator.h"
 
 
 class GeometryScene : public Scene
@@ -16,6 +17,7 @@ public:
     void reset();
     void update() override;
     void mousePressed(int x, int y, int button) override;
+    void mouseDragged(int x, int y, int button) override;
     void dragEvent(ofDragInfo dragInfo) override;
     void keyPressed(int key) override;
     void keyReleased(int key) override;
@@ -29,7 +31,9 @@ private:
     vector<ofCamera> cameras;
     ofMesh selectionMesh;
     bool is_selected;
+    bool debugger;
     int current_cam = 0;
+    int selected_primitive = 0;
 
 
     std::vector<std::shared_ptr<ofxAssimpModelLoader>> objects;
@@ -65,8 +69,16 @@ private:
     float offset_y;
     float offset_x;
 
+    int previous_x;
+    int previous_y;
+
     float backgroundColor[4] = {0.1f, 0.1f, 0.1f, 1.0f};
-    static of3dPrimitive createTriangle();
-    static ofMesh createBox(ofVec3f minVertex, ofVec3f maxVertex);
-    void getBoundingBox(ofMesh& mesh, ofVec3f& minVertex, ofVec3f& maxVertex);
+   /* static of3dPrimitive createTriangle();
+    static of3dPrimitive createCube();
+    static of3dPrimitive createSphere(int lat, int longi);
+    static of3dPrimitive createLasagna(float l_w_ratio, int periods, int resolution_l, int resolution_w);
+    static of3dPrimitive createPyramid(int sides);*/
+    ofMesh createBox(of3dPrimitive& primitive);
+    void getBoundingBox(of3dPrimitive& primitive, ofVec3f& minVertex, ofVec3f& maxVertex);
+    vector<ofVec3f> getPrimitiveVertices(of3dPrimitive& primitive);
 };

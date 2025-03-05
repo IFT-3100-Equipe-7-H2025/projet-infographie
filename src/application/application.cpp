@@ -172,6 +172,21 @@ void Application::mousePressed(int x, int y, int button)
     }
 }
 
+void Application::mouseDragged(int x, int y, int button)
+{
+    try
+    {
+        auto selectedScene = renderer.scenes.GetSelectedScene();
+        if (selectedScene)
+        {
+            selectedScene->mouseDragged(x, y, button);
+        }
+    } catch (std::exception& e)
+    {
+        ofLog() << "Aucune scène sélectionnée pour mouseDragged : " << e.what();
+    }
+}
+
 void Application::exit()
 {
     ofLog() << "<app::exit>";
