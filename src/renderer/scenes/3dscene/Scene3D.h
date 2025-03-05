@@ -80,7 +80,6 @@ private:
 
 
     std::vector<std::shared_ptr<ofxAssimpModelLoader>> objects;
-    std::vector<of3dPrimitive> primitives;
 
 
     float time_current;
@@ -120,4 +119,7 @@ private:
     void getBoundingBox(of3dPrimitive& primitive, ofVec3f& minVertex, ofVec3f& maxVertex);
     std::vector<ofVec3f> getPrimitiveVertices(of3dPrimitive& primitive);
     void focus();
+
+
+    std::vector<std::shared_ptr<of3dPrimitive>> getPrimitives();
 };

@@ -73,6 +73,12 @@ void Scene3D::draw()
 
     material.begin();
     sceneGraph.Draw();
+
+    if (is_selected)
+    {
+        selectionMesh.draw();
+    }
+
     material.end();
     camera->end();
 }
@@ -297,54 +303,55 @@ void Scene3D::reset()
 
 void Scene3D::mouseDragged(int x, int y, int button)
 {
-    switch (button)
-    {
-        case 0://left
-            if (is_selected)
-            {
-                ofVec3f cameraForward = camera->getLookAtDir();
-                ofVec3f cameraRight = camera->getSideDir();
-                ofVec3f cameraUp = camera->getUpDir();
+    //switch (button)
+    //{
+    //{
+    //    case 0://left
+    //        if (is_selected)
+    //        {
+    //            ofVec3f cameraForward = camera->getLookAtDir();
+    //            ofVec3f cameraRight = camera->getSideDir();
+    //            ofVec3f cameraUp = camera->getUpDir();
 
-                ofVec3f current_pos = primitives[selected_primitive].getPosition();
-                ofVec3f current_screen_pos = camera->worldToScreen(current_pos);
+    //            ofVec3f current_pos = primitives[selected_primitive].getPosition();
+    //            ofVec3f current_screen_pos = camera->worldToScreen(current_pos);
 
-                ofVec3f current = ofVec3f(x, y, current_screen_pos.z);
-                ofVec3f past = ofVec3f(previous_x, previous_y, current_screen_pos.z);
+    //            ofVec3f current = ofVec3f(x, y, current_screen_pos.z);
+    //            ofVec3f past = ofVec3f(previous_x, previous_y, current_screen_pos.z);
 
-                ofVec3f new_pos = camera->screenToWorld(current_screen_pos + (current - past));
-
-
-                ofVec3f translate = new_pos - current_pos;
-
-                primitives[selected_primitive].setPosition(new_pos);
-                //translateMesh(translate, selected_primitive);
-                //primitives[selected_primitive].setPosition(new_pos);
-            }
-
-            break;
-        case 2://right
-            if (is_selected)
-            {
-                ofVec3f cameraForward = camera->getLookAtDir();
-                ofVec3f cameraRight = camera->getSideDir();
-                ofVec3f cameraUp = camera->getUpDir();
-
-                ofVec3f current_pos = primitives[selected_primitive].getPosition();
-                ofVec3f current_screen_pos = camera->worldToScreen(current_pos);
-
-                ofVec3f current = ofVec3f(x, y, current_screen_pos.z);
-                ofVec3f past = ofVec3f(previous_x, previous_y, current_screen_pos.z);
-
-                ofVec3f new_pos = camera->screenToWorld(current_screen_pos + (current - past));
+    //            ofVec3f new_pos = camera->screenToWorld(current_screen_pos + (current - past));
 
 
-                float scale = 1 + ((x - previous_x) + (previous_y - y)) * 0.1;
-                ofLog() << scale;
-                ofVec3f scaleVec = primitives[selected_primitive].getScale() * scale;
-                primitives[selected_primitive].setScale(scaleVec);
-            }
-    }
+    //            ofVec3f translate = new_pos - current_pos;
+
+    //            primitives[selected_primitive].setPosition(new_pos);
+    //            //translateMesh(translate, selected_primitive);
+    //            //primitives[selected_primitive].setPosition(new_pos);
+    //        }
+
+    //        break;
+    //    case 2://right
+    //        if (is_selected)
+    //        {
+    //            ofVec3f cameraForward = camera->getLookAtDir();
+    //            ofVec3f cameraRight = camera->getSideDir();
+    //            ofVec3f cameraUp = camera->getUpDir();
+
+    //            ofVec3f current_pos = primitives[selected_primitive].getPosition();
+    //            ofVec3f current_screen_pos = camera->worldToScreen(current_pos);
+
+    //            ofVec3f current = ofVec3f(x, y, current_screen_pos.z);
+    //            ofVec3f past = ofVec3f(previous_x, previous_y, current_screen_pos.z);
+
+    //            ofVec3f new_pos = camera->screenToWorld(current_screen_pos + (current - past));
+
+
+    //            float scale = 1 + ((x - previous_x) + (previous_y - y)) * 0.1;
+    //            ofLog() << scale;
+    //            ofVec3f scaleVec = primitives[selected_primitive].getScale() * scale;
+    //            primitives[selected_primitive].setScale(scaleVec);
+    //        }
+    //}
 
     previous_x = x;
     previous_y = y;
@@ -360,16 +367,17 @@ void Scene3D::mousePressed(int x, int y, int button)
     rayDirection.normalize();
     is_selected = false;
     float closeness = -1;
+    std::vector<std::shared_ptr<of3dPrimitive>> primitives = getPrimitives();
     for (int i = 0; i < primitives.size(); i++)
     {
         ofVec3f minVertex, maxVertex;
-        ofMesh mesh = primitives[i].getMesh();
+        ofMesh mesh = primitives[i]->getMesh();
 
 
         float minX = 0, maxX = 0;
         float minY = 0, maxY = 0;
 
-        getBoundingBox(primitives[i], minVertex, maxVertex);
+        getBoundingBox(*primitives[i], minVertex, maxVertex);
 
         std::vector<ofVec3f> corners = {
                 camera->worldToScreen(maxVertex),
@@ -383,7 +391,7 @@ void Scene3D::mousePressed(int x, int y, int button)
                 camera->worldToScreen(ofVec3f(maxVertex.x, minVertex.y, minVertex.z)),
         };
         ofVec3f camPos = camera->getPosition();
-        ofVec3f objPos = primitives[i].getPosition();
+        ofVec3f objPos = primitives[i]->getPosition();
         float new_closeness = camPos.distance(objPos);
 
         minX = corners[0].x, maxX = corners[0].x;
@@ -405,7 +413,7 @@ void Scene3D::mousePressed(int x, int y, int button)
             if (new_closeness < closeness || closeness == -1)
             {
                 closeness = new_closeness;
-                selectionMesh = createBox(primitives[i]);
+                selectionMesh = createBox(*primitives[i]);
                 selected_primitive = i;
                 is_selected = true;
                 ofLog() << "Object : " << i << " selected. ";
@@ -486,7 +494,7 @@ void Scene3D::dragEvent(ofDragInfo dragInfo)
                 combinedMesh.append(mesh);
             }
             of3dPrimitive import = of3dPrimitive(combinedMesh);
-            primitives.push_back(import);
+            //primitives.push_back(import);
         }
         else
         {
@@ -534,10 +542,10 @@ std::vector<ofVec3f> Scene3D::getPrimitiveVertices(of3dPrimitive& primitive)
 
 void Scene3D::focus()
 {
-    if (is_selected)
+    /*if (is_selected)
     {
         camera->lookAt(primitives[selected_primitive].getPosition());
-    }
+    }*/
 }
 
 
@@ -630,10 +638,10 @@ void Scene3D::keyReleased(int key)
             reset();
             break;
         case 45://-
-            previousCam();
+            //previousCam();
             break;
         case 61:
-            nextCam();
+            //nextCam();
             break;
         case 107://k
             debugger = !debugger;
@@ -717,4 +725,21 @@ void Scene3D::update()
     {
         camera->setFov(camera->getFov() - 0.2);
     }
+}
+
+std::vector<std::shared_ptr<of3dPrimitive>> Scene3D::getPrimitives()
+{
+
+    std::vector<std::shared_ptr<Node>> nodes =  sceneGraph.GetNodes();
+    std::vector<std::shared_ptr<of3dPrimitive>> primitives{};
+    for (const auto& node : nodes) {
+        const std::shared_ptr<ofNode>& inner = node->GetInner();
+        std::shared_ptr<of3dPrimitive> prim = std::dynamic_pointer_cast<of3dPrimitive>(inner);
+        if (prim)
+        {
+            primitives.push_back(prim);
+        }
+    }
+
+    return primitives;
 }
