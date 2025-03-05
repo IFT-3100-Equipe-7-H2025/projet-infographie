@@ -81,4 +81,5 @@ private:
     ofMesh createBox(of3dPrimitive& primitive);
     void getBoundingBox(of3dPrimitive& primitive, ofVec3f& minVertex, ofVec3f& maxVertex);
     vector<ofVec3f> getPrimitiveVertices(of3dPrimitive& primitive);
+    void focus();
 };

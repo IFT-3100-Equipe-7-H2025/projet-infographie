@@ -417,6 +417,13 @@ vector<ofVec3f> GeometryScene::getPrimitiveVertices(of3dPrimitive& primitive) {
 }
 
 
+void GeometryScene::focus() {
+    if (is_selected) {
+        camera->lookAt(primitives[selected_primitive].getPosition());
+    }
+}
+
+
 
 
 void GeometryScene::keyPressed(int key)
@@ -515,6 +522,9 @@ void GeometryScene::keyReleased(int key)
             break;
         case 107://k
             debugger = !debugger;
+            break;
+        case 'y':
+            focus();
             break;
     }
 }
