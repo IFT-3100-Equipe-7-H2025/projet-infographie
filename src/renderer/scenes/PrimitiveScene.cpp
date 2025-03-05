@@ -33,7 +33,6 @@ void PrimitiveScene::drawThickPolygon(const std::vector<ofVec2f>& vertices, floa
 }
 
 void PrimitiveScene::draw() {
-    // Dark Mode vu que le reste du projet est en DM, à voir si on veut rester en dark mode ou passer en mode clair
     ofColor bgColor(backgroundColor[0]*255, backgroundColor[1]*255, backgroundColor[2]*255, backgroundColor[3]*255);
     ofClear(bgColor);
 
@@ -128,21 +127,21 @@ void PrimitiveScene::draw() {
         ofDrawCircle(pendingLineStart, 5);
     }
 
-    ImGui::Begin("Contrôle des Primitives");
+    ImGui::Begin("Toolbox");
 
-    if (ImGui::Button("Point")) {
+    if (ImGui::Button("Dot")) {
         selectedType = PrimitiveType::Point;
         adding = true;
         waitingForLineSecondClick = false;
     }
     ImGui::SameLine();
-    if (ImGui::Button("Ligne")) {
+    if (ImGui::Button("Line")) {
         selectedType = PrimitiveType::Ligne;
         adding = true;
         waitingForLineSecondClick = false;
     }
     ImGui::SameLine();
-    if (ImGui::Button("Carré")) {
+    if (ImGui::Button("Square")) {
         selectedType = PrimitiveType::Carre;
         adding = true;
         waitingForLineSecondClick = false;
@@ -161,22 +160,22 @@ void PrimitiveScene::draw() {
     }
 
     ImGui::Separator();
-    ImGui::Text("Outils de dessin:");
-    ImGui::SliderFloat("Épaisseur du contour", &currentStrokeThickness, 1.0f, 10.0f);
-    ImGui::ColorEdit4("Couleur du contour", currentStrokeColor);
-    ImGui::ColorEdit4("Couleur de remplissage", currentFillColor);
-    ImGui::ColorEdit4("Couleur d'arrière-plan", backgroundColor);
+    ImGui::Text("Drawing tools:");
+    ImGui::SliderFloat("Border thickness", &currentStrokeThickness, 1.0f, 10.0f);
+    ImGui::ColorEdit4("Border color", currentStrokeColor);
+    ImGui::ColorEdit4("Fill color", currentFillColor);
+    ImGui::ColorEdit4("Background color", backgroundColor);
     ImGui::Separator();
 
     if (adding) {
         if (selectedType == PrimitiveType::Ligne) {
             if (!waitingForLineSecondClick) {
-                ImGui::Text("Cliquez pour définir le point de départ de la ligne");
+                ImGui::Text("Click to define starting point of the line");
             } else {
-                ImGui::Text("Cliquez pour définir le point d'arrivée de la ligne");
+                ImGui::Text("Click to define ending point of the line");
             }
         } else {
-            ImGui::Text("Cliquez dans la scène pour ajouter la primitive");
+            ImGui::Text("Click on the scene to add primitive");
         }
     }
 
