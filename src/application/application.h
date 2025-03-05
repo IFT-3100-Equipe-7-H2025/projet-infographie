@@ -21,9 +21,12 @@ public:
 
     void SelectScene(SceneId id);
     void ShowMainMenuBar();
+    void ShowCaptureOption();
 
     void ExportImage(const std::string& path);
     void ExportImageButtonPressed();
+    void StartTimedCapture(int, float);
+    void CaptureManager();
 
     CursorManager cursorManager;
 
@@ -35,4 +38,18 @@ public:
     std::shared_ptr<Scene3D> scene3D;
 
     std::weak_ptr<Scene> selectedScene;
+
+    private:
+    bool capturing = false;
+    bool gifCapturing = false;
+    int screenshotCount = 0;
+    float lastCaptureTime = 0.0f;
+    float captureInterval = 0.5f;
+    int totalScreenshots = 10;
+
+    bool showPopup = false;
+    int userScreenshots = 10;
+    float userDuration = 5.0f;
+
+    std::string exportPath;
 };
