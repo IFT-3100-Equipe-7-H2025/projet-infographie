@@ -28,6 +28,7 @@ void GeometryScene::setup()
     rotate_speed = 100;
     camera->lookAt(ofVec3f(0, 0, 0));
     shader.load("shader.vert", "shader.frag");
+    //createLasagna(0.5, 3, 2, 2);
 }
 
 void GeometryScene::update()
@@ -108,12 +109,18 @@ void GeometryScene::draw()
     ofColor bgColor(backgroundColor[0] * 255, backgroundColor[1] * 255, backgroundColor[2] * 255, backgroundColor[3] * 255);
     ofClear(bgColor);
     auto triangle = createTriangle();
+    auto lasasgn = createLasagna(0.5, 4, 40, 2);
     auto sphere = createSphere(30, 30);
+    auto pyramide = createPyramid(100);
 
+    pyramide.setPosition(0, 0, -500);
+    pyramide.setScale(1000, 1000, 1000);
     triangle.setPosition(0, 0, -500);
     triangle.setScale(1000, 1000, 1000);
     sphere.setPosition(0, 0, -500);
     sphere.setScale(1000, 1000, 1000);
+    lasasgn.setPosition(0, 0, -500);
+    lasasgn.setScale(6000, 1000, 1000);
 
     ofMatrix4x4 projMatrix;
     projMatrix.makePerspectiveMatrix(90, (double) ofGetWidth() / (double) ofGetHeight(), 10, 1000);
@@ -136,8 +143,10 @@ void GeometryScene::draw()
 
     ofFloatColor myColor = ofFloatColor(0.0, 1.0, 0.0, 1.0);// Green
     shader.setUniform4f("inputColor", myColor);
-    triangle.draw();
-    sphere.drawWireframe();
+    //triangle.draw();
+    //sphere.drawWireframe();
+    //lasasgn.draw();
+    pyramide.drawWireframe();
 
     for (int i = 0; i < objects.size(); i++)
     {
@@ -445,7 +454,6 @@ of3dPrimitive GeometryScene::createSphere(int lat, int longi)
         }
 
 
-        // TODO change < 1 for < longi
         for (int j = 0; j < longi; j++)
         {
             int top_left = (i - 1) * longi + j + 1;
@@ -479,4 +487,82 @@ of3dPrimitive GeometryScene::createSphere(int lat, int longi)
 
 
     return of3dPrimitive{sphere};
+}
+
+of3dPrimitive GeometryScene::createLasagna(float l_w_ratio, int periods, int resolution_l, int resolution_w)
+{
+    assert(resolution_w >= 2);
+    assert(resolution_l >= 2);
+    ofMesh lasagna;
+    lasagna.setMode(OF_PRIMITIVE_TRIANGLES);
+
+    float width = 2 * l_w_ratio;
+    float d_w = width / float(resolution_w - 1);
+    auto d_x = float(2 / float(resolution_l * periods));
+    float x_f = -1.0f;
+    float lambda = 2.0f / (float) periods;
+    float k = 2.0f * (float) numbers::pi / lambda;
+
+    for (int frontier = 0; frontier < periods * resolution_l + 1; frontier++)
+    {
+        float z_0 = -l_w_ratio;
+        for (int i = 0; i < resolution_w; i++)
+        {
+            lasagna.addVertex(ofPoint(x_f, sin(k * (x_f - 2.0f)), z_0));
+            z_0 += d_w;
+        }
+        x_f += d_x;
+    }
+
+
+    for (int col = 0; col < periods * resolution_l; col++)
+    {
+        for (int row = 0; row < resolution_w - 1; row++)
+        {
+            int stride = resolution_w;
+            int p1 = col * stride + row;
+            int p2 = p1 + 1;
+            int p3 = p1 + stride;
+            int p4 = p3 + 1;
+
+
+            //top quad
+            lasagna.addIndex(p1);
+            lasagna.addIndex(p3);
+            lasagna.addIndex(p2);
+
+            lasagna.addIndex(p2);
+            lasagna.addIndex(p3);
+            lasagna.addIndex(p4);
+        }
+    }
+    return of3dPrimitive{lasagna};
+}
+
+of3dPrimitive GeometryScene::createPyramid(int sides)
+{
+    float delta_theta = 2.0f * float(numbers::pi) / float(sides);
+    ofMesh pyramid;
+    pyramid.setMode(OF_PRIMITIVE_TRIANGLES);
+
+    for (int i = 0; i < sides; i++)
+    {
+        pyramid.addVertex(ofPoint(cos(float(i) * delta_theta), -1, sin(float(i) * delta_theta)));
+    }
+    pyramid.addVertex(ofPoint(0, 1, 0));
+    pyramid.addVertex(ofPoint(0, -1, 0));
+
+    for (int i = 0; i < sides; i++)
+    {
+        pyramid.addIndex(sides);
+        pyramid.addIndex(i);
+        pyramid.addIndex((i + 1) % sides);
+
+        pyramid.addIndex(sides + 1);
+        pyramid.addIndex((i + 1) % sides);
+        pyramid.addIndex(i);
+    }
+
+
+    return of3dPrimitive{pyramid};
 }
