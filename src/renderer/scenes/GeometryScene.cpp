@@ -22,7 +22,6 @@ void GeometryScene::setup()
     for (int i = 0; i < 6; i++)
     {
         ofCamera new_cam;
-        //new_cam.setPosition(0, 500, 500);
         new_cam.lookAt(ofVec3f(0, 0, 0));
         cameras.push_back(new_cam);
     }
