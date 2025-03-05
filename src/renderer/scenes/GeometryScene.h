@@ -15,7 +15,7 @@ public:
     void setup() override;
     void reset();
     void update() override;
-    void mousePressed(int x, int y, int button) override {};
+    void mousePressed(int x, int y, int button) override;
     void dragEvent(ofDragInfo dragInfo) override;
     void keyPressed(int key) override;
     void keyReleased(int key) override;
@@ -27,11 +27,13 @@ public:
 private:
     ofCamera* camera;
     vector<ofCamera> cameras;
-
+    ofMesh selectionMesh;
+    bool is_selected;
     int current_cam = 0;
 
 
     std::vector<std::shared_ptr<ofxAssimpModelLoader>> objects;
+    vector<of3dPrimitive> primitives;
 
 
     float time_current;
@@ -65,4 +67,6 @@ private:
 
     float backgroundColor[4] = {0.1f, 0.1f, 0.1f, 1.0f};
     static of3dPrimitive createTriangle();
+    static ofMesh createBox(ofVec3f minVertex, ofVec3f maxVertex);
+    void getBoundingBox(ofMesh& mesh, ofVec3f& minVertex, ofVec3f& maxVertex);
 };

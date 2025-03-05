@@ -43,7 +43,7 @@ public:
     std::shared_ptr<RotatingCubeScene> rotatingCubeScene;
     std::shared_ptr<PrimitiveScene> primitiveScene;
     std::shared_ptr<Scene3D> scene3D;
+    std::shared_ptr<GeometryScene> geometryScene;
 
     std::weak_ptr<Scene> selectedScene;
-    std::shared_ptr<GeometryScene> geometryScene;
 };

@@ -11,6 +11,8 @@
 ofShader shader;
 void GeometryScene::setup()
 {
+
+    primitives.push_back(createTriangle());
     for (int i = 0; i < 6; i++) {
         ofCamera new_cam;
         //new_cam.setPosition(0, 500, 500);
@@ -85,7 +87,6 @@ void GeometryScene::update() {
     if (is_key_press_e)
     {
         camera->dolly(-speed_translation);
-
     }
     if (is_key_press_f)
     {
@@ -101,9 +102,9 @@ void GeometryScene::draw()
 {
     ofColor bgColor(backgroundColor[0] * 255, backgroundColor[1] * 255, backgroundColor[2] * 255, backgroundColor[3] * 255);
     ofClear(bgColor);
-    auto triangle = createTriangle();
+    /*auto triangle = createTriangle();
 
-    triangle.setScale(1000, 1000, 1000);
+    triangle.setScale(1000, 1000, 1000);*/
 
     ofMatrix4x4 projMatrix;
     projMatrix.makePerspectiveMatrix(90, (double) ofGetWidth() / (double) ofGetHeight(), 10, 1000);
@@ -126,7 +127,13 @@ void GeometryScene::draw()
 
     ofFloatColor myColor = ofFloatColor(0.0, 1.0, 0.0, 1.0);// Green
     shader.setUniform4f("inputColor", myColor);
-    triangle.draw();
+    if (is_selected) {
+        selectionMesh.draw();
+    }
+    for (auto& primitive : primitives) {
+        //primitive.setScale(1000, 1000, 1000);
+        primitive.draw();
+    }
 
     for (int i = 0; i < objects.size();i++)
     {
@@ -145,9 +152,9 @@ of3dPrimitive GeometryScene::createTriangle()
 {
     ofMesh triangle;
     triangle.setMode(OF_PRIMITIVE_TRIANGLES);
-    auto p1 = ofPoint(0.5, 0, -0.5);
-    auto p2 = ofPoint(0, 0.5, -0.5);
-    auto p3 = ofPoint(-0.5, 0, -0.5);
+    auto p1 = ofPoint(500, 0, -500);
+    auto p2 = ofPoint(0, 500, -500);
+    auto p3 = ofPoint(-500, 0, -500);
     triangle.addVertex(p1);
     triangle.addVertex(p2);
     triangle.addVertex(p3);
@@ -159,6 +166,178 @@ void GeometryScene::reset()
 {
     camera->resetTransform();
 }
+
+void GeometryScene::mousePressed(int x, int y, int button) {
+    ofVec3f rayOrigin = camera->getPosition();
+    ofVec3f rayDirection = camera->screenToWorld(ofVec3f(x, y, 0)) - rayOrigin;
+    rayDirection.normalize();
+
+    for (int i = 0; i < primitives.size(); i++) {
+        ofVec3f minVertex, maxVertex;
+        ofMesh mesh = primitives[i].getMesh();
+
+
+        float minX = 0, maxX = 0;
+        float minY = 0, maxY = 0;
+
+        getBoundingBox(mesh, minVertex, maxVertex);
+
+
+        vector<ofVec3f> corners = {
+                camera->worldToScreen(minVertex),
+                camera->worldToScreen(ofVec3f(minVertex.x, maxVertex.y, minVertex.z)),
+                camera->worldToScreen(ofVec3f(maxVertex.x, maxVertex.y, minVertex.z)),
+                camera->worldToScreen(ofVec3f(maxVertex.x, minVertex.y, minVertex.z))};
+        minX = corners[0].x, maxX = corners[0].x;
+        minY = corners[0].y, maxY = corners[0].y;
+            
+        for (auto& corner: corners)
+        {
+            minX = min(minX, corner.x);
+            maxX = max(minX, corner.x);
+            minY = min(minY, corner.y);
+            maxY = max(minY, corner.y);
+        }
+
+        ofLog() << "Clicked At x:" << x << " y: " << y;
+        ofLog() << "Box at minX" << minX << " maxX : " << maxX << "minY" << minY << " maxY : " << maxY;
+
+        
+
+
+
+        selectionMesh = createBox(minVertex, maxVertex);
+        is_selected = true;
+        ofLog() << "Selected" << is_selected;
+        if (minX < x && x < maxX && minY < y && y < maxY)
+        {
+            ofLog() << "Object : " << i << " selected. ";
+            break;
+        }
+        
+
+        //ofMesh mesh = createTriangle().getMesh();
+        
+
+
+
+
+    }
+
+
+    
+}
+
+
+ofMesh GeometryScene::createBox(ofVec3f minVertex, ofVec3f maxVertex)
+{
+    ofMesh new_mesh;
+    new_mesh.setMode(OF_PRIMITIVE_LINE_LOOP);
+
+    new_mesh.addVertex(minVertex);
+    new_mesh.addVertex(ofVec3f(minVertex.x, maxVertex.y, minVertex.z));
+    new_mesh.addVertex(ofVec3f(maxVertex.x, maxVertex.y, minVertex.z));
+    new_mesh.addVertex(ofVec3f(maxVertex.x, minVertex.y, minVertex.z));
+
+
+    new_mesh.addVertex(ofVec3f(maxVertex.x, minVertex.y, maxVertex.z));
+    new_mesh.addVertex(ofVec3f(maxVertex.x, maxVertex.y, maxVertex.z));
+    new_mesh.addVertex(ofVec3f(maxVertex.x, maxVertex.y, minVertex.z));
+    new_mesh.addVertex(ofVec3f(maxVertex.x, minVertex.y, minVertex.z));
+
+
+    new_mesh.addVertex(ofVec3f(maxVertex.x, minVertex.y, minVertex.z));
+    new_mesh.addVertex(ofVec3f(minVertex.x, minVertex.y, minVertex.z));
+    new_mesh.addVertex(ofVec3f(minVertex.x, minVertex.y, maxVertex.z));
+    new_mesh.addVertex(ofVec3f(maxVertex.x, minVertex.y, maxVertex.z));
+
+
+    new_mesh.addVertex(ofVec3f(maxVertex.x, maxVertex.y, maxVertex.z));
+    new_mesh.addVertex(ofVec3f(minVertex.x, maxVertex.y, maxVertex.z));
+    new_mesh.addVertex(ofVec3f(minVertex.x, minVertex.y, maxVertex.z));
+
+    new_mesh.addVertex(ofVec3f(minVertex.x, minVertex.y, minVertex.z));
+    new_mesh.addVertex(ofVec3f(minVertex.x, maxVertex.y, minVertex.z));
+    new_mesh.addVertex(ofVec3f(minVertex.x, maxVertex.y, maxVertex.z));
+    new_mesh.addVertex(ofVec3f(minVertex.x, minVertex.y, maxVertex.z));
+
+
+    return new_mesh;
+
+
+
+
+
+
+}
+
+
+//void GeometryScene::mousePressed(int x, int y, int button)
+//{
+//    ofVec3f rayOrigin = camera->getPosition();
+//    ofVec3f rayDirection = camera->screenToWorld(ofVec3f(x, y, 0)) - rayOrigin;
+//    rayDirection.normalize();
+//
+//    for (int i = 0; i < objects.size(); i++)
+//    {
+//        ofVec3f minVertex, maxVertex;
+//        int meshNumber = objects[i]->getNumMeshes();
+//
+//
+//        float minX = 0, maxX = 0;
+//        float minY = 0, maxY = 0;
+//        for (int j = 0; j < meshNumber; j++)
+//        {
+//            ofMesh mesh = objects[i]->getMesh(j);
+//
+//            getBoundingBox(mesh, minVertex, maxVertex);
+//
+//
+//            vector<ofVec3f> corners = {
+//                    camera->worldToScreen(minVertex),
+//                    camera->worldToScreen(ofVec3f(minVertex.x, maxVertex.y, minVertex.z)),
+//                    camera->worldToScreen(ofVec3f(maxVertex.x, maxVertex.y, minVertex.z)),
+//                    camera->worldToScreen(ofVec3f(maxVertex.x, minVertex.y, minVertex.z))};
+//            if (j == 0)
+//            {
+//                minX = corners[0].x, maxX = corners[0].x;
+//                minY = corners[0].y, maxY = corners[0].y;
+//            }
+//
+//            for (auto& corner: corners)
+//            {
+//                minX = min(minX, corner.x);
+//                maxX = max(minX, corner.x);
+//                minY = min(minY, corner.y);
+//                maxY = max(minY, corner.y);
+//            }
+//        }
+//
+//        ofLog() << "Clicked At x:" << x << " y: " << y;
+//        ofLog() << "Box at minX" << minX << " maxX : " << maxX << "minY" << minY << " maxY : " << maxY;
+//        ofLog() << "Num meshes" << meshNumber;
+//        ofMesh new_mesh;
+//        new_mesh.setMode(OF_PRIMITIVE_LINE_LOOP);
+//
+//        new_mesh.addVertex(ofPoint(minX, minY, 0));
+//        new_mesh.addVertex(ofPoint(minX, maxY, 0));
+//        new_mesh.addVertex(ofPoint(maxX, maxY, 0));
+//        new_mesh.addVertex(ofPoint(maxX, minY, 0));
+//
+//        selectionMesh = new_mesh;
+//        is_selected = true;
+//        ofLog() << "Selected" << is_selected;
+//        if (minX < x && x < maxX && minY < y && y < maxY)
+//        {
+//            ofLog() << "Object : " << i << " selected. ";
+//            break;
+//        }
+//
+//
+//        //ofMesh mesh = createTriangle().getMesh();
+//    }
+//}
+
 
 
 void GeometryScene::keyPressed(int key)
@@ -304,4 +483,25 @@ void GeometryScene::dragEvent(ofDragInfo dragInfo)
     ofLog() << "<GeometryScene::dragEvent: >";
     ofLog() << "<GeometryScene::ofDragInfo file[0]: " << dragInfo.files.at(0)
             << " at : " << dragInfo.position << ">";
+}
+
+
+
+void GeometryScene::getBoundingBox(ofMesh& mesh, ofVec3f& minVertex, ofVec3f& maxVertex)
+{
+    minVertex = mesh.getVertex(0);
+    maxVertex = mesh.getVertex(0);
+
+    vector<glm::vec3> vertices = mesh.getVertices();
+
+    for (int i = 0; i < vertices.size(); i++) {
+        ofLog() << "Vertex X: " << vertices[i].x << "Vertex Y: " << vertices[i].y << "Vertex Z: " << vertices[i].z;
+        minVertex.x = min(vertices[i].x, minVertex.x);
+        maxVertex.x = max(vertices[i].x, maxVertex.x);
+        minVertex.y = min(vertices[i].y, minVertex.y);
+        maxVertex.y = max(vertices[i].y, maxVertex.y);
+        minVertex.z = min(vertices[i].z, minVertex.z);
+        maxVertex.z = max(vertices[i].z, maxVertex.z);
+
+    }
 }
