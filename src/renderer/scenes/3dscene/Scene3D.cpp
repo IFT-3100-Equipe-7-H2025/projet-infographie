@@ -1,5 +1,6 @@
 #include "Scene3D.h"
 
+#include "3dscene/commands/RemoveNodeCommand.h"
 #include "3dscene/commands/SetPositionCommand.h"
 #include "3dscene/commands/SetRotationCommand.h"
 #include "3dscene/commands/SetScaleCommand.h"
@@ -12,7 +13,7 @@
 #include <ranges>
 
 Scene3D::Scene3D() : history(CommandHistory()),
-                     graph(SceneGraph()),
+                     sceneGraph(SceneGraph()),
                      selectedNode(std::make_shared<std::shared_ptr<Node>>(nullptr)),
                      sharedParams(std::make_shared<SharedShapeCreationParams>())
 {
@@ -22,7 +23,7 @@ Scene3D::Scene3D() : history(CommandHistory()),
 
 void Scene3D::setup()
 {
-    this->SelectNode(this->graph.GetRoot());
+    this->SelectNode(this->sceneGraph.GetRoot());
 
     this->createShapeUIs.push_back(std::make_unique<CreateCubeUI>(CreateCubeUI(this->sharedParams, this->history)));
     this->createShapeUIs.emplace_back(std::make_unique<CreateSphereUI>(CreateSphereUI(this->sharedParams, this->history)));
@@ -40,7 +41,7 @@ void Scene3D::setup()
     light.setAmbientColor(ofFloatColor(0.2, 0.2, 0.2));
     light.lookAt(ofVec3f((float) ofGetWidth() / 2.0f, (float) ofGetHeight() / 2.0f, 0));
     auto light_ptr = std::make_shared<Node>("Light", std::make_shared<ofLight>(light));
-    this->graph.AddNode(light_ptr);
+    this->sceneGraph.AddNode(light_ptr);
 }
 
 void Scene3D::draw()
@@ -50,7 +51,7 @@ void Scene3D::draw()
     this->DrawCommandHistoryWindow();
 
     material.begin();
-    graph.Draw();
+    sceneGraph.Draw();
     material.end();
 }
 
@@ -59,7 +60,7 @@ void Scene3D::DrawSceneGraphWindow()
     ImGui::SetNextWindowPos(ImVec2(10, 30), ImGuiCond_FirstUseEver);
     ImGui::SetNextWindowSize(ImVec2(300, 400), ImGuiCond_FirstUseEver);
     ImGui::Begin("3D scene graph");
-    this->ShowChildren(this->graph.GetRoot());
+    this->ShowChildren(this->sceneGraph.GetRoot());
     ImGui::End();
 }
 
@@ -72,6 +73,12 @@ void Scene3D::DrawSelectedNodeWindow()
 
         if (ImGui::Begin((*this->selectedNode)->GetName().c_str()))
         {
+            if (ImGui::Button("Delete node"))
+            {
+                this->history.executeCommand(std::make_shared<RemoveNodeCommand>(*this->selectedNode));
+                this->SelectNode(this->sceneGraph.GetRoot());
+            }
+
             this->DrawModifyNodeSliders(*this->selectedNode);
 
             if (ImGui::CollapsingHeader("Add child", ImGuiTreeNodeFlags_DefaultOpen))
@@ -205,6 +212,7 @@ void Scene3D::SelectNode(const std::shared_ptr<Node>& node)
     node->SetOpen(!node->IsOpen());
 }
 
+// NOLINTNEXTLINE(misc-no-recursion)
 void Scene3D::ShowChildren(const std::shared_ptr<Node>& node)
 {
     ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_DefaultOpen;

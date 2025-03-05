@@ -4,6 +4,11 @@
 #include <memory>
 #include <vector>
 
+// Maximum number of commands that can be stored in the undo/redo stacks, after which the oldest command is removed.
+//   This is necessary to prevent storing an infinite number of commands in memory since they might contain shared pointers
+//   to nodes and other objects that would prevent them from being deleted otherwise.
+constexpr int MAX_COMMAND_HISTORY = 100;
+
 class CommandHistory
 {
 public:
@@ -13,8 +18,8 @@ public:
     void undo();
     void redo();
 
-    [[nodiscard]] std::vector<std::shared_ptr<Command>>& GetUndoStack() { return undoStack; }
-    [[nodiscard]] std::vector<std::shared_ptr<Command>>& GetRedoStack() { return redoStack; }
+    [[nodiscard]] const std::vector<std::shared_ptr<Command>>& GetUndoStack() { return undoStack; }
+    [[nodiscard]] const std::vector<std::shared_ptr<Command>>& GetRedoStack() { return redoStack; }
 
 private:
     std::vector<std::shared_ptr<Command>> undoStack;
