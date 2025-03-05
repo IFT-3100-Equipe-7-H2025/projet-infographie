@@ -1,6 +1,8 @@
 #include "application.h"
 #include "GeometryScene.h"
 #include "imgui.h"
+#include "ofAppRunner.h"
+
 
 #include <Macros.h>
 
@@ -49,9 +51,11 @@ void Application::update()
 
 void Application::draw()
 {
+    CaptureManager();
     gui.begin();
     ImGui::DockSpaceOverViewport(0, ImGui::GetMainViewport(), ImGuiDockNodeFlags_PassthruCentralNode);
     this->ShowMainMenuBar();
+    this->ShowCaptureOption();
     renderer.Draw();
 
     if (ImGui::GetIO().WantCaptureMouse)
@@ -218,9 +222,17 @@ void Application::ShowMainMenuBar()
             ImGui::EndMenu();
         }
 
-        if (ImGui::Button("Export screen as image"))
+        if (ImGui::BeginMenu("Capture Options"))
         {
-            this->ExportImageButtonPressed();
+            if (ImGui::Button("Export screen as image"))
+            {
+                this->ExportImageButtonPressed();
+            }
+            if (ImGui::Button("Custom Capture Settings"))
+            {
+                showPopup = true;
+            }
+            ImGui::EndMenu();
         }
 
         ImGui::EndMainMenuBar();
@@ -241,4 +253,77 @@ void Application::ExportImageButtonPressed()
         ofLog() << "Successfully exported image: " << result.filePath;
         this->ExportImage(result.filePath);
     }
+}
+
+void Application::ShowCaptureOption()
+{
+
+    if (showPopup)
+    {
+        ImGui::OpenPopup("Set Capture Settings");
+    }
+
+    if (ImGui::BeginPopupModal("Set Capture Settings", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+    {
+        ImGui::InputInt("Number of Screenshots", &userScreenshots);
+        ImGui::InputFloat("Capture Duration (sec)", &userDuration);
+
+        if (ImGui::Button("Start Screenshot Capture"))
+        {
+            StartTimedCapture(userScreenshots, userDuration);
+            showPopup = false;
+            ImGui::CloseCurrentPopup();
+        }
+
+        if (ImGui::Button("Cancel"))
+        {
+            showPopup = false;
+            ImGui::CloseCurrentPopup();
+        }
+
+        ImGui::EndPopup();
+    }
+}
+
+void Application::CaptureManager()
+{
+    if (capturing)
+    {
+        if (ofGetElapsedTimef() - lastCaptureTime > captureInterval)
+        {
+            if (screenshotCount < totalScreenshots)
+            {
+                std::string filename = exportPath + "_" + std::to_string(screenshotCount) + ".png";
+                this->ExportImage(filename);
+                lastCaptureTime = ofGetElapsedTimef();
+                screenshotCount++;
+            }
+            else
+            {
+                capturing = false;
+                ofLog() << "Finished capturing screenshots";
+            }
+        }
+    }
+}
+void Application::StartTimedCapture(int numShots, float duration)
+{
+    ofFileDialogResult result = ofSystemSaveDialog("TimedCapture.png", "Choose Save Location");
+
+    if (!result.bSuccess)
+    {
+        ofLog() << "Screenshot save canceled.";
+        return;
+    }
+    else
+    {
+        exportPath = result.filePath;
+    }
+
+    capturing = true;
+    screenshotCount = 0;
+    lastCaptureTime = ofGetElapsedTimef();
+    totalScreenshots = numShots;
+    captureInterval = duration / numShots;
+    ofLog() << "Started capturing " << numShots << " screenshots over " << duration << " sec.";
 }
