@@ -42,11 +42,10 @@ you need to install the [nightly version of openframeworks](https://github.com/o
 ./compileOF.sh -j4
 ```
 
-6. on linux, you need to compile the project generator yourself. To do so, go to `{your openframeworks folder}/scripts/linux` and run
+6. on linux, you can compile a cli version of the project generator. To do so, go to `{your openframeworks folder}/scripts/linux` and run
 ```sh
 ./compilePG.sh
 ```
-it will put the compiled version in the `projectGenerator-linux64` folder at the root of your openframeworks folder.
 
 7. Clone the [`ofxImGui`](https://github.com/jvcleave/ofxImGui) repository inside your `/addons` folder of your openframeworks installation. You need to clone the `develop` branch for it to work. To do so, run this command:
 ```sh
