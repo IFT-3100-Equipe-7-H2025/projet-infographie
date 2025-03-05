@@ -158,13 +158,74 @@ void PrimitiveScene::draw() {
         adding = true;
         waitingForLineSecondClick = false;
     }
-
+    ImGui::Checkbox("Mode HSB", &modeHSBActivated);
     ImGui::Separator();
-    ImGui::Text("Drawing tools:");
-    ImGui::SliderFloat("Border thickness", &currentStrokeThickness, 1.0f, 10.0f);
-    ImGui::ColorEdit4("Border color", currentStrokeColor);
-    ImGui::ColorEdit4("Fill color", currentFillColor);
-    ImGui::ColorEdit4("Background color", backgroundColor);
+    if (!modeHSBActivated)
+    {
+        ImGui::Text("Drawing tools RGBA:");
+        ImGui::SliderFloat("Border thickness", &currentStrokeThickness, 1.0f, 10.0f);
+        ImGui::ColorEdit4("Border color", currentStrokeColor);
+        ImGui::ColorEdit4("Fill color", currentFillColor);
+        ImGui::ColorEdit4("Background color", backgroundColor);
+    }
+    else
+    {
+        ofColor selectedStrokeColor(currentStrokeColor[0] * 255, currentStrokeColor[1] * 255, currentStrokeColor[2] * 255, currentStrokeColor[3] * 255);
+        ofColor selectedFillColor(currentFillColor[0] * 255, currentFillColor[1] * 255, currentFillColor[2] * 255, currentFillColor[3] * 255);
+        ofColor selectedBGColor(backgroundColor[0] * 255, backgroundColor[1] * 255, backgroundColor[2] * 255, backgroundColor[3] * 255);
+
+        ImVec4 strokeColorVec = ImVec4(currentStrokeColor[0],
+                                       currentStrokeColor[1],
+                                       currentStrokeColor[2],
+                                       currentStrokeColor[3]);
+
+        ImVec4 fillColorVec = ImVec4(currentFillColor[0],
+                                     currentFillColor[1],
+                                     currentFillColor[2],
+                                     currentFillColor[3]);
+
+        ImVec4 bgColorVec = ImVec4(backgroundColor[0],
+                                   backgroundColor[1],
+                                   backgroundColor[2],
+                                   backgroundColor[3]);
+
+        ImGui::Text("Drawing tools HSB:");
+        ImGui::SliderFloat("Border thickness", &currentStrokeThickness, 1.0f, 10.0f);
+
+        hueContour = selectedStrokeColor.getHue();
+        satContour = selectedStrokeColor.getSaturation();
+        briContour = selectedStrokeColor.getBrightness();
+        ImGui::Text("Border color");
+        ImGui::ColorButton("Preview##Contour", strokeColorVec, ImGuiColorEditFlags_NoPicker, ImVec2(50, 50));
+        ImGui::SliderFloat("Hue##Contour", &hueContour, 0.0f, 255.0f);
+        ImGui::SliderFloat("Saturation##Contour", &satContour, 0.0f, 255.0f);
+        ImGui::SliderFloat("Brightness##Contour", &briContour, 0.0f, 255.0f);
+        selectedStrokeColor.setHsb(hueContour, satContour, briContour);
+        colorUpdate(currentStrokeColor, selectedStrokeColor);
+
+
+        hueFill = selectedFillColor.getHue();
+        satFill = selectedFillColor.getSaturation();
+        briFill = selectedFillColor.getBrightness();
+        ImGui::Text("Fill color");
+        ImGui::ColorButton("Preview##Remplissage", fillColorVec, ImGuiColorEditFlags_NoPicker, ImVec2(50, 50));
+        ImGui::SliderFloat("Hue##Remplissage", &hueFill, 0.0f, 255.0f);
+        ImGui::SliderFloat("Saturation##Remplissage", &satFill, 0.0f, 255.0f);
+        ImGui::SliderFloat("Brightness##Remplissage", &briFill, 0.0f, 255.0f);
+        selectedFillColor.setHsb(hueFill, satFill, briFill);
+        colorUpdate(currentFillColor, selectedFillColor);
+
+        hueBG = selectedBGColor.getHue();
+        satBG = selectedBGColor.getSaturation();
+        briBG = selectedBGColor.getBrightness();
+        ImGui::Text("Background color");
+        ImGui::ColorButton("Preview##BG", bgColorVec, ImGuiColorEditFlags_NoPicker, ImVec2(50, 50));
+        ImGui::SliderFloat("Hue##BG", &hueBG, 0.0f, 255.0f);
+        ImGui::SliderFloat("Saturation##BG", &satBG, 0.0f, 255.0f);
+        ImGui::SliderFloat("Brightness##BG", &briBG, 0.0f, 255.0f);
+        selectedBGColor.setHsb(hueBG, satBG, briBG);
+        colorUpdate(backgroundColor, selectedBGColor);
+    }
     ImGui::Separator();
 
     if (adding) {
@@ -245,4 +306,11 @@ void PrimitiveScene::redo() {
         primitives.push_back(redoStack.back());
         redoStack.pop_back();
     }
+}
+
+void PrimitiveScene::colorUpdate(float currentColor[4], ofColor hsbColor){
+    currentColor[0] = hsbColor.r / 255.0f;
+    currentColor[1] = hsbColor.g / 255.0f;
+    currentColor[2] = hsbColor.b / 255.0f;
+    currentColor[3] = hsbColor.a / 255.0f;
 }
