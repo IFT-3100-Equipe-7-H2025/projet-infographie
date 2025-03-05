@@ -33,7 +33,6 @@ void PrimitiveScene::drawThickPolygon(const std::vector<ofVec2f>& vertices, floa
 }
 
 void PrimitiveScene::draw() {
-    // Dark Mode vu que le reste du projet est en DM, à voir si on veut rester en dark mode ou passer en mode clair
     ofColor bgColor(backgroundColor[0]*255, backgroundColor[1]*255, backgroundColor[2]*255, backgroundColor[3]*255);
     ofClear(bgColor);
 
@@ -128,21 +127,21 @@ void PrimitiveScene::draw() {
         ofDrawCircle(pendingLineStart, 5);
     }
 
-    ImGui::Begin("Contrôle des Primitives");
+    ImGui::Begin("Toolbox");
 
-    if (ImGui::Button("Point")) {
+    if (ImGui::Button("Dot")) {
         selectedType = PrimitiveType::Point;
         adding = true;
         waitingForLineSecondClick = false;
     }
     ImGui::SameLine();
-    if (ImGui::Button("Ligne")) {
+    if (ImGui::Button("Line")) {
         selectedType = PrimitiveType::Ligne;
         adding = true;
         waitingForLineSecondClick = false;
     }
     ImGui::SameLine();
-    if (ImGui::Button("Carré")) {
+    if (ImGui::Button("Square")) {
         selectedType = PrimitiveType::Carre;
         adding = true;
         waitingForLineSecondClick = false;
@@ -163,11 +162,11 @@ void PrimitiveScene::draw() {
     ImGui::Separator();
     if (!modeHSBActivated)
     {
-        ImGui::Text("Outils de dessin RGBA:");
-        ImGui::SliderFloat("Épaisseur du contour", &currentStrokeThickness, 1.0f, 10.0f);
-        ImGui::ColorEdit4("Couleur du contour", currentStrokeColor);
-        ImGui::ColorEdit4("Couleur de remplissage", currentFillColor);
-        ImGui::ColorEdit4("Couleur d'arrière-plan", backgroundColor);
+        ImGui::Text("Drawing tools RGBA:");
+        ImGui::SliderFloat("Border thickness", &currentStrokeThickness, 1.0f, 10.0f);
+        ImGui::ColorEdit4("Border color", currentStrokeColor);
+        ImGui::ColorEdit4("Fill color", currentFillColor);
+        ImGui::ColorEdit4("Background color", backgroundColor);
     }
     else
     {
@@ -190,14 +189,13 @@ void PrimitiveScene::draw() {
                                    backgroundColor[2],
                                    backgroundColor[3]);
 
-        ImGui::Text("Outils de dessin HSB:");
-        ImGui::Text("Épaisseur du contour:");
-        ImGui::SliderFloat("Épaisseur du contour", &currentStrokeThickness, 1.0f, 10.0f);
+        ImGui::Text("Drawing tools HSB:");
+        ImGui::SliderFloat("Border thickness", &currentStrokeThickness, 1.0f, 10.0f);
 
         hueContour = selectedStrokeColor.getHue();
         satContour = selectedStrokeColor.getSaturation();
         briContour = selectedStrokeColor.getBrightness();
-        ImGui::Text("Couleur du contour:");
+        ImGui::Text("Border color");
         ImGui::ColorButton("Preview##Contour", strokeColorVec, ImGuiColorEditFlags_NoPicker, ImVec2(50, 50));
         ImGui::SliderFloat("Hue##Contour", &hueContour, 0.0f, 255.0f);
         ImGui::SliderFloat("Saturation##Contour", &satContour, 0.0f, 255.0f);
@@ -209,7 +207,7 @@ void PrimitiveScene::draw() {
         hueFill = selectedFillColor.getHue();
         satFill = selectedFillColor.getSaturation();
         briFill = selectedFillColor.getBrightness();
-        ImGui::Text("Couleur de remplissage");
+        ImGui::Text("Fill color");
         ImGui::ColorButton("Preview##Remplissage", fillColorVec, ImGuiColorEditFlags_NoPicker, ImVec2(50, 50));
         ImGui::SliderFloat("Hue##Remplissage", &hueFill, 0.0f, 255.0f);
         ImGui::SliderFloat("Saturation##Remplissage", &satFill, 0.0f, 255.0f);
@@ -220,7 +218,7 @@ void PrimitiveScene::draw() {
         hueBG = selectedBGColor.getHue();
         satBG = selectedBGColor.getSaturation();
         briBG = selectedBGColor.getBrightness();
-        ImGui::Text("Couleur d'arrière-plan");
+        ImGui::Text("Background color");
         ImGui::ColorButton("Preview##BG", bgColorVec, ImGuiColorEditFlags_NoPicker, ImVec2(50, 50));
         ImGui::SliderFloat("Hue##BG", &hueBG, 0.0f, 255.0f);
         ImGui::SliderFloat("Saturation##BG", &satBG, 0.0f, 255.0f);
@@ -233,12 +231,12 @@ void PrimitiveScene::draw() {
     if (adding) {
         if (selectedType == PrimitiveType::Ligne) {
             if (!waitingForLineSecondClick) {
-                ImGui::Text("Cliquez pour définir le point de départ de la ligne");
+                ImGui::Text("Click to define starting point of the line");
             } else {
-                ImGui::Text("Cliquez pour définir le point d'arrivée de la ligne");
+                ImGui::Text("Click to define ending point of the line");
             }
         } else {
-            ImGui::Text("Cliquez dans la scène pour ajouter la primitive");
+            ImGui::Text("Click on the scene to add primitive");
         }
     }
 

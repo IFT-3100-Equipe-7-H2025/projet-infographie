@@ -8,6 +8,11 @@ struct Image
     ofVec2f position;
 };
 
+struct SampleBlock
+{
+    ofImage block;
+    ofVec2f position;
+};
 
 class ImportImageScene : public Scene
 {
@@ -16,9 +21,12 @@ public:
 
     void ImportImage(const std::string& path);
     void ImportImageButtonPressed();
+    void SampleImage();
+    void GenerateNewImages();
 
     std::string GetName() override { return "Image importing"; }
 
 private:
     std::vector<Image> images{};
+    std::vector<ofImage> generatedImages;
 };
