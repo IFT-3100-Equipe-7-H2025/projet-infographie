@@ -5,9 +5,12 @@
 #include "3dscene/commands/SetRotationCommand.h"
 #include "3dscene/commands/SetScaleCommand.h"
 #include "3dscene/createShapes/CreateCubeUI.h"
+#include "3dscene/createShapes/CreateLasagnaUI.h"
 #include "3dscene/createShapes/CreateLightUI.h"
+#include "3dscene/createShapes/CreatePyramidUI.h"
 #include "3dscene/createShapes/CreateSphereUI.h"
 #include "imgui.h"
+#include "of3dPrimitives.h"
 #include "ofAppRunner.h"
 #include "ofGraphics.h"
 #include <ranges>
@@ -28,6 +31,8 @@ void Scene3D::setup()
     this->createShapeUIs.push_back(std::make_unique<CreateCubeUI>(CreateCubeUI(this->sharedParams, this->history)));
     this->createShapeUIs.emplace_back(std::make_unique<CreateSphereUI>(CreateSphereUI(this->sharedParams, this->history)));
     this->createShapeUIs.emplace_back(std::make_unique<CreateLightUI>(CreateLightUI(this->sharedParams, this->history)));
+    this->createShapeUIs.emplace_back(std::make_unique<CreateLasagnaUI>(CreateLasagnaUI(this->sharedParams, this->history)));
+    this->createShapeUIs.push_back(std::make_unique<CreatePyramidUI>(CreatePyramidUI(this->sharedParams, this->history)));
 
     material.setDiffuseColor(ofFloatColor(1.0, 0.5, 0.5));
     material.setSpecularColor(ofFloatColor(1.0, 1.0, 1.0));
@@ -42,6 +47,8 @@ void Scene3D::setup()
     light.lookAt(ofVec3f((float) ofGetWidth() / 2.0f, (float) ofGetHeight() / 2.0f, 0));
     auto light_ptr = std::make_shared<Node>("Light", std::make_shared<ofLight>(light));
     this->sceneGraph.AddNode(light_ptr);
+
+    ofBoxPrimitive box(100, 100, 100);
 }
 
 void Scene3D::draw()
@@ -72,8 +79,9 @@ void Scene3D::DrawSelectedNodeWindow()
         ImGui::SetNextWindowPos(ImVec2(320, 30), ImGuiCond_FirstUseEver);
         ImGui::SetNextWindowSize(ImVec2(300, 400), ImGuiCond_FirstUseEver);
 
-        if (ImGui::Begin((*this->selectedNode)->GetName().c_str()))
+        if (ImGui::Begin("Selected Node"))
         {
+            ImGui::Text("Selected node: %s", (*this->selectedNode)->GetName().c_str());
             if (ImGui::Button("Delete node"))
             {
                 this->history.executeCommand(std::make_shared<RemoveNodeCommand>(*this->selectedNode));
@@ -135,7 +143,7 @@ void Scene3D::DrawModifyNodeSliders(const std::shared_ptr<Node>& node)
 
     // Scales
     const glm::vec3 currentScale = inner->getScale();
-    if (ImGui::SliderFloat3("Scale", this->scale, 0.001f, 100.0f))
+    if (ImGui::SliderFloat3("Scale", this->scale, 0.001f, 10.0f))
     {
         inner->setScale(this->scale[0], this->scale[1], this->scale[2]);
     }

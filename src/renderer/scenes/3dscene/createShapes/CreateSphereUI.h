@@ -35,8 +35,6 @@ public:
 
                 auto sphere_ptr = std::make_shared<Node>("Sphere", std::make_shared<of3dPrimitive>(sphere));
                 history.executeCommand(std::make_shared<AddChildToNodeCommand>(*sharedParams->selectedNode, sphere_ptr));
-
-                radius = DEFAULT_SPHERE_RADIUS;
             }
 
             ImGui::TreePop();
