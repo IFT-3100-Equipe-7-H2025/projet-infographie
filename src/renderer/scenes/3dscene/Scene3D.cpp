@@ -10,9 +10,9 @@
 #include "imgui.h"
 #include "ofAppRunner.h"
 #include "ofGraphics.h"
-#include <ranges>
 #include <cmath>
 #include <numbers>
+#include <ranges>
 
 Scene3D::Scene3D() : history(CommandHistory()),
                      sceneGraph(SceneGraph()),
@@ -57,10 +57,6 @@ void Scene3D::setup()
     translate_speed = 100;
     rotate_speed = 50;
     ofLog() << "Near " << camera->getNearClip() << " Far " << camera->getFarClip();
-    
-
-
-   
 }
 
 void Scene3D::draw()
@@ -293,10 +289,6 @@ void Scene3D::ResetParams(const std::shared_ptr<Node>& node)
 }
 
 
-
-
-
-
 void Scene3D::reset()
 {
     camera->resetTransform();
@@ -333,7 +325,7 @@ void Scene3D::mouseDragged(int x, int y, int button)
         case 2://right
             if (is_selected)
             {
-               ofVec3f cameraForward = camera->getLookAtDir();
+                ofVec3f cameraForward = camera->getLookAtDir();
                 ofVec3f cameraRight = camera->getSideDir();
                 ofVec3f cameraUp = camera->getUpDir();
 
@@ -401,10 +393,10 @@ void Scene3D::mousePressed(int x, int y, int button)
 
         for (auto& corner: corners)
         {
-            minX = min(minX, corner.x);
-            maxX = max(maxX, corner.x);
-            minY = min(minY, corner.y);
-            maxY = max(maxY, corner.y);
+            minX = std::min(minX, corner.x);
+            maxX = std::max(maxX, corner.x);
+            minY = std::min(minY, corner.y);
+            maxY = std::max(maxY, corner.y);
         }
 
         ofLog() << "Clicked At x:" << x << " y: " << y;
@@ -518,12 +510,12 @@ void Scene3D::getBoundingBox(of3dPrimitive& primitive, ofVec3f& minVertex, ofVec
     for (int i = 0; i < vertices.size(); i++)
     {
         ofLog() << "Vertex X: " << vertices[i].x << "Vertex Y: " << vertices[i].y << "Vertex Z: " << vertices[i].z;
-        minVertex.x = min(vertices[i].x, minVertex.x);
-        maxVertex.x = max(vertices[i].x, maxVertex.x);
-        minVertex.y = min(vertices[i].y, minVertex.y);
-        maxVertex.y = max(vertices[i].y, maxVertex.y);
-        minVertex.z = min(vertices[i].z, minVertex.z);
-        maxVertex.z = max(vertices[i].z, maxVertex.z);
+        minVertex.x = std::min(vertices[i].x, minVertex.x);
+        maxVertex.x = std::max(vertices[i].x, maxVertex.x);
+        minVertex.y = std::min(vertices[i].y, minVertex.y);
+        maxVertex.y = std::max(vertices[i].y, maxVertex.y);
+        minVertex.z = std::min(vertices[i].z, minVertex.z);
+        maxVertex.z = std::max(vertices[i].z, maxVertex.z);
     }
 }
 
@@ -655,7 +647,6 @@ void Scene3D::keyReleased(int key)
 }
 
 
-
 void Scene3D::update()
 {
     time_current = ofGetElapsedTimef();
@@ -732,22 +723,23 @@ void Scene3D::update()
 std::vector<std::pair<std::shared_ptr<of3dPrimitive>, NodeId>> Scene3D::getPrimitives()
 {
 
-    std::vector<std::shared_ptr<Node>> nodes =  sceneGraph.GetNodes();
+    std::vector<std::shared_ptr<Node>> nodes = sceneGraph.GetNodes();
     std::vector<std::pair<std::shared_ptr<of3dPrimitive>, NodeId>> primitives{};
-    for (const auto& node : nodes) {
+    for (const auto& node: nodes)
+    {
         auto inner = node->GetInner();
-        if (inner) {
-            ofLog() << "Inner " << node->GetName() << " : "  << inner.get();
+        if (inner)
+        {
+            ofLog() << "Inner " << node->GetName() << " : " << inner.get();
             ofLog() << "Shared ptr use count: " << inner.use_count();
             auto prim = std::dynamic_pointer_cast<of3dPrimitive>(inner);
             ofLog() << "Shared ptr use count: " << inner.use_count();
-            
+
             if (prim)
             {
                 primitives.push_back(std::pair(prim, node->GetId()));
             }
         }
-        
     }
 
 
