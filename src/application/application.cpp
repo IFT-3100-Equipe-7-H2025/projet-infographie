@@ -21,7 +21,7 @@ void Application::setup()
 
     static const ImWchar* normalCharRanges = ImGui::GetIO().Fonts->GetGlyphRangesDefault();
     static const ImWchar* myCharRanges = normalCharRanges;
-    customFont = gui.addFont("fonts/Tahoma_Regular_font.ttf", 18.0f, nullptr, myCharRanges, false);
+    customFont = gui.addFont("fonts/Tahoma_Regular_font.ttf", fontSize, nullptr, myCharRanges, false);
     SetDarkishBlueTheme();
     renderer.Setup();
 
@@ -263,7 +263,7 @@ void Application::ShowMainMenuBar()
         }
 
         // Add padding to show the FPS checkbox on the right
-        ImGui::SameLine(ImGui::GetWindowWidth() - (100 + 18.0f * 16));
+        ImGui::SameLine(ImGui::GetWindowWidth() - (100 + fontSize * 16));
         if (ImGui::Checkbox("Vsync", &this->renderer.vsync))
         {
             this->renderer.SetVsync(this->renderer.vsync);

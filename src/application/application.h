@@ -71,4 +71,5 @@ private:
 
     std::string exportPath;
     ImFont* customFont = nullptr;
+    float fontSize = 18.0f;
 };
