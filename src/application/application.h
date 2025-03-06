@@ -30,6 +30,11 @@ public:
     void mouseDragged(int x, int y, int button) override;
     void exit() override;
 
+    void SetDarkishBlueTheme();
+    void SetDarkGlassTheme();
+    void SetWinXpTheme();
+    void SetLightTheme();
+
     void SelectScene(SceneId id);
     void ShowMainMenuBar();
     void ShowCaptureOption();
@@ -65,4 +70,5 @@ private:
     float userDuration = 5.0f;
 
     std::string exportPath;
+    ImFont* customFont = nullptr;
 };
