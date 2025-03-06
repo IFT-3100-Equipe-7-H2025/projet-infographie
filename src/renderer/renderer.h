@@ -2,7 +2,6 @@
 
 #include "Gui.h"
 #include "ofMain.h"
-#include "scenes/Scene.h"
 #include "scenes/Scenes.h"
 
 class Renderer
@@ -12,4 +11,7 @@ public:
     void Draw();
     void Update();
     Scenes scenes{};
+
+    bool showFPS = true;
+    ofTrueTypeFont font;
 };

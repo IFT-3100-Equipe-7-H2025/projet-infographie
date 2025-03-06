@@ -236,6 +236,10 @@ void Application::ShowMainMenuBar()
             ImGui::EndMenu();
         }
 
+        // Add padding to show the FPS checkbox on the right
+        ImGui::SameLine(ImGui::GetWindowWidth() - 100);
+        ImGui::Checkbox("Show FPS", &this->renderer.showFPS);
+
         ImGui::EndMainMenuBar();
     }
 }

@@ -21,25 +21,39 @@ void SceneGraph::Draw() const
 
 [[nodiscard]] std::optional<std::shared_ptr<Node>> SceneGraph::GetNode(NodeId id) const
 {
-    std::stack<Node*> nodes;
-    nodes.push(root.get());
-
-    while (!nodes.empty())
+    if (this->nodes.count(id))
     {
-        Node* current = nodes.top();
-        nodes.pop();
+        if (std::shared_ptr<Node> node = this->nodes.at(id).lock(); node)
+        {
+            return node;
+        }
+        else
+        {
+            this->nodes.erase(id);
+            return std::nullopt;
+        }
+    }
+
+    std::stack<Node*> traversal;
+    traversal.push(root.get());
+
+    while (!traversal.empty())
+    {
+        Node* current = traversal.top();
+        traversal.pop();
 
         if (current->GetId() == id)
         {
-            return std::shared_ptr<Node>(current);
+            std::shared_ptr<Node> found = current->shared_from_this();
+            this->nodes[id] = found;
+            return found;
         }
 
         for (const auto& child: current->GetChildren())
         {
-            nodes.push(child.get());
+            traversal.push(child.get());
         }
     }
-
     return std::nullopt;
 }
 
@@ -48,6 +62,16 @@ void SceneGraph::RemoveNode(NodeId id)
     if (id == this->root->GetId())
     {
         ofLogError() << "Cannot remove the root node";
+        return;
+    }
+
+    if (this->nodes.count(id))
+    {
+        if (std::shared_ptr<Node> node = this->nodes.at(id).lock(); node)
+        {
+            node->Delete();
+        }
+        this->nodes.erase(id);
         return;
     }
 
@@ -61,8 +85,9 @@ void SceneGraph::RemoveNode(NodeId id)
 
         if (current->GetId() == id)
         {
-            ofLog() << "Removing node " << current->GetName();
-            current->Delete();
+            std::shared_ptr<Node> found = current->shared_from_this();
+            found->Delete();
+            this->nodes.erase(id);
             return;
         }
 
