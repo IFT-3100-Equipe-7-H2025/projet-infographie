@@ -41,6 +41,10 @@ void Application::setup()
     this->primitiveScene->setup();
     renderer.scenes.AddScene(this->primitiveScene);
 
+    this->imageHistogramScene = std::make_shared<ImageHistogramScene>();
+    this->imageHistogramScene->setup();
+    renderer.scenes.AddScene(this->imageHistogramScene);
+
     this->SelectScene(scene3D->getId());
 }
 
@@ -135,9 +139,6 @@ void Application::dragEvent(ofDragInfo dragInfo)
     {
         ofLog() << "Aucune scène sélectionnée pour keyReleased : " << e.what();
     }
-
-
-
 }
 
 void Application::keyReleased(int key)

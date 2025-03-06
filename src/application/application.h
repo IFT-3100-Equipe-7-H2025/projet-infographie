@@ -1,12 +1,12 @@
 #pragma once
 
 #include "GeometryScene.h"
+#include "ImageHistogramScene.h"
 #include "ImportImageScene.h"
 #include "PrimitiveScene.h"
 #include "RotatingCubeScene.h"
 #include "ofMain.h"
 #include "renderer/cursor/CursorManager.h"
-#include "renderer/renderer.h"
 #include "renderer/renderer.h"
 #include "renderer/scenes/3dscene/Scene3D.h"
 #include "renderer/scenes/ImportImageScene.h"
@@ -48,10 +48,11 @@ public:
     std::shared_ptr<PrimitiveScene> primitiveScene;
     std::shared_ptr<Scene3D> scene3D;
     std::shared_ptr<GeometryScene> geometryScene;
+    std::shared_ptr<ImageHistogramScene> imageHistogramScene;
 
     std::weak_ptr<Scene> selectedScene;
 
-    private:
+private:
     bool capturing = false;
     bool gifCapturing = false;
     int screenshotCount = 0;
