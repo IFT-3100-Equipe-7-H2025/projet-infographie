@@ -1,8 +1,10 @@
 #pragma once
+
 #include "3dscene/commands/AddShapeChildToNodeCommand.h"
 #include "CreateShapeUI.h"
 #include "imgui.h"
 #include "of3dPrimitives.h"
+#include "renderer/PrimitiveCreator.h"
 
 constexpr float DEFAULT_SPHERE_RADIUS = 100.0f;
 
@@ -21,8 +23,7 @@ public:
 
             if (ImGui::Button("Add"))
             {
-                auto sphere = ofSpherePrimitive();
-                sphere.setRadius(radius);
+                auto sphere = PrimitiveCreator::createSphere(30, 30, radius);
 
                 auto& mesh = sphere.getMesh();
 
@@ -32,10 +33,8 @@ public:
                     mesh.addColor(color);
                 }
 
-                auto sphere_ptr = std::make_shared<Node>("Sphere", std::make_shared<ofSpherePrimitive>(sphere));
+                auto sphere_ptr = std::make_shared<Node>("Sphere", std::make_shared<of3dPrimitive>(sphere));
                 history.executeCommand(std::make_shared<AddChildToNodeCommand>(*sharedParams->selectedNode, sphere_ptr));
-
-                radius = DEFAULT_SPHERE_RADIUS;
             }
 
             ImGui::TreePop();

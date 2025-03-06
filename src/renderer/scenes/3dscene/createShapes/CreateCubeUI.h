@@ -3,6 +3,7 @@
 #include "CreateShapeUI.h"
 #include "imgui.h"
 #include "of3dPrimitives.h"
+#include "renderer/PrimitiveCreator.h"
 
 constexpr float DEFAULT_CUBE_WIDTH = 100.0f;
 constexpr float DEFAULT_CUBE_HEIGHT = 100.0f;
@@ -25,15 +26,18 @@ public:
 
             if (ImGui::Button("Add"))
             {
-                auto cube = ofBoxPrimitive(width, height, depth);
-                for (int i = 0; i < 6; i++) { cube.setSideColor(i, ofFloatColor(sharedParams->color[0], sharedParams->color[1], sharedParams->color[2], sharedParams->color[3])); }
-                auto cube_ptr = std::make_shared<Node>("Cube", std::make_shared<ofBoxPrimitive>(cube));
+                auto cube = PrimitiveCreator::createCube(width, height, depth);
+                ofMesh& mesh = cube.getMesh();
+
+                ofFloatColor color(sharedParams->color[0], sharedParams->color[1], sharedParams->color[2], sharedParams->color[3]);
+                for (size_t i = 0; i < mesh.getNumVertices(); ++i)
+                {
+                    mesh.addColor(color);
+                }
+
+                auto cube_ptr = std::make_shared<Node>("Cube", std::make_shared<of3dPrimitive>(cube));
 
                 history.executeCommand(std::make_shared<AddChildToNodeCommand>(*sharedParams->selectedNode, cube_ptr));
-
-                width = DEFAULT_CUBE_WIDTH;
-                height = DEFAULT_CUBE_HEIGHT;
-                depth = DEFAULT_CUBE_DEPTH;
             }
 
             ImGui::TreePop();

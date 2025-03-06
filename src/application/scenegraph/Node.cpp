@@ -1,4 +1,5 @@
 #include "Node.h"
+#include "of3dPrimitives.h"
 #include <memory>
 
 Node::Node(std::string name, std::shared_ptr<ofNode> node) : inner(std::move(node)), name(std::move(name)), id(nextId++) {}
