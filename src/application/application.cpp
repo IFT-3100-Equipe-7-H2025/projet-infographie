@@ -237,8 +237,21 @@ void Application::ShowMainMenuBar()
         }
 
         // Add padding to show the FPS checkbox on the right
-        ImGui::SameLine(ImGui::GetWindowWidth() - 100);
+        ImGui::SameLine(ImGui::GetWindowWidth() - 330);
+        if (ImGui::Checkbox("Vsync", &this->renderer.vsync))
+        {
+            this->renderer.SetVsync(this->renderer.vsync);
+        }
+
         ImGui::Checkbox("Show FPS", &this->renderer.showFPS);
+
+        ImGui::PushItemWidth(100);
+        ImGui::InputInt("Target FPS", &this->renderer.targetFPS);
+        if (ImGui::IsItemDeactivatedAfterEdit())
+        {
+            this->renderer.SetTargetFPS(this->renderer.targetFPS);
+        }
+        ImGui::PopItemWidth();
 
         ImGui::EndMainMenuBar();
     }

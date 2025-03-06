@@ -12,6 +12,20 @@ public:
     void Update();
     Scenes scenes{};
 
+    int targetFPS = 60;
+    void SetTargetFPS(int targetFPS)
+    {
+        this->targetFPS = targetFPS;
+        ofSetFrameRate(targetFPS);
+    }
+
+    bool vsync = true;
+    void SetVsync(bool vsync)
+    {
+        this->vsync = vsync;
+        ofSetVerticalSync(vsync);
+    }
+
     bool showFPS = true;
     ofTrueTypeFont font;
 };

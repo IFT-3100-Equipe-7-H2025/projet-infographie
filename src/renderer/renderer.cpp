@@ -8,7 +8,8 @@ constexpr unsigned int FPS_FONT_SIZE = 14;
 // NOLINTNEXTLINE(readability-convert-member-functions-to-static)
 void Renderer::Setup()
 {
-    ofSetFrameRate(60);
+    ofSetFrameRate(targetFPS);
+    ofSetVerticalSync(vsync);
 
     ofSetWindowShape(1600, 900);
 
