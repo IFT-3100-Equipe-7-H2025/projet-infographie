@@ -29,9 +29,10 @@ public:
     void ImportImage(const std::string& path);
     void ImportImageButtonPressed();
     void CalculateHistogram();
-    void ShowHistogram();
 
     void ShowUI();
+
+    void ShowHistogram();
 
     std::string GetName() override { return "Image histogram"; }
 

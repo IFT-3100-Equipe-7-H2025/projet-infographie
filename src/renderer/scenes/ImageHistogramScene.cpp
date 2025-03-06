@@ -6,11 +6,13 @@
 #include "ofPolyline.h"
 #include "ofSystemUtils.h"
 
+#include <ranges>
+
 constexpr int FONT_SIZE = 20;
 
 void ImageHistogramScene::setup()
 {
-    font.load(OF_TTF_SANS, FONT_SIZE, true, true);
+    font.load("fonts/JetBrainsMono-Regular.ttf", FONT_SIZE, true, true);
 }
 
 void ImageHistogramScene::draw()
@@ -69,11 +71,21 @@ void ImageHistogramScene::ImportImageButtonPressed()
 
 void ImageHistogramScene::ImportImage(const std::string& path)
 {
+    std::string filename = ofFilePath::getFileName(path);
+    for ( const auto& image: std::views::keys(images) )
+    {
+        if ( image.filename == filename )
+        {
+            ofLogError() << "There is already an image with this name imported. Aborting import.";
+            return;
+        }
+    }
+
     ImageWithName image;
     image.image.load(path);
     image.position = ofVec2f((static_cast<float>(ofGetWidth()) / 2.0f) - image.image.getWidth() / 2.0f,
                              (static_cast<float>(ofGetHeight()) / 2.0f) - image.image.getHeight() / 2.0f);
-    image.filename = ofFilePath::getFileName(path);
+    image.filename = filename;
     if (this->images.empty())
     {
         this->images.emplace_back(image, true);
@@ -92,7 +104,7 @@ void ImageHistogramScene::CalculateHistogram()
     for (auto& [image, include]: images)
     {
         if (!include) continue;
-        ofPixels pixels = image.image.getPixels();
+        ofPixels& pixels = image.image.getPixels();
         for (size_t i = 0; i < pixels.size(); i += 3)
         {
             histogram[RED][pixels[i]]++;
@@ -100,22 +112,16 @@ void ImageHistogramScene::CalculateHistogram()
             histogram[BLUE][pixels[i + 2]]++;
         }
     }
-
-    ofLog() << "Histogram values:";
-    for (int i = 0; i < 256; i++)
-    {
-        ofLog() << i << " -> Red: " << histogram[RED][i] << " Green: " << histogram[GREEN][i] << " Blue: " << histogram[BLUE][i];
-    }
 }
 
 void ImageHistogramScene::ShowHistogram()
 {
-    float offsetX = static_cast<float>(ofGetWidth()) / 10.0f;
-    float offsetY = static_cast<float>(ofGetHeight()) / 5.0f;
-    float regionWidth = static_cast<float>(ofGetWidth()) / 1.33f;
-    float regionHeight = static_cast<float>(ofGetHeight()) / 3.0f;
+    const float     offsetX = static_cast<float>(ofGetWidth()) / 10.0f;
+    constexpr float offsetY = 50.0f;
+    const float     regionWidth = static_cast<float>(ofGetWidth()) / 1.33f;
+    const float     regionHeight = static_cast<float>(ofGetHeight()) / 2.0f;
 
-    const int numBins = 256;
+    constexpr int numBins = 256;
 
     int maxValue = 0;
     for (int i = 0; i < numBins; i++)
@@ -123,17 +129,17 @@ void ImageHistogramScene::ShowHistogram()
         maxValue = std::max({maxValue, histogram[RED][i], histogram[GREEN][i], histogram[BLUE][i]});
     }
 
-    float scaleY = (maxValue > 0) ? (regionHeight / static_cast<float>(maxValue)) : 1.0f;
-    float scaleX = regionWidth / static_cast<float>(numBins);
+    const float scaleY = (maxValue > 0) ? (regionHeight / static_cast<float>(maxValue)) : 1.0f;
+    const float scaleX = regionWidth / static_cast<float>(numBins);
 
     ofPolyline red, green, blue;
     for (int i = 0; i < numBins; i++)
     {
-        float xPos = offsetX + static_cast<float>(i) * scaleX;
+        const float xPos = offsetX + static_cast<float>(i) * scaleX;
 
-        float yRed = offsetY + regionHeight - static_cast<float>(histogram[RED][i]) * scaleY;
-        float yGreen = offsetY + regionHeight - static_cast<float>(histogram[GREEN][i]) * scaleY;
-        float yBlue = offsetY + regionHeight - static_cast<float>(histogram[BLUE][i]) * scaleY;
+        const float yRed = offsetY + regionHeight - static_cast<float>(histogram[RED][i]) * scaleY;
+        const float yGreen = offsetY + regionHeight - static_cast<float>(histogram[GREEN][i]) * scaleY;
+        const float yBlue = offsetY + regionHeight - static_cast<float>(histogram[BLUE][i]) * scaleY;
 
         red.addVertex(xPos, yRed);
         green.addVertex(xPos, yGreen);
@@ -151,8 +157,8 @@ void ImageHistogramScene::ShowHistogram()
     ofDrawLine(offsetX, offsetY, offsetX, offsetY + regionHeight);
 
     font.drawString("0", offsetX - 25, offsetY + regionHeight);
-    font.drawString(std::to_string(maxValue), offsetX - 15 * static_cast<float>(std::to_string(maxValue).size()), offsetY);
-    font.drawString("Frequency", offsetX - 7 * FONT_SIZE, offsetY + regionHeight / 2);
+    font.drawString(std::to_string(maxValue), offsetX - 10 - 15 * static_cast<float>(std::to_string(maxValue).size()), offsetY);
+    font.drawString("Frequency", offsetX - 8 * FONT_SIZE, offsetY + regionHeight / 2);
     ofDrawLine(offsetX, offsetY + regionHeight, offsetX + regionWidth, offsetY + regionHeight);
 
     if (showRed)
@@ -171,4 +177,37 @@ void ImageHistogramScene::ShowHistogram()
         blue.draw();
     }
     ofPopStyle();
+
+    // show included images below the histogram, resized to fit the window
+    std::vector<ImageWithName*> shownImages;
+    for ( auto& [image, include]: this->images ) { if ( include ) { shownImages.push_back(&image); } }
+
+    float       imageOffsetX = offsetX;
+    float       imageOffsetY = offsetY + regionHeight + 75;
+    const float imageWidth = (regionWidth * 0.9f) / static_cast<float>(shownImages.size());
+
+    const float screenWidth = static_cast<float>(ofGetWidth());
+    const float screenHeight = static_cast<float>(ofGetHeight());
+
+    for ( const auto image: shownImages )
+    {
+        const float aspectRatio = image->image.getWidth() / image->image.getHeight();
+        float       resizedWidth = imageWidth;
+        float       resizedHeight = imageWidth / aspectRatio;
+
+        if ( imageOffsetY + resizedHeight > screenHeight )
+        {
+            resizedHeight = screenHeight - imageOffsetY - 15;
+            resizedWidth = resizedHeight * aspectRatio;
+        }
+
+        if ( imageOffsetX + resizedWidth > screenWidth )
+        {
+            imageOffsetX = offsetX;
+            imageOffsetY += resizedHeight + 15;
+        }
+
+        image->image.draw(imageOffsetX, imageOffsetY, resizedWidth, resizedHeight);
+        imageOffsetX += resizedWidth;
+    }
 }
