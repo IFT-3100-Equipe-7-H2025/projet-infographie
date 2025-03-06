@@ -11,6 +11,13 @@ of3dPrimitive PrimitiveCreator::createTriangle()
     triangle.addVertex(p1);
     triangle.addVertex(p2);
     triangle.addVertex(p3);
+
+    // calculate normals
+    for (int i = 0; i < triangle.getNumVertices(); i++)
+    {
+        triangle.addNormal(normalize(triangle.getVertex(i)));
+    }
+
     return of3dPrimitive{triangle};
 }
 
@@ -86,13 +93,21 @@ of3dPrimitive PrimitiveCreator::createCube()
     cube.addIndex(5);
     cube.addIndex(4);
 
+    // calculate normals
+    for (int i = 0; i < cube.getNumVertices(); i++)
+    {
+        cube.addNormal(normalize(cube.getVertex(i)));
+    }
+
     return of3dPrimitive{cube};
 }
 
-of3dPrimitive PrimitiveCreator::createSphere(int lat, int longi)
+of3dPrimitive PrimitiveCreator::createSphere(int lat, int longi, float radius)
 {
     ofMesh sphere;
     sphere.setMode(OF_PRIMITIVE_TRIANGLES);
+    sphere.enableNormals();
+    sphere.enableColors();
 
     float r = 1.0f;
     ofPoint top = ofPoint{0.0f, 1.0f, 0.0f};
@@ -175,6 +190,17 @@ of3dPrimitive PrimitiveCreator::createSphere(int lat, int longi)
         sphere.addIndex(top_right);
     }
 
+    // calculate normals
+    for (int i = 0; i < sphere.getNumVertices(); i++)
+    {
+        sphere.addNormal(normalize(sphere.getVertex(i)));
+    }
+
+    // scale points to radius
+    for (int i = 0; i < sphere.getNumVertices(); i++)
+    {
+        sphere.setVertex(i, sphere.getVertex(i) * radius);
+    }
 
     return of3dPrimitive{sphere};
 }
@@ -226,6 +252,13 @@ of3dPrimitive PrimitiveCreator::createLasagna(float l_w_ratio, int periods, int 
             lasagna.addIndex(p4);
         }
     }
+
+    // calculate normals
+    for (int i = 0; i < lasagna.getNumVertices(); i++)
+    {
+        lasagna.addNormal(normalize(lasagna.getVertex(i)));
+    }
+
     return of3dPrimitive{lasagna};
 }
 
@@ -253,6 +286,11 @@ of3dPrimitive PrimitiveCreator::createPyramid(int sides)
         pyramid.addIndex(i);
     }
 
+    // calculate normals
+    for (int i = 0; i < pyramid.getNumVertices(); i++)
+    {
+        pyramid.addNormal(normalize(pyramid.getVertex(i)));
+    }
 
     return of3dPrimitive{pyramid};
 }

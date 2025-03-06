@@ -34,7 +34,7 @@ void Renderer::Draw()
 
     if (this->showFPS)
     {
-        std::string fps = std::format("FPS: {:.2f}", ofGetFrameRate());
+        std::string fps = std::format("FPS: {:.4f}", ofGetFrameRate());
         ofPushStyle();
         ofSetColor(0, 255, 0);
         font.drawString(fps, static_cast<float>(ofGetWidth()) - static_cast<float>(fps.size() - 1) * FPS_FONT_SIZE, 30.0f + FPS_FONT_SIZE);

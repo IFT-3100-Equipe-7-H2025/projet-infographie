@@ -13,7 +13,7 @@ void GeometryScene::setup()
 {
 
     //primitives.push_back(createTriangle());
-    of3dPrimitive sphere = PrimitiveCreator::createSphere(30, 30);
+    of3dPrimitive sphere = PrimitiveCreator::createSphere(30, 30, 100);
     sphere.setScale(10);
     of3dPrimitive pyramid = PrimitiveCreator::createPyramid(3);
     pyramid.setScale(10);
@@ -116,7 +116,7 @@ void GeometryScene::draw()
     ofClear(bgColor);
     auto triangle = PrimitiveCreator::createTriangle();
     auto lasasgn = PrimitiveCreator::createLasagna(0.5, 4, 40, 2);
-    auto sphere = PrimitiveCreator::createSphere(30, 30);
+    auto sphere = PrimitiveCreator::createSphere(30, 30, 100);
     auto pyramide = PrimitiveCreator::createPyramid(100);
     /*auto triangle = createTriangle();
 

@@ -46,6 +46,7 @@ void Scene3D::setup()
 
 void Scene3D::draw()
 {
+    ofClear(0, 77, 98);
     this->DrawSceneGraphWindow();
     this->DrawSelectedNodeWindow();
     this->DrawCommandHistoryWindow();
