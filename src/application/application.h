@@ -1,5 +1,11 @@
 #pragma once
 
+#include "GeometryScene.h"
+#include "ImageHistogramScene.h"
+#include "ImportImageScene.h"
+#include "PrimitiveScene.h"
+#include "RotatingCubeScene.h"
+#include "ofMain.h"
 #include "renderer/cursor/CursorManager.h"
 #include "renderer/renderer.h"
 #include "renderer/scenes/3dscene/Scene3D.h"
@@ -13,10 +19,15 @@ public:
     Renderer renderer;
 
     void setup() override;
+    void update() override;
     void draw() override;
+    void keyPressed(int key) override;
     void keyReleased(int key) override;
+    void dragEvent(ofDragInfo dragInfo) override;
+
     void mouseReleased(int x, int y, int button) override;
     void mousePressed(int x, int y, int button) override;
+    void mouseDragged(int x, int y, int button) override;
     void exit() override;
 
     void SetDarkishBlueTheme();
@@ -41,10 +52,12 @@ public:
     std::shared_ptr<RotatingCubeScene> rotatingCubeScene;
     std::shared_ptr<PrimitiveScene> primitiveScene;
     std::shared_ptr<Scene3D> scene3D;
+    std::shared_ptr<GeometryScene> geometryScene;
+    std::shared_ptr<ImageHistogramScene> imageHistogramScene;
 
     std::weak_ptr<Scene> selectedScene;
 
-    private:
+private:
     bool capturing = false;
     bool gifCapturing = false;
     int screenshotCount = 0;

@@ -1,4 +1,5 @@
 #include "application.h"
+#include "GeometryScene.h"
 #include "imgui.h"
 #include "ofAppRunner.h"
 
@@ -23,6 +24,10 @@ void Application::setup()
     customFont = gui.addFont("fonts\\Tahoma_Regular_font.ttf", 18.0f, nullptr, myCharRanges, false);
     SetDarkishBlueTheme();
     renderer.Setup();
+
+    this->geometryScene = std::make_shared<GeometryScene>();
+    this->geometryScene->setup();
+    renderer.scenes.AddScene(this->geometryScene);
     this->scene3D = std::make_shared<Scene3D>();
     this->scene3D->setup();
     renderer.scenes.AddScene(this->scene3D);
@@ -39,7 +44,16 @@ void Application::setup()
     this->primitiveScene->setup();
     renderer.scenes.AddScene(this->primitiveScene);
 
+    this->imageHistogramScene = std::make_shared<ImageHistogramScene>();
+    this->imageHistogramScene->setup();
+    renderer.scenes.AddScene(this->imageHistogramScene);
+
     this->SelectScene(scene3D->getId());
+}
+
+void Application::update()
+{
+    renderer.Update();
 }
 
 void Application::draw()
@@ -97,9 +111,55 @@ void Application::draw()
     gui.end();
 }
 
+void Application::keyPressed(int key)
+{
+    ofLog() << "<app::keyPressed: " << key << ">";
+    try
+    {
+        auto selectedScene = renderer.scenes.GetSelectedScene();
+        if (selectedScene)
+        {
+            selectedScene->keyPressed(key);
+        }
+    } catch (std::exception& e)
+    {
+        ofLog() << "Aucune scène sélectionnée pour keyPressed : " << e.what();
+    }
+}
+
+void Application::dragEvent(ofDragInfo dragInfo)
+{
+
+    ofLog() << "<app::dragged: >";
+    ofLog() << "<app::ofDragInfo file[0]: " << dragInfo.files.at(0)
+            << " at : " << dragInfo.position << ">";
+    try
+    {
+        auto selectedScene = renderer.scenes.GetSelectedScene();
+        if (selectedScene)
+        {
+            selectedScene->dragEvent(dragInfo);
+        }
+    } catch (std::exception& e)
+    {
+        ofLog() << "Aucune scène sélectionnée pour keyReleased : " << e.what();
+    }
+}
+
 void Application::keyReleased(int key)
 {
     ofLog() << "<app::keyReleased: " << key << ">";
+    try
+    {
+        auto selectedScene = renderer.scenes.GetSelectedScene();
+        if (selectedScene)
+        {
+            selectedScene->keyReleased(key);
+        }
+    } catch (std::exception& e)
+    {
+        ofLog() << "Aucune scène sélectionnée pour keyReleased : " << e.what();
+    }
 }
 
 void Application::mouseReleased(int x, int y, int button)
@@ -119,6 +179,21 @@ void Application::mousePressed(int x, int y, int button)
     } catch (std::exception& e)
     {
         ofLog() << "Aucune scène sélectionnée pour mousePressed : " << e.what();
+    }
+}
+
+void Application::mouseDragged(int x, int y, int button)
+{
+    try
+    {
+        auto selectedScene = renderer.scenes.GetSelectedScene();
+        if (selectedScene)
+        {
+            selectedScene->mouseDragged(x, y, button);
+        }
+    } catch (std::exception& e)
+    {
+        ofLog() << "Aucune scène sélectionnée pour mouseDragged : " << e.what();
     }
 }
 
@@ -186,6 +261,23 @@ void Application::ShowMainMenuBar()
             }
             ImGui::End();
         }
+      
+        // Add padding to show the FPS checkbox on the right
+        ImGui::SameLine(ImGui::GetWindowWidth() - 330);
+        if (ImGui::Checkbox("Vsync", &this->renderer.vsync))
+        {
+            this->renderer.SetVsync(this->renderer.vsync);
+        }
+
+        ImGui::Checkbox("Show FPS", &this->renderer.showFPS);
+
+        ImGui::PushItemWidth(100);
+        ImGui::InputInt("Target FPS", &this->renderer.targetFPS);
+        if (ImGui::IsItemDeactivatedAfterEdit())
+        {
+            this->renderer.SetTargetFPS(this->renderer.targetFPS);
+        }
+        ImGui::PopItemWidth();
         ImGui::EndMainMenuBar();
     }  
 }

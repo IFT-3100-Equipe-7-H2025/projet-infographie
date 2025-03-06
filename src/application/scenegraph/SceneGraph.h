@@ -34,7 +34,6 @@ private:
         }
     }
 
-    [[nodiscard]] std::optional<std::shared_ptr<Node>> GetNodeInternal(const std::shared_ptr<Node>& node, NodeId id) const;
-
     std::shared_ptr<Node> root;
+    mutable std::unordered_map<NodeId, std::weak_ptr<Node>> nodes;
 };
