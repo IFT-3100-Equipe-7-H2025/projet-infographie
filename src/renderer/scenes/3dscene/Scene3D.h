@@ -71,6 +71,8 @@ private:
 
 
     std::shared_ptr<ofCamera> camera;
+
+
     //std::vector<ofCamera> cameras;
     ofMesh selectionMesh;
     bool is_selected;
@@ -121,5 +123,5 @@ private:
     void focus();
 
 
-    std::vector<std::shared_ptr<of3dPrimitive>> getPrimitives();
+    std::vector <std::pair<std::shared_ptr<of3dPrimitive>, NodeId>> getPrimitives();
 };

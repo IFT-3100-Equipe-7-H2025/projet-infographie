@@ -21,12 +21,12 @@ void SceneGraph::Draw() const
 
 [[nodiscard]] std::optional<std::shared_ptr<Node>> SceneGraph::GetNode(NodeId id) const
 {
-    std::stack<Node*> nodes;
-    nodes.push(root.get());
+    std::stack<std::shared_ptr<Node>> nodes;
+    nodes.push(root);
 
     while (!nodes.empty())
     {
-        Node* current = nodes.top();
+        std::shared_ptr<Node> current = nodes.top();
         nodes.pop();
 
         if (current->GetId() == id)
@@ -36,7 +36,7 @@ void SceneGraph::Draw() const
 
         for (const auto& child: current->GetChildren())
         {
-            nodes.push(child.get());
+            nodes.push(child);
         }
     }
 
@@ -46,19 +46,19 @@ void SceneGraph::Draw() const
 
 std::vector<std::shared_ptr<Node>> SceneGraph::GetNodes() const
 {
-    std::stack<Node*> nodes;
+    std::stack<std::shared_ptr<Node>> nodes;
     std::vector<std::shared_ptr<Node>> output;
-    nodes.push(root.get());
+    nodes.push(root);
 
     while (!nodes.empty())
     {
-        Node* current = nodes.top();
-        output.push_back(std::shared_ptr<Node>(current));
+        std::shared_ptr<Node> current = nodes.top();
+        output.push_back(current);
         nodes.pop();
 
         for (const auto& child: current->GetChildren())
         {
-            nodes.push(child.get());
+            nodes.push(child);
         }
     }
 

@@ -12,7 +12,7 @@ void Renderer::Setup()
     ofEnableDepthTest();
     ofEnableLighting();
 
-    ofSetLogLevel(ofLogLevel::OF_LOG_VERBOSE);
+    //ofSetLogLevel(ofLogLevel::OF_LOG_VERBOSE);
 }
 
 void Renderer::Update()
