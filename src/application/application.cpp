@@ -15,13 +15,13 @@ void Application::setup()
 
     ofLog() << "<app::setup>";
     gui.setup(nullptr, true, ImGuiConfigFlags_DockingEnable, false);
-    
+
     ImGuiIO& io = ImGui::GetIO();
     io.ConfigFlags |= ImGuiConfigFlags_NoMouseCursorChange;
 
     static const ImWchar* normalCharRanges = ImGui::GetIO().Fonts->GetGlyphRangesDefault();
     static const ImWchar* myCharRanges = normalCharRanges;
-    customFont = gui.addFont("fonts\\Tahoma_Regular_font.ttf", 18.0f, nullptr, myCharRanges, false);
+    customFont = gui.addFont("fonts/Tahoma_Regular_font.ttf", 18.0f, nullptr, myCharRanges, false);
     SetDarkishBlueTheme();
     renderer.Setup();
 
@@ -61,7 +61,7 @@ void Application::draw()
     CaptureManager();
     gui.begin();
     ImGui::DockSpaceOverViewport(0, ImGui::GetMainViewport(), ImGuiDockNodeFlags_PassthruCentralNode);
-    
+
     ImGui::PushFont(customFont);//Change le font pour le reste de l'application
     this->ShowMainMenuBar();
     this->ShowCaptureOption();
@@ -261,9 +261,9 @@ void Application::ShowMainMenuBar()
             }
             ImGui::End();
         }
-      
+
         // Add padding to show the FPS checkbox on the right
-        ImGui::SameLine(ImGui::GetWindowWidth() - 330);
+        ImGui::SameLine(ImGui::GetWindowWidth() - (100 + 18.0f * 16));
         if (ImGui::Checkbox("Vsync", &this->renderer.vsync))
         {
             this->renderer.SetVsync(this->renderer.vsync);
@@ -279,7 +279,7 @@ void Application::ShowMainMenuBar()
         }
         ImGui::PopItemWidth();
         ImGui::EndMainMenuBar();
-    }  
+    }
 }
 
 void Application::ExportImage(const std::string& path)
@@ -469,23 +469,23 @@ void Application::SetWinXpTheme()
     ImVec4 orange = ImVec4(1.0f, 0.6f, 0.2f, 1.00f);
 
     // (Backgrounds, Titles, Tabs)
-    colors[ImGuiCol_WindowBg] = bleu;// Main window
+    colors[ImGuiCol_WindowBg] = bleu;      // Main window
     colors[ImGuiCol_MenuBarBg] = vertFonce;// Menu bar
-    colors[ImGuiCol_PopupBg] = bleuFonce;// Popup windows
-    colors[ImGuiCol_TitleBg] = bleuPale;// Title bar
+    colors[ImGuiCol_PopupBg] = bleuFonce;  // Popup windows
+    colors[ImGuiCol_TitleBg] = bleuPale;   // Title bar
     colors[ImGuiCol_TitleBgActive] = bleuFonce;
     colors[ImGuiCol_TitleBgCollapsed] = bleuPale;
     colors[ImGuiCol_TabUnfocused] = vertPale;
     colors[ImGuiCol_TabUnfocusedActive] = bleuFonce;
 
     // (Text, Highlights)
-    colors[ImGuiCol_Text] = blancCreme;// Main text
+    colors[ImGuiCol_Text] = blancCreme;  // Main text
     colors[ImGuiCol_TextDisabled] = gris;// Disabled text
 
     colors[ImGuiCol_CheckMark] = blancCreme;// Checkmark
 
     // (Tabs, Headers, Sliders, Grips)
-    colors[ImGuiCol_Header] = bleu;      // Headers
+    colors[ImGuiCol_Header] = bleu;            // Headers
     colors[ImGuiCol_HeaderHovered] = bleuFonce;// Hovered Headers
     colors[ImGuiCol_HeaderActive] = bleuPale;  // Active Headers
     colors[ImGuiCol_Tab] = bleu;
@@ -539,7 +539,7 @@ void Application::SetDarkGlassTheme()
     ImVec4* colors = style.Colors;
 
     /// Setting up a dark theme base
-    colors[ImGuiCol_WindowBg] = ImVec4(0.1f, 0.1f, 0.1f, 0.6f);// Semi-transparent dark background
+    colors[ImGuiCol_WindowBg] = ImVec4(0.1f, 0.1f, 0.1f, 0.6f); // Semi-transparent dark background
     colors[ImGuiCol_MenuBarBg] = ImVec4(0.1f, 0.1f, 0.1f, 0.8f);// ADDED
     colors[ImGuiCol_ChildBg] = ImVec4(0.1f, 0.1f, 0.1f, 0.4f);
     colors[ImGuiCol_PopupBg] = ImVec4(0.08f, 0.08f, 0.08f, 0.8f);
@@ -565,7 +565,7 @@ void Application::SetDarkGlassTheme()
     colors[ImGuiCol_FrameBg] = ImVec4(0.15f, 0.15f, 0.18f, 1.00f);
     colors[ImGuiCol_FrameBgHovered] = ImVec4(0.22f, 0.22f, 0.27f, 1.00f);
     colors[ImGuiCol_FrameBgActive] = ImVec4(0.25f, 0.25f, 0.30f, 1.00f);
-    
+
     // Scrollbar
     colors[ImGuiCol_ScrollbarBg] = ImVec4(0.10f, 0.10f, 0.12f, 1.00f);
     colors[ImGuiCol_ScrollbarGrab] = ImVec4(0.30f, 0.30f, 0.35f, 1.00f);
@@ -614,7 +614,7 @@ void Application::SetLightTheme()
     style.WindowBorderSize = 1.0f;
     style.FrameBorderSize = 1.0f;
     style.PopupBorderSize = 1.0f;
-    style.PopupRounding = 5.0f;                
+    style.PopupRounding = 5.0f;
 
     // Setting the colors (Light version)
     colors[ImGuiCol_Text] = ImVec4(0.10f, 0.10f, 0.10f, 1.00f);
