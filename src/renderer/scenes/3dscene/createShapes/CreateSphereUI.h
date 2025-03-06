@@ -3,6 +3,7 @@
 #include "CreateShapeUI.h"
 #include "imgui.h"
 #include "of3dPrimitives.h"
+#include "Primitive3D.h"
 
 constexpr float DEFAULT_SPHERE_RADIUS = 100.0f;
 
@@ -31,8 +32,8 @@ public:
                 {
                     mesh.addColor(color);
                 }
-
-                auto sphere_ptr = std::make_shared<Node>("Sphere", std::make_shared<ofSpherePrimitive>(sphere));
+                auto sphere_scene = Primitive3D(sphere);
+                auto sphere_ptr = std::make_shared<Node>("Sphere", std::make_shared<Primitive3D>(sphere_scene));
                 history.executeCommand(std::make_shared<AddChildToNodeCommand>(*sharedParams->selectedNode, sphere_ptr));
 
                 radius = DEFAULT_SPHERE_RADIUS;

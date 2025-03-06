@@ -7,6 +7,7 @@
 #include "scenegraph/SceneGraph.h"
 #include <ofxAssimpModelLoader.h>
 #include "ofMain.h"
+#include "SceneObject.h"
 
 class Scene3D : public Scene
 {
@@ -36,6 +37,7 @@ public:
     void update() override;
     void mousePressed(int x, int y, int button) override;
     void mouseDragged(int x, int y, int button) override;
+    void mouseMoved(int x, int y) override;
     void dragEvent(ofDragInfo dragInfo) override;
     void keyPressed(int key) override;
     void keyReleased(int key) override;
@@ -73,7 +75,7 @@ private:
     std::shared_ptr<ofCamera> camera;
 
 
-    //std::vector<ofCamera> cameras;
+    std::vector<std::shared_ptr<ofCamera>> cameras;
     ofMesh selectionMesh;
     bool is_selected;
     bool debugger;
@@ -116,12 +118,13 @@ private:
     int previous_x;
     int previous_y;
 
+    ofRectangle viewport1;
+    ofRectangle viewport2;
+
     float backgroundColor[4] = {0.1f, 0.1f, 0.1f, 1.0f};
-    ofMesh createBox(of3dPrimitive& primitive);
-    void getBoundingBox(of3dPrimitive& primitive, ofVec3f& minVertex, ofVec3f& maxVertex);
     std::vector<ofVec3f> getPrimitiveVertices(of3dPrimitive& primitive);
     void focus();
+    void drawScene();
 
-
-    std::vector <std::pair<std::shared_ptr<of3dPrimitive>, NodeId>> getPrimitives();
+    std::vector<std::pair<std::shared_ptr<SceneObject>, NodeId>> getSceneObjects();
 };

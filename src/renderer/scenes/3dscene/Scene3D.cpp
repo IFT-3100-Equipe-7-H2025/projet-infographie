@@ -13,6 +13,9 @@
 #include <ranges>
 #include <cmath>
 #include <numbers>
+#include "renderer/ImportModel.h"
+#include "SceneObject.h"
+#include "Light.h"
 
 Scene3D::Scene3D() : history(CommandHistory()),
                      sceneGraph(SceneGraph()),
@@ -42,46 +45,74 @@ void Scene3D::setup()
     light.setSpecularColor(ofFloatColor(1.0, 1.0, 1.0));
     light.setAmbientColor(ofFloatColor(0.2, 0.2, 0.2));
     light.lookAt(ofVec3f((float) ofGetWidth() / 2.0f, (float) ofGetHeight() / 2.0f, 0));
-    auto light_ptr = std::make_shared<Node>("Light", std::make_shared<ofLight>(light));
+
+    auto light_ptr = std::make_shared<Node>("Light", std::make_shared<Light>(light));
     this->sceneGraph.AddNode(light_ptr);
 
 
     // Add base camera
-    //cam
-
-    camera = std::make_shared<ofCamera>();
+    /*camera = std::make_shared<ofCamera>();
     camera->setPosition(0, 0, -200);
     camera->lookAt(ofVec3f(0, 0, 0));
     auto cam_ptr = std::make_shared<Node>("Camera", camera);
-    this->sceneGraph.AddNode(cam_ptr);
-    translate_speed = 100;
-    rotate_speed = 50;
-    ofLog() << "Near " << camera->getNearClip() << " Far " << camera->getFarClip();
-    
+    this->sceneGraph.AddNode(cam_ptr);*/
+    translate_speed = 1000;
+    rotate_speed = 100;
 
+    for (int i = 0; i < 6; i++)
+    {
+        shared_ptr<ofCamera> new_cam = make_shared<ofCamera>();
+        new_cam->lookAt(ofVec3f(0, 0, 0));
+        cameras.push_back(new_cam);
+    }
 
+    camera = cameras[0];
+    current_cam = 0;
+
+    viewport1.set(0, 0, ofGetWidth() / 2, ofGetHeight());
+    //viewport2.set(ofGetWidth() / 2, 0, ofGetWidth(), ofGetHeight());
    
 }
 
 void Scene3D::draw()
 {
-    camera->begin();
-    camera->drawFrustum();
     this->DrawSceneGraphWindow();
     this->DrawSelectedNodeWindow();
     this->DrawCommandHistoryWindow();
+
+
+    cameras[0]->begin();
+    drawScene();
+    cameras[0]->drawFrustum();
+    
+    cameras[0]->end();
+
+    //cameras[1]->begin(viewport2);
+    //drawScene();
+    //cameras[1]->drawFrustum();
+
+    //cameras[1]->end();
+
+    /*ofNoFill();
+    ofDrawRectangle(viewport1);
+    ofDrawRectangle(viewport2);*/
+
+}
+
+void Scene3D::drawScene() {
+    
 
     material.begin();
     sceneGraph.Draw();
 
     if (is_selected)
     {
-        ofSetColor(255, 0, 0);
+        ofSetColor(255, 255, 255);
+        selectionMesh.setColorForIndices(255, 255, 0);
         selectionMesh.draw();
     }
 
     material.end();
-    camera->end();
 }
 
 void Scene3D::DrawSceneGraphWindow()
@@ -292,11 +323,6 @@ void Scene3D::ResetParams(const std::shared_ptr<Node>& node)
     rotate[2] = eulerRotation.z;
 }
 
-
-
-
-
-
 void Scene3D::reset()
 {
     camera->resetTransform();
@@ -309,13 +335,11 @@ void Scene3D::mouseDragged(int x, int y, int button)
         case 0://left
             if (is_selected)
             {
-
-
                 ofVec3f cameraForward = camera->getLookAtDir();
                 ofVec3f cameraRight = camera->getSideDir();
                 ofVec3f cameraUp = camera->getUpDir();
 
-                ofVec3f current_pos = selectedNode->get()->GetInner()->getPosition();
+                ofVec3f current_pos = selectedNode->get()->GetInner()->getGlobalPosition();
                 ofVec3f current_screen_pos = camera->worldToScreen(current_pos);
 
                 ofVec3f current = ofVec3f(x, y, current_screen_pos.z);
@@ -326,7 +350,7 @@ void Scene3D::mouseDragged(int x, int y, int button)
 
                 ofVec3f translate = new_pos - current_pos;
 
-                selectedNode->get()->GetInner()->setPosition(new_pos);
+                selectedNode->get()->GetInner()->setGlobalPosition(new_pos);
             }
 
             break;
@@ -347,7 +371,6 @@ void Scene3D::mouseDragged(int x, int y, int button)
 
 
                 float scale = 1 + ((x - previous_x) + (previous_y - y)) * 0.1;
-                ofLog() << scale;
                 ofVec3f scaleVec = selectedNode->get()->GetInner()->getScale() * scale;
                 selectedNode->get()->GetInner()->setScale(scaleVec);
             }
@@ -367,19 +390,16 @@ void Scene3D::mousePressed(int x, int y, int button)
     rayDirection.normalize();
     is_selected = false;
     float closeness = -1;
-    std::vector<std::pair<std::shared_ptr<of3dPrimitive>, NodeId>> primitive_pairs = getPrimitives();
+    std::vector<std::pair<std::shared_ptr<SceneObject>, NodeId>> primitive_pairs = getSceneObjects();
     for (int i = 0; i < primitive_pairs.size(); i++)
     {
-        ofVec3f minVertex, maxVertex;
-        std::shared_ptr<of3dPrimitive> primitive = primitive_pairs[i].first;
+        
+        std::shared_ptr<SceneObject> primitive = primitive_pairs[i].first;
         NodeId id = primitive_pairs[i].second;
-        ofMesh mesh = primitive->getMesh();
 
+        std::pair<ofVec3f, ofVec3f> vertices = primitive->getBoundingVertices();
+        ofVec3f minVertex = vertices.first, maxVertex = vertices.second;
 
-        float minX = 0, maxX = 0;
-        float minY = 0, maxY = 0;
-
-        getBoundingBox(*primitive, minVertex, maxVertex);
 
         std::vector<ofVec3f> corners = {
                 camera->worldToScreen(maxVertex),
@@ -392,9 +412,17 @@ void Scene3D::mousePressed(int x, int y, int button)
                 camera->worldToScreen(ofVec3f(minVertex.x, minVertex.y, minVertex.z)),
                 camera->worldToScreen(ofVec3f(maxVertex.x, minVertex.y, minVertex.z)),
         };
+
+
         ofVec3f camPos = camera->getPosition();
         ofVec3f objPos = primitive->getPosition();
         float new_closeness = camPos.distance(objPos);
+
+
+
+        float minX = 0, maxX = 0;
+        float minY = 0, maxY = 0;
+
 
         minX = corners[0].x, maxX = corners[0].x;
         minY = corners[0].y, maxY = corners[0].y;
@@ -415,7 +443,7 @@ void Scene3D::mousePressed(int x, int y, int button)
             if (new_closeness < closeness || closeness == -1)
             {
                 closeness = new_closeness;
-                selectionMesh = createBox(*primitive);
+                selectionMesh = primitive->getSelectionBox();
                 SelectNode(sceneGraph.GetNode(id).value());
                 is_selected = true;
                 ofLog() << "Object : " << i << " selected. ";
@@ -424,47 +452,6 @@ void Scene3D::mousePressed(int x, int y, int button)
     }
 }
 
-
-ofMesh Scene3D::createBox(of3dPrimitive& primitive)
-{
-    ofVec3f minVertex, maxVertex;
-
-    getBoundingBox(primitive, minVertex, maxVertex);
-
-
-    ofMesh new_mesh;
-    new_mesh.setMode(OF_PRIMITIVE_LINE_LOOP);
-
-    new_mesh.addVertex(minVertex);
-    new_mesh.addVertex(ofVec3f(minVertex.x, maxVertex.y, minVertex.z));
-    new_mesh.addVertex(ofVec3f(maxVertex.x, maxVertex.y, minVertex.z));
-    new_mesh.addVertex(ofVec3f(maxVertex.x, minVertex.y, minVertex.z));
-
-
-    new_mesh.addVertex(ofVec3f(maxVertex.x, minVertex.y, maxVertex.z));
-    new_mesh.addVertex(ofVec3f(maxVertex.x, maxVertex.y, maxVertex.z));
-    new_mesh.addVertex(ofVec3f(maxVertex.x, maxVertex.y, minVertex.z));
-    new_mesh.addVertex(ofVec3f(maxVertex.x, minVertex.y, minVertex.z));
-
-
-    new_mesh.addVertex(ofVec3f(maxVertex.x, minVertex.y, minVertex.z));
-    new_mesh.addVertex(ofVec3f(minVertex.x, minVertex.y, minVertex.z));
-    new_mesh.addVertex(ofVec3f(minVertex.x, minVertex.y, maxVertex.z));
-    new_mesh.addVertex(ofVec3f(maxVertex.x, minVertex.y, maxVertex.z));
-
-
-    new_mesh.addVertex(ofVec3f(maxVertex.x, maxVertex.y, maxVertex.z));
-    new_mesh.addVertex(ofVec3f(minVertex.x, maxVertex.y, maxVertex.z));
-    new_mesh.addVertex(ofVec3f(minVertex.x, minVertex.y, maxVertex.z));
-
-    new_mesh.addVertex(ofVec3f(minVertex.x, minVertex.y, minVertex.z));
-    new_mesh.addVertex(ofVec3f(minVertex.x, maxVertex.y, minVertex.z));
-    new_mesh.addVertex(ofVec3f(minVertex.x, maxVertex.y, maxVertex.z));
-    new_mesh.addVertex(ofVec3f(minVertex.x, minVertex.y, maxVertex.z));
-
-
-    return new_mesh;
-}
 
 //void Scene3D::nextCam()
 //{
@@ -483,49 +470,23 @@ void Scene3D::dragEvent(ofDragInfo dragInfo)
 
     if (!dragInfo.files.empty())
     {
-        auto model = std::make_shared<ofxAssimpModelLoader>();
+        auto model = std::make_shared<ImportModel>();
         std::string filePath = dragInfo.files[0];// Get the first dropped file
         if (ofFilePath::getFileExt(filePath) == "obj")
         {
             model->loadModel(filePath);// Load the OBJ model
             model->setPosition(0, 0, 0);
-            ofMesh combinedMesh;
-            for (int i = 0; i < model->getNumMeshes(); i++)
-            {
-                ofMesh mesh = model->getMesh(i);
-                combinedMesh.append(mesh);
-            }
-            of3dPrimitive import = of3dPrimitive(combinedMesh);
-            //primitives.push_back(import);
+            shared_ptr<Node> node = make_shared<Node>("Object ", model);
+            sceneGraph.AddNode(node);
         }
         else
         {
             ofLog() << "Not an OBJ file!";
         }
     }
-    ofLog() << "<GeometryScene::dragEvent: >";
-    ofLog() << "<GeometryScene::ofDragInfo file[0]: " << dragInfo.files.at(0)
-            << " at : " << dragInfo.position << ">";
+
 }
 
-void Scene3D::getBoundingBox(of3dPrimitive& primitive, ofVec3f& minVertex, ofVec3f& maxVertex)
-{
-    std::vector<ofVec3f> vertices = getPrimitiveVertices(primitive);
-
-    minVertex = vertices[0];
-    maxVertex = vertices[0];
-
-    for (int i = 0; i < vertices.size(); i++)
-    {
-        ofLog() << "Vertex X: " << vertices[i].x << "Vertex Y: " << vertices[i].y << "Vertex Z: " << vertices[i].z;
-        minVertex.x = min(vertices[i].x, minVertex.x);
-        maxVertex.x = max(vertices[i].x, maxVertex.x);
-        minVertex.y = min(vertices[i].y, minVertex.y);
-        maxVertex.y = max(vertices[i].y, maxVertex.y);
-        minVertex.z = min(vertices[i].z, minVertex.z);
-        maxVertex.z = max(vertices[i].z, maxVertex.z);
-    }
-}
 
 std::vector<ofVec3f> Scene3D::getPrimitiveVertices(of3dPrimitive& primitive)
 {
@@ -553,7 +514,6 @@ void Scene3D::focus()
 
 void Scene3D::keyPressed(int key)
 {
-    ofLog() << "<GeometryScene::keyPressed: " << key << ">";
     switch (key)
     {
         case 119://w
@@ -597,7 +557,6 @@ void Scene3D::keyPressed(int key)
 
 void Scene3D::keyReleased(int key)
 {
-    ofLog() << "<GeometryScene::keyReleased: " << key << ">";
     switch (key)
     {
         case 119://w
@@ -670,45 +629,33 @@ void Scene3D::update()
     if (is_key_press_w)
     {
         camera->boom(speed_translation);
-        ofLog() << "boom boom";
-        //offset_y += speed_translation;
     }
     if (is_key_press_s)
     {
         camera->boom(-speed_translation);
-        ofLog() << "boom down";
-        //offset_y -= speed_translation;
     }
     if (is_key_press_a)
     {
-        ofLog() << "left";
         camera->truck(-speed_translation);
-        //offset_x -= speed_translation;
     }
     if (is_key_press_d)
     {
-        ofLog() << "right";
         camera->truck(speed_translation);
-        //offset_x += speed_translation;
     }
     if (is_key_press_up)
     {
         camera->tilt(speed_rotation);
-        //angle_y += speed_rotation;
     }
     if (is_key_press_down)
     {
-        //angle_y -= speed_rotation;
         camera->tilt(-speed_rotation);
     }
     if (is_key_press_left)
     {
-        angle_x += speed_rotation;
         camera->pan(speed_rotation);
     }
     if (is_key_press_right)
     {
-        angle_x -= speed_rotation;
         camera->pan(-speed_rotation);
     }
     if (is_key_press_q)
@@ -729,27 +676,30 @@ void Scene3D::update()
     }
 }
 
-std::vector<std::pair<std::shared_ptr<of3dPrimitive>, NodeId>> Scene3D::getPrimitives()
+std::vector<std::pair<std::shared_ptr<SceneObject>, NodeId>> Scene3D::getSceneObjects()
 {
 
     std::vector<std::shared_ptr<Node>> nodes =  sceneGraph.GetNodes();
-    std::vector<std::pair<std::shared_ptr<of3dPrimitive>, NodeId>> primitives{};
+    std::vector<std::pair<std::shared_ptr<SceneObject>, NodeId>> sceneObjects{};
     for (const auto& node : nodes) {
         auto inner = node->GetInner();
         if (inner) {
-            ofLog() << "Inner " << node->GetName() << " : "  << inner.get();
-            ofLog() << "Shared ptr use count: " << inner.use_count();
-            auto prim = std::dynamic_pointer_cast<of3dPrimitive>(inner);
-            ofLog() << "Shared ptr use count: " << inner.use_count();
-            
+            auto prim = std::dynamic_pointer_cast<SceneObject>(inner);
             if (prim)
             {
-                primitives.push_back(std::pair(prim, node->GetId()));
+                sceneObjects.push_back(std::pair(prim, node->GetId()));
             }
         }
         
     }
+    return sceneObjects;
+}
 
 
-    return primitives;
+void Scene3D::mouseMoved(int x, int y)
+{
+ /*   previous_x = x;
+    previous_y = y;
+
+    if (ofRectangle::getIn)*/
 }
