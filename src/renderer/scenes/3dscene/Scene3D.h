@@ -27,7 +27,10 @@ public:
 
     void DrawSceneGraphWindow();
     void DrawSelectedNodeWindow();
+    void DrawModifyCameraNodeSliders(const std::shared_ptr<Node>& node, shared_ptr<ofCamera> camera);
+
     void DrawModifyNodeSliders(const std::shared_ptr<Node>& node);
+
     void DrawCommandHistoryWindow();
 
     void ResetParams(const std::shared_ptr<Node>& node);
@@ -37,7 +40,6 @@ public:
     void update() override;
     void mousePressed(int x, int y, int button) override;
     void mouseDragged(int x, int y, int button) override;
-    void mouseMoved(int x, int y) override;
     void dragEvent(ofDragInfo dragInfo) override;
     void keyPressed(int key) override;
     void keyReleased(int key) override;
@@ -59,12 +61,16 @@ private:
     float rotate[3] = {0.0f, 0.0f, 0.0f};
     glm::quat initialRotation;// Used to store the initial rotation of the selected node when using the sliders, so that we can undo the change in a single command
 
+    float fov;
+    float initialFov;
+
     std::shared_ptr<SharedShapeCreationParams> sharedParams;
 
     std::vector<std::unique_ptr<CreateShapeUI>> createShapeUIs;
 
     ofMaterial material;
 
+    map<NodeId, std::pair<weak_ptr<ofCamera>, bool>> cameraMap;
 
 
 
@@ -73,10 +79,12 @@ private:
 
 
     std::shared_ptr<ofCamera> camera;
+    ofRectangle current_viewPort;
 
 
-    std::vector<std::shared_ptr<ofCamera>> cameras;
+    //std::vector<std::shared_ptr<ofCamera>> cameras;
     ofMesh selectionMesh;
+    ofRectangle onScreenCorners;
     bool is_selected;
     bool debugger;
     int current_cam = 0;
@@ -103,20 +111,18 @@ private:
     bool is_key_press_e = false;
     bool is_key_press_f = false;
     bool is_key_press_g = false;
-
-    float angle_y;
-    float angle_x;
-
+    bool is_key_press_plus = false;
+    bool is_key_press_minus = false;
 
     float translate_speed;
     float rotate_speed;
     float speed_translation;
     float speed_rotation;
-    float offset_y;
-    float offset_x;
 
     int previous_x;
     int previous_y;
+
+    std::vector<std::pair<shared_ptr<ofCamera>, ofRectangle>> cameras;
 
     ofRectangle viewport1;
     ofRectangle viewport2;
@@ -127,4 +133,10 @@ private:
     void drawScene();
 
     std::vector<std::pair<std::shared_ptr<SceneObject>, NodeId>> getSceneObjects();
+    void updateViewPorts();
+    ofVec3f worldToViewPort(ofVec3f worldPos);
+    ofVec3f screenToViewPort(ofVec3f screenPos);
+    ofVec3f viewPortToWorld(ofVec3f worldPos);
+    ofVec3f viewPortToScreen(ofVec3f viewPos);
+
 };

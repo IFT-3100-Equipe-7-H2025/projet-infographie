@@ -44,7 +44,7 @@ public:
     {
        ofPushMatrix();
        light->draw();
-       light->setPosition(ofNode::getPosition());
+       //light->setPosition(ofNode::getPosition());
        ofPopMatrix();
     }
 

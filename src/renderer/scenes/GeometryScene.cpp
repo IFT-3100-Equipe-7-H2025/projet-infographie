@@ -150,11 +150,14 @@ void GeometryScene::draw()
 
     ofFloatColor myColor = ofFloatColor(0.0, 1.0, 0.0, 1.0);// Green
     shader.setUniform4f("inputColor", myColor);
-    if (is_selected) {
+    if (is_selected)
+    {
         selectionMesh.draw();
     }
-    for (auto& primitive : primitives) {
-        if (debugger) {
+    for (auto& primitive: primitives)
+    {
+        if (debugger)
+        {
             primitive.setScale(1000, 1000, 1000);
         }
         primitive.draw();
@@ -183,7 +186,8 @@ void GeometryScene::reset()
     camera->resetTransform();
 }
 
-void GeometryScene::mouseDragged(int x, int y, int button) {
+void GeometryScene::mouseDragged(int x, int y, int button)
+{
     switch (button)
     {
         case 0://left
@@ -208,7 +212,7 @@ void GeometryScene::mouseDragged(int x, int y, int button) {
                 //translateMesh(translate, selected_primitive);
                 //primitives[selected_primitive].setPosition(new_pos);
             }
-            
+
             break;
         case 2://right
             if (is_selected)
@@ -231,15 +235,14 @@ void GeometryScene::mouseDragged(int x, int y, int button) {
                 ofVec3f scaleVec = primitives[selected_primitive].getScale() * scale;
                 primitives[selected_primitive].setScale(scaleVec);
             }
-
     }
 
     previous_x = x;
     previous_y = y;
-    
 }
 
-void GeometryScene::mousePressed(int x, int y, int button) {
+void GeometryScene::mousePressed(int x, int y, int button)
+{
     previous_x = x;
     previous_y = y;
 
@@ -248,7 +251,8 @@ void GeometryScene::mousePressed(int x, int y, int button) {
     rayDirection.normalize();
     is_selected = false;
     float closeness = -1;
-    for (int i = 0; i < primitives.size(); i++) {
+    for (int i = 0; i < primitives.size(); i++)
+    {
         ofVec3f minVertex, maxVertex;
         ofMesh mesh = primitives[i].getMesh();
 
@@ -278,10 +282,10 @@ void GeometryScene::mousePressed(int x, int y, int button) {
 
         for (auto& corner: corners)
         {
-            minX = min(minX, corner.x);
-            maxX = max(maxX, corner.x);
-            minY = min(minY, corner.y);
-            maxY = max(maxY, corner.y);
+            minX = std::min(minX, corner.x);
+            maxX = std::max(maxX, corner.x);
+            minY = std::min(minY, corner.y);
+            maxY = std::max(maxY, corner.y);
         }
 
         ofLog() << "Clicked At x:" << x << " y: " << y;
@@ -289,7 +293,8 @@ void GeometryScene::mousePressed(int x, int y, int button) {
 
         if (minX < x && x < maxX && minY < y && y < maxY)
         {
-            if (new_closeness < closeness || closeness == -1) {
+            if (new_closeness < closeness || closeness == -1)
+            {
                 closeness = new_closeness;
                 selectionMesh = createBox(primitives[i]);
                 selected_primitive = i;
@@ -306,7 +311,6 @@ ofMesh GeometryScene::createBox(of3dPrimitive& primitive)
     ofVec3f minVertex, maxVertex;
 
     getBoundingBox(primitive, minVertex, maxVertex);
-
 
 
     ofMesh new_mesh;
@@ -367,7 +371,8 @@ void GeometryScene::dragEvent(ofDragInfo dragInfo)
             model->loadModel(filePath);// Load the OBJ model
             model->setPosition(0, 0, 0);
             ofMesh combinedMesh;
-            for (int i = 0; i < model->getNumMeshes(); i++) {
+            for (int i = 0; i < model->getNumMeshes(); i++)
+            {
                 ofMesh mesh = model->getMesh(i);
                 combinedMesh.append(mesh);
             }
@@ -386,7 +391,7 @@ void GeometryScene::dragEvent(ofDragInfo dragInfo)
 
 void GeometryScene::getBoundingBox(of3dPrimitive& primitive, ofVec3f& minVertex, ofVec3f& maxVertex)
 {
-    vector<ofVec3f> vertices =  getPrimitiveVertices(primitive);
+    vector<ofVec3f> vertices = getPrimitiveVertices(primitive);
 
     minVertex = vertices[0];
     maxVertex = vertices[0];
@@ -394,21 +399,23 @@ void GeometryScene::getBoundingBox(of3dPrimitive& primitive, ofVec3f& minVertex,
     for (int i = 0; i < vertices.size(); i++)
     {
         ofLog() << "Vertex X: " << vertices[i].x << "Vertex Y: " << vertices[i].y << "Vertex Z: " << vertices[i].z;
-        minVertex.x = min(vertices[i].x, minVertex.x);
-        maxVertex.x = max(vertices[i].x, maxVertex.x);
-        minVertex.y = min(vertices[i].y, minVertex.y);
-        maxVertex.y = max(vertices[i].y, maxVertex.y);
-        minVertex.z = min(vertices[i].z, minVertex.z);
-        maxVertex.z = max(vertices[i].z, maxVertex.z);
+        minVertex.x = std::min(vertices[i].x, minVertex.x);
+        maxVertex.x = std::max(vertices[i].x, maxVertex.x);
+        minVertex.y = std::min(vertices[i].y, minVertex.y);
+        maxVertex.y = std::max(vertices[i].y, maxVertex.y);
+        minVertex.z = std::min(vertices[i].z, minVertex.z);
+        maxVertex.z = std::max(vertices[i].z, maxVertex.z);
     }
 }
 
-vector<ofVec3f> GeometryScene::getPrimitiveVertices(of3dPrimitive& primitive) {
+vector<ofVec3f> GeometryScene::getPrimitiveVertices(of3dPrimitive& primitive)
+{
     ofMesh mesh = primitive.getMesh();
     ofMatrix4x4 transform = primitive.getLocalTransformMatrix();
 
     vector<ofVec3f> transformedVertices;
-    for (auto& vertex : mesh.getVertices()) {
+    for (auto& vertex: mesh.getVertices())
+    {
         ofVec4f transformedVertex = transform.preMult(ofVec4f(vertex.x, vertex.y, vertex.z, 1.0f));
         transformedVertices.push_back(ofVec3f(transformedVertex.x, transformedVertex.y, transformedVertex.z));
     }
@@ -416,13 +423,13 @@ vector<ofVec3f> GeometryScene::getPrimitiveVertices(of3dPrimitive& primitive) {
 }
 
 
-void GeometryScene::focus() {
-    if (is_selected) {
+void GeometryScene::focus()
+{
+    if (is_selected)
+    {
         camera->lookAt(primitives[selected_primitive].getPosition());
     }
 }
-
-
 
 
 void GeometryScene::keyPressed(int key)

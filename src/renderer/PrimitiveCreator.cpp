@@ -1,8 +1,6 @@
 #include "PrimitiveCreator.h"
-#include <numbers>
 #include <cmath>
-
-
+#include <numbers>
 
 
 of3dPrimitive PrimitiveCreator::createTriangle()
@@ -109,15 +107,15 @@ of3dPrimitive PrimitiveCreator::createSphere(int lat, int longi)
 
     std::vector<ofPoint> topLayer = std::vector<ofPoint>();
     float phi_tl = 90.0f - delta_phi;
-    float y_tl = r * (float) sin(phi_tl * numbers::pi / 180.0f);
+    float y_tl = r * (float) sin(phi_tl * std::numbers::pi / 180.0f);
 
     // Adding top layer positions
     for (int i = 0; i < longi; i++)
     {
         float theta = delta_theta * (float) i;
-        float hor_proj = r * (float) cos(phi_tl * numbers::pi / 180.0f);
-        float x_tl = hor_proj * (float) cos(theta * numbers::pi / 180.0f);
-        float z_tl = hor_proj * (float) sin(theta * numbers::pi / 180.0f);
+        float hor_proj = r * (float) cos(phi_tl * std::numbers::pi / 180.0f);
+        float x_tl = hor_proj * (float) cos(theta * std::numbers::pi / 180.0f);
+        float z_tl = hor_proj * (float) sin(theta * std::numbers::pi / 180.0f);
         sphere.addVertex(ofPoint(x_tl, y_tl, z_tl));
     }
 
@@ -140,10 +138,10 @@ of3dPrimitive PrimitiveCreator::createSphere(int lat, int longi)
         for (int j = 0; j < longi; j++)
         {
             float theta = delta_theta * (float) j;
-            float hor_proj = r * (float) cos(phi_bl * numbers::pi / 180.0f);
-            float x_bl = hor_proj * (float) cos(theta * numbers::pi / 180.0f);
-            float y_bl = r * (float) sin(phi_bl * numbers::pi / 180.0f);
-            float z_bl = hor_proj * (float) sin(theta * numbers::pi / 180.0f);
+            float hor_proj = r * (float) cos(phi_bl * std::numbers::pi / 180.0f);
+            float x_bl = hor_proj * (float) cos(theta * std::numbers::pi / 180.0f);
+            float y_bl = r * (float) sin(phi_bl * std::numbers::pi / 180.0f);
+            float z_bl = hor_proj * (float) sin(theta * std::numbers::pi / 180.0f);
             sphere.addVertex(ofPoint(x_bl, y_bl, z_bl));
         }
 
@@ -195,7 +193,7 @@ of3dPrimitive PrimitiveCreator::createLasagna(float l_w_ratio, int periods, int 
     auto d_x = float(2 / float(resolution_l * periods));
     float x_f = -1.0f;
     float lambda = 2.0f / (float) periods;
-    float k = 2.0f * (float) numbers::pi / lambda;
+    float k = 2.0f * (float) std::numbers::pi / lambda;
 
     for (int frontier = 0; frontier < periods * resolution_l + 1; frontier++)
     {
@@ -235,7 +233,7 @@ of3dPrimitive PrimitiveCreator::createLasagna(float l_w_ratio, int periods, int 
 
 of3dPrimitive PrimitiveCreator::createPyramid(int sides)
 {
-    float delta_theta = 2.0f * float(numbers::pi) / float(sides);
+    float delta_theta = 2.0f * float(std::numbers::pi) / float(sides);
     ofMesh pyramid;
     pyramid.setMode(OF_PRIMITIVE_TRIANGLES);
 

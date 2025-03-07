@@ -10,12 +10,12 @@
 #include "imgui.h"
 #include "ofAppRunner.h"
 #include "ofGraphics.h"
-#include <ranges>
 #include <cmath>
 #include <numbers>
 #include "renderer/ImportModel.h"
 #include "SceneObject.h"
 #include "Light.h"
+#include <ranges>
 
 Scene3D::Scene3D() : history(CommandHistory()),
                      sceneGraph(SceneGraph()),
@@ -46,32 +46,178 @@ void Scene3D::setup()
     light.setAmbientColor(ofFloatColor(0.2, 0.2, 0.2));
     light.lookAt(ofVec3f((float) ofGetWidth() / 2.0f, (float) ofGetHeight() / 2.0f, 0));
 
-    auto light_ptr = std::make_shared<Node>("Light", std::make_shared<Light>(light));
+    auto light_ptr = std::make_shared<Node>("Light", std::make_shared<ofLight>(light));
     this->sceneGraph.AddNode(light_ptr);
 
-
     // Add base camera
-    /*camera = std::make_shared<ofCamera>();
+    //cam
+
+    camera = std::make_shared<ofCamera>();
     camera->setPosition(0, 0, -200);
     camera->lookAt(ofVec3f(0, 0, 0));
     auto cam_ptr = std::make_shared<Node>("Camera", camera);
-    this->sceneGraph.AddNode(cam_ptr);*/
+    this->sceneGraph.AddNode(cam_ptr);
+    cameraMap.emplace(cam_ptr.get()->GetId(), std::pair(camera, true));
+    updateViewPorts();
+
+
+    shared_ptr<ofCamera> camera2 = std::make_shared<ofCamera>();
+    camera2->setPosition(0, 0, -200);
+    camera2->lookAt(ofVec3f(0, 0, 0));
+    auto cam_ptr2 = std::make_shared<Node>("Camera", camera2);
+    this->sceneGraph.AddNode(cam_ptr2);
+    cameraMap.emplace(cam_ptr2.get()->GetId(), std::pair(camera2, true));
+    updateViewPorts();
+
+
+    shared_ptr<ofCamera> camera3 = std::make_shared<ofCamera>();
+    camera3->setPosition(0, 0, -200);
+    camera3->lookAt(ofVec3f(0, 0, 0));
+    auto cam_ptr3 = std::make_shared<Node>("Camera", camera3);
+    this->sceneGraph.AddNode(cam_ptr3);
+    cameraMap.emplace(cam_ptr3.get()->GetId(), std::pair(camera3, false));
+    updateViewPorts();
+
+
+    shared_ptr<ofCamera> camera4 = std::make_shared<ofCamera>();
+    camera4->setPosition(0, 0, -200);
+    camera4->lookAt(ofVec3f(0, 0, 0));
+    auto cam_ptr4 = std::make_shared<Node>("Camera", camera4);
+    this->sceneGraph.AddNode(cam_ptr4);
+    cameraMap.emplace(cam_ptr4.get()->GetId(), std::pair(camera4, false));
+    updateViewPorts();
+
     translate_speed = 1000;
     rotate_speed = 100;
+}
 
-    for (int i = 0; i < 6; i++)
+void Scene3D::updateViewPorts()
+{
+
+    cameras.clear();
+    vector<shared_ptr<ofCamera>> activatedCameras;
+    for (auto& [id, pair]: cameraMap)
     {
-        shared_ptr<ofCamera> new_cam = make_shared<ofCamera>();
-        new_cam->lookAt(ofVec3f(0, 0, 0));
-        cameras.push_back(new_cam);
+        auto& [camera, toggled] = pair;
+
+        if (toggled)
+        {
+            auto ptr = camera.lock();
+            if (ptr)
+            {
+                activatedCameras.push_back(ptr);
+            }
+            else
+            {
+                cameraMap.erase(id);
+            }
+        }
     }
 
-    camera = cameras[0];
-    current_cam = 0;
+    int camNumber = activatedCameras.size();
+    int prev_height = 0;
+    int prev_width = 0;
+    if (camNumber >= 3)
+    {
+        cameras.push_back(std::pair(activatedCameras[0], ofRectangle(0, 0, ofGetWidth() / 2, ofGetHeight() / 2)));
+        cameras.push_back(std::pair(activatedCameras[1], ofRectangle(ofGetWidth() / 2, 0, ofGetWidth() / 2, ofGetHeight() / 2)));
+        if (camNumber == 3)
+        {
+            cameras.push_back(std::pair(activatedCameras[2], ofRectangle(0, ofGetHeight() / 2, ofGetWidth(), ofGetHeight() / 2)));
+            if (previous_x < ofGetWidth() / 2)
+            {
+                if (previous_y < ofGetHeight() / 2)
+                {
+                    camera = cameras[0].first;
+                    current_viewPort = cameras[0].second;
+                }
+                else
+                {
+                    camera = cameras[2].first;
+                    current_viewPort = cameras[2].second;
+                }
+            }
 
-    viewport1.set(0, 0, ofGetWidth() / 2, ofGetHeight());
-    //viewport2.set(ofGetWidth() / 2, 0, ofGetWidth(), ofGetHeight());
-   
+            else
+            {
+                if (previous_y < ofGetHeight() / 2)
+                {
+                    camera = cameras[1].first;
+                    current_viewPort = cameras[1].second;
+                }
+                else
+                {
+                    camera = cameras[2].first;
+                    current_viewPort = cameras[2].second;
+                }
+            }
+
+        }
+        else
+        {
+            cameras.push_back(std::pair(activatedCameras[2], ofRectangle(0, ofGetHeight() / 2, ofGetWidth() / 2, ofGetHeight() / 2)));
+            cameras.push_back(std::pair(activatedCameras[3], ofRectangle(ofGetWidth() / 2, ofGetHeight() / 2, ofGetWidth() / 2, ofGetHeight() / 2)));
+
+
+            if (previous_x < ofGetWidth() / 2)
+            {
+                if (previous_y < ofGetHeight() / 2)
+                {
+                    camera = cameras[0].first;
+                    current_viewPort = cameras[0].second;
+                }
+                else
+                {
+                    camera = cameras[2].first;
+                    current_viewPort = cameras[2].second;
+                }
+            }
+
+            else
+            {
+                if (previous_y < ofGetHeight() / 2)
+                {
+                    camera = cameras[1].first;
+                    current_viewPort = cameras[1].second;
+                }
+                else
+                {
+                    camera = cameras[3].first;
+                    current_viewPort = cameras[3].second;
+                }
+            }
+        }
+
+
+        
+    }
+    else if (camNumber == 2)
+    {
+        ofLog() << "Changing Viewport" << current_viewPort.x;
+        current_viewPort = ofRectangle(0, 0, ofGetWidth(), ofGetHeight() / 2);
+        camera = activatedCameras[0];
+        cameras.push_back(std::pair(activatedCameras[0], ofRectangle(0, 0, ofGetWidth(), ofGetHeight() / 2)));
+        cameras.push_back(std::pair(activatedCameras[1], ofRectangle(0, ofGetHeight() / 2, ofGetWidth(), ofGetHeight() / 2 )));
+
+        if (previous_y < ofGetHeight() / 2)
+        {
+            camera = cameras[0].first;
+            current_viewPort = cameras[0].second;
+        }
+        else
+        {
+            camera = cameras[1].first;
+            current_viewPort = cameras[1].second;
+        }
+    }
+    else if (camNumber == 1)
+    {
+        current_viewPort = ofRectangle(0, 0, ofGetWidth(), ofGetHeight());
+        cameras.push_back(std::pair(activatedCameras[0], ofRectangle(0, 0, ofGetWidth(), ofGetHeight())));
+        camera = cameras[0].first;
+        current_viewPort = cameras[0].second;
+    }
+
 }
 
 void Scene3D::draw()
@@ -81,35 +227,39 @@ void Scene3D::draw()
     this->DrawCommandHistoryWindow();
 
 
-    cameras[0]->begin();
-    drawScene();
-    cameras[0]->drawFrustum();
+
+    for (auto& [camera, box] : cameras) {
+        camera->begin(box);
+        for (auto& [camera, box]: cameras)
+        {
+            camera->drawFrustum();
+        }
+        drawScene();
+        camera->end();
+        ofNoFill();
+        ofDrawRectangle(box);
+    }
     
-    cameras[0]->end();
+    ofSetColor(0, 255, 0);
+    ofDrawRectangle(onScreenCorners);
 
-    //cameras[1]->begin(viewport2);
-    //drawScene();
-    //cameras[1]->drawFrustum();
-
-    //cameras[1]->end();
-
-    /*ofNoFill();
-    ofDrawRectangle(viewport1);
-    ofDrawRectangle(viewport2);*/
+    ofSetColor(255, 255, 255);
 
 }
 
 void Scene3D::drawScene() {
-    
 
+    ofSetColor(0, 255, 0);
     material.begin();
     sceneGraph.Draw();
 
-    if (is_selected)
+    if (is_selected || debugger)
     {
-        ofSetColor(255, 255, 255);
+        selectionMesh.enableColors();
         selectionMesh.setColorForIndices(255, 255, 0);
+        
         selectionMesh.draw();
+        
     }
 
     material.end();
@@ -141,6 +291,23 @@ void Scene3D::DrawSelectedNodeWindow()
 
             this->DrawModifyNodeSliders(*this->selectedNode);
 
+
+            if (auto camera = std::dynamic_pointer_cast<ofCamera>(this->selectedNode.get()->get()->GetInner()); camera)
+            {
+                NodeId id = this->selectedNode.get()->get()->GetId();
+                if (!cameraMap.contains(id)) {
+                    cameraMap.emplace(id, std::pair(camera, false));
+                }
+                bool &activated = cameraMap.at(id).second;
+                if (ImGui::Checkbox("Activate", &activated))
+                {
+                    updateViewPorts();
+                }
+
+                //this->DrawModifyCameraNodeSliders(*this->selectedNode, camera);
+            }
+            
+
             if (ImGui::CollapsingHeader("Add child", ImGuiTreeNodeFlags_DefaultOpen))
             {
                 ImGui::ColorEdit4("Color", sharedParams->color);
@@ -151,9 +318,38 @@ void Scene3D::DrawSelectedNodeWindow()
                 }
             }
 
+
             ImGui::End();
         }
     }
+}
+
+
+void Scene3D::DrawModifyCameraNodeSliders(const std::shared_ptr<Node>& node, shared_ptr<ofCamera> camera) {
+    const std::shared_ptr<ofNode>& inner = node->GetInner();
+
+    // Fov
+    const float current_fov = camera->getFov();
+    if (ImGui::SliderFloat("FOV", &this->fov, 0, 360))
+    {
+        camera->setFov(fov);
+    }
+    if (ImGui::IsItemActivated())
+    {
+        this->initialFov = current_fov;
+    }
+ /*   if (ImGui::IsItemDeactivatedAfterEdit())
+    {
+        this->history.executeCommand(std::make_shared<SetPositionCommand>(node, glm::vec3(this->translate[0], this->translate[1], this->translate[2]), this->initialPosition));
+    }*/
+
+
+
+    /*if (ImGui::Checkbox("Visible Frustrum", &activated))
+    {
+        updateViewPorts();
+    }*/
+
 }
 
 void Scene3D::DrawModifyNodeSliders(const std::shared_ptr<Node>& node)
@@ -323,6 +519,7 @@ void Scene3D::ResetParams(const std::shared_ptr<Node>& node)
     rotate[2] = eulerRotation.z;
 }
 
+
 void Scene3D::reset()
 {
     camera->resetTransform();
@@ -335,20 +532,13 @@ void Scene3D::mouseDragged(int x, int y, int button)
         case 0://left
             if (is_selected)
             {
-                ofVec3f cameraForward = camera->getLookAtDir();
-                ofVec3f cameraRight = camera->getSideDir();
-                ofVec3f cameraUp = camera->getUpDir();
-
                 ofVec3f current_pos = selectedNode->get()->GetInner()->getGlobalPosition();
-                ofVec3f current_screen_pos = camera->worldToScreen(current_pos);
 
-                ofVec3f current = ofVec3f(x, y, current_screen_pos.z);
-                ofVec3f past = ofVec3f(previous_x, previous_y, current_screen_pos.z);
+                ofVec3f current_view_pos = worldToViewPort(current_pos);
 
-                ofVec3f new_pos = camera->screenToWorld(current_screen_pos + (current - past));
+                ofVec3f current = ofVec3f(x, y, current_view_pos.z);
 
-
-                ofVec3f translate = new_pos - current_pos;
+                ofVec3f new_pos = viewPortToWorld(current);
 
                 selectedNode->get()->GetInner()->setGlobalPosition(new_pos);
             }
@@ -357,10 +547,6 @@ void Scene3D::mouseDragged(int x, int y, int button)
         case 2://right
             if (is_selected)
             {
-               ofVec3f cameraForward = camera->getLookAtDir();
-                ofVec3f cameraRight = camera->getSideDir();
-                ofVec3f cameraUp = camera->getUpDir();
-
                 ofVec3f current_pos = selectedNode->get()->GetInner()->getPosition();
                 ofVec3f current_screen_pos = camera->worldToScreen(current_pos);
 
@@ -368,7 +554,6 @@ void Scene3D::mouseDragged(int x, int y, int button)
                 ofVec3f past = ofVec3f(previous_x, previous_y, current_screen_pos.z);
 
                 ofVec3f new_pos = camera->screenToWorld(current_screen_pos + (current - past));
-
 
                 float scale = 1 + ((x - previous_x) + (previous_y - y)) * 0.1;
                 ofVec3f scaleVec = selectedNode->get()->GetInner()->getScale() * scale;
@@ -380,20 +565,78 @@ void Scene3D::mouseDragged(int x, int y, int button)
     previous_y = y;
 }
 
+ofVec3f Scene3D::worldToViewPort(ofVec3f worldPos)
+{
+    camera->begin(current_viewPort);
+    ofVec3f screenPos = camera->worldToScreen(worldPos);
+    camera->end();
+    if (current_viewPort.y > 0)
+    {
+        screenPos.y += (ofGetHeight() - current_viewPort.getHeight());
+    }
+    else
+    {
+        screenPos.y -= (ofGetHeight() - current_viewPort.getHeight());
+    }
+    
+    return screenPos;
+}
+
+ofVec3f Scene3D::screenToViewPort(ofVec3f screenPos)
+{
+    ofLog() << "Before screen to viewPort : X : " << screenPos.x << " Y " << screenPos.y << " Z " << screenPos.z;
+    ofVec3f viewPos;
+    viewPos.x = (float) screenPos.x * ((float) current_viewPort.getHeight() / (float) ofGetHeight()) + current_viewPort.x;
+    viewPos.y = (float) screenPos.y * (current_viewPort.getHeight() / (float) ofGetHeight()) + current_viewPort.y;
+    viewPos.z = (float) screenPos.z;
+
+    ofLog() << "After screen to viewPort : X : " << viewPos.x << " Y " << viewPos.y << " Z " << viewPos.z;
+    return viewPos;
+}
+
+ofVec3f Scene3D::viewPortToWorld(ofVec3f viewPos)
+{
+    if (!current_viewPort.y > 0)
+    {
+        viewPos.y += (ofGetHeight() - current_viewPort.getHeight());
+    }
+    else
+    {
+        viewPos.y -= (ofGetHeight() - current_viewPort.getHeight());
+    }
+    camera->begin(current_viewPort);
+    ofVec3f worldPos = camera->screenToWorld(viewPos);
+    camera->end();
+    return worldPos;
+}
+
+
+
+ofVec3f Scene3D::viewPortToScreen(ofVec3f viewPos)
+{
+    ofVec3f screenPos;
+    screenPos.x = (viewPos.x - current_viewPort.x) / ((float) current_viewPort.getHeight() / (float) ofGetHeight());
+    screenPos.y = (viewPos.y - current_viewPort.y) / ((float) current_viewPort.getHeight() / (float) ofGetHeight());
+    screenPos.z = viewPos.z;
+    return viewPos;
+}
+
 void Scene3D::mousePressed(int x, int y, int button)
 {
     previous_x = x;
     previous_y = y;
 
-    ofVec3f rayOrigin = camera->getPosition();
-    ofVec3f rayDirection = camera->screenToWorld(ofVec3f(x, y, 0)) - rayOrigin;
-    rayDirection.normalize();
+
+    updateViewPorts();
+
+    ofLog() << "Current View Port  Y " << current_viewPort.y << " X " << current_viewPort.x << " Width " << current_viewPort.width << " Height " << current_viewPort.height;
+
     is_selected = false;
     float closeness = -1;
     std::vector<std::pair<std::shared_ptr<SceneObject>, NodeId>> primitive_pairs = getSceneObjects();
     for (int i = 0; i < primitive_pairs.size(); i++)
     {
-        
+
         std::shared_ptr<SceneObject> primitive = primitive_pairs[i].first;
         NodeId id = primitive_pairs[i].second;
 
@@ -402,23 +645,22 @@ void Scene3D::mousePressed(int x, int y, int button)
 
 
         std::vector<ofVec3f> corners = {
-                camera->worldToScreen(maxVertex),
-                camera->worldToScreen(ofVec3f(minVertex.x, maxVertex.y, maxVertex.z)),
-                camera->worldToScreen(ofVec3f(minVertex.x, minVertex.y, maxVertex.z)),
-                camera->worldToScreen(ofVec3f(maxVertex.x, minVertex.y, maxVertex.z)),
+                worldToViewPort(maxVertex),
+                worldToViewPort(ofVec3f(minVertex.x, maxVertex.y, maxVertex.z)),
+                worldToViewPort(ofVec3f(minVertex.x, minVertex.y, maxVertex.z)),
+                worldToViewPort(ofVec3f(maxVertex.x, minVertex.y, maxVertex.z)),
 
-                camera->worldToScreen(minVertex),
-                camera->worldToScreen(ofVec3f(minVertex.x, maxVertex.y, minVertex.z)),
-                camera->worldToScreen(ofVec3f(minVertex.x, minVertex.y, minVertex.z)),
-                camera->worldToScreen(ofVec3f(maxVertex.x, minVertex.y, minVertex.z)),
+                worldToViewPort(minVertex),
+                worldToViewPort(ofVec3f(minVertex.x, maxVertex.y, minVertex.z)),
+                worldToViewPort(ofVec3f(minVertex.x, minVertex.y, minVertex.z)),
+                worldToViewPort(ofVec3f(maxVertex.x, minVertex.y, minVertex.z)),
         };
 
+        selectionMesh = primitive->getSelectionBox();
 
         ofVec3f camPos = camera->getPosition();
         ofVec3f objPos = primitive->getPosition();
         float new_closeness = camPos.distance(objPos);
-
-
 
         float minX = 0, maxX = 0;
         float minY = 0, maxY = 0;
@@ -429,14 +671,14 @@ void Scene3D::mousePressed(int x, int y, int button)
 
         for (auto& corner: corners)
         {
-            minX = min(minX, corner.x);
-            maxX = max(maxX, corner.x);
-            minY = min(minY, corner.y);
-            maxY = max(maxY, corner.y);
-        }
 
-        ofLog() << "Clicked At x:" << x << " y: " << y;
-        ofLog() << "Box at minX" << minX << " maxX : " << maxX << "minY" << minY << " maxY : " << maxY;
+            minX = std::min(minX, corner.x);
+            maxX = std::max(maxX, corner.x);
+            minY = std::min(minY, corner.y);
+            maxY = std::max(maxY, corner.y);
+        }
+    
+        onScreenCorners = ofRectangle(minX, minY, maxX - minX, maxY - minY);
 
         if (minX < x && x < maxX && minY < y && y < maxY)
         {
@@ -444,8 +686,9 @@ void Scene3D::mousePressed(int x, int y, int button)
             {
                 closeness = new_closeness;
                 selectionMesh = primitive->getSelectionBox();
-                SelectNode(sceneGraph.GetNode(id).value());
                 is_selected = true;
+                SelectNode(sceneGraph.GetNode(id).value());
+                
                 ofLog() << "Object : " << i << " selected. ";
             }
         }
@@ -484,9 +727,7 @@ void Scene3D::dragEvent(ofDragInfo dragInfo)
             ofLog() << "Not an OBJ file!";
         }
     }
-
 }
-
 
 std::vector<ofVec3f> Scene3D::getPrimitiveVertices(of3dPrimitive& primitive)
 {
@@ -552,6 +793,12 @@ void Scene3D::keyPressed(int key)
         case 103://g
             is_key_press_g = true;
             break;
+        case 45://-
+            is_key_press_minus = true;
+            break;
+        case 61:
+            is_key_press_plus = true;
+            break;
     }
 }
 
@@ -599,10 +846,10 @@ void Scene3D::keyReleased(int key)
             reset();
             break;
         case 45://-
-            //previousCam();
+            is_key_press_minus = false;
             break;
         case 61:
-            //nextCam();
+            is_key_press_plus = false;
             break;
         case 107://k
             debugger = !debugger;
@@ -612,7 +859,6 @@ void Scene3D::keyReleased(int key)
             break;
     }
 }
-
 
 
 void Scene3D::update()
@@ -674,6 +920,14 @@ void Scene3D::update()
     {
         camera->setFov(camera->getFov() - 0.2);
     }
+    if (is_key_press_plus)
+    {
+        camera->roll(speed_rotation);
+    }
+    if (is_key_press_minus)
+    {
+        camera->roll(-speed_rotation);
+    }
 }
 
 std::vector<std::pair<std::shared_ptr<SceneObject>, NodeId>> Scene3D::getSceneObjects()
@@ -681,7 +935,9 @@ std::vector<std::pair<std::shared_ptr<SceneObject>, NodeId>> Scene3D::getSceneOb
 
     std::vector<std::shared_ptr<Node>> nodes =  sceneGraph.GetNodes();
     std::vector<std::pair<std::shared_ptr<SceneObject>, NodeId>> sceneObjects{};
-    for (const auto& node : nodes) {
+
+    for (const auto& node: nodes)
+    {
         auto inner = node->GetInner();
         if (inner) {
             auto prim = std::dynamic_pointer_cast<SceneObject>(inner);
@@ -690,16 +946,6 @@ std::vector<std::pair<std::shared_ptr<SceneObject>, NodeId>> Scene3D::getSceneOb
                 sceneObjects.push_back(std::pair(prim, node->GetId()));
             }
         }
-        
     }
     return sceneObjects;
-}
-
-
-void Scene3D::mouseMoved(int x, int y)
-{
- /*   previous_x = x;
-    previous_y = y;
-
-    if (ofRectangle::getIn)*/
 }
