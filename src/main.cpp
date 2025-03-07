@@ -1,5 +1,6 @@
 #include "application/application.h"
 
+
 int main()
 {
     ofGLFWWindowSettings windowSettings;

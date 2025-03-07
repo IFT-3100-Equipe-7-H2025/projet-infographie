@@ -2,6 +2,9 @@
 #include <cmath>
 #include <numbers>
 
+#include <cmath>
+#include <numbers>
+
 
 of3dPrimitive PrimitiveCreator::createTriangle()
 {
@@ -13,88 +16,181 @@ of3dPrimitive PrimitiveCreator::createTriangle()
     triangle.addVertex(p1);
     triangle.addVertex(p2);
     triangle.addVertex(p3);
+
+    // calculate normals
+    for (size_t i = 0; i < triangle.getNumVertices(); i++)
+    {
+        triangle.addNormal(normalize(triangle.getVertex(i)));
+    }
+
     return of3dPrimitive{triangle};
 }
 
-of3dPrimitive PrimitiveCreator::createCube()
+of3dPrimitive PrimitiveCreator::createCube(float width, float height, float depth)
 {
     ofMesh cube;
     cube.setMode(OF_PRIMITIVE_TRIANGLES);
 
-    auto p1 = ofPoint(-1, -1, -1);// 0
-    auto p2 = ofPoint(1, -1, -1); // 1
-    auto p3 = ofPoint(1, 1, -1);  // 2
-    auto p4 = ofPoint(-1, 1, -1); // 3
-    auto p5 = ofPoint(-1, -1, 1); // 4
-    auto p6 = ofPoint(1, -1, 1);  // 5
-    auto p7 = ofPoint(1, 1, 1);   // 6
-    auto p8 = ofPoint(-1, 1, 1);  // 7
+    auto p1 = ofPoint(-0.5, -0.5, -0.5);// 1
+    auto p2 = ofPoint(0.5, -0.5, -0.5); // 2
+    auto p3 = ofPoint(0.5, 0.5, -0.5);  // 3
+    auto p4 = ofPoint(-0.5, 0.5, -0.5); // 4
+    auto p5 = ofPoint(-0.5, -0.5, 0.5); // 5
+    auto p6 = ofPoint(0.5, -0.5, 0.5);  // 6
+    auto p7 = ofPoint(0.5, 0.5, 0.5);   // 7
+    auto p8 = ofPoint(-0.5, 0.5, 0.5);  // 8
 
-    // Add all vertices
-    cube.addVertex(p1);// 0
-    cube.addVertex(p2);// 1
-    cube.addVertex(p3);// 2
-    cube.addVertex(p4);// 3
-    cube.addVertex(p5);// 4
-    cube.addVertex(p6);// 5
-    cube.addVertex(p7);// 6
-    cube.addVertex(p8);// 7
+    // FRONT FACE: vertices: p5, p6, p7, p8 with normal (0, 0, 1)
+    ofVec3f frontNormal(0, 0, 1);
+    size_t startIndex = cube.getNumVertices();
+    cube.addVertex(p5);
+    cube.addNormal(frontNormal);
 
-    // Front face (p5, p6, p7, p8)
-    cube.addIndex(4);
-    cube.addIndex(5);
-    cube.addIndex(6);
-    cube.addIndex(4);
-    cube.addIndex(6);
-    cube.addIndex(7);
+    cube.addVertex(p6);
+    cube.addNormal(frontNormal);
 
-    // Back face (p1, p2, p3, p4)
-    cube.addIndex(0);
-    cube.addIndex(1);
-    cube.addIndex(2);
-    cube.addIndex(0);
-    cube.addIndex(2);
-    cube.addIndex(3);
+    cube.addVertex(p7);
+    cube.addNormal(frontNormal);
 
-    // Left face (p1, p5, p8, p4)
-    cube.addIndex(0);
-    cube.addIndex(4);
-    cube.addIndex(7);
-    cube.addIndex(0);
-    cube.addIndex(7);
-    cube.addIndex(3);
+    cube.addVertex(p8);
+    cube.addNormal(frontNormal);
 
-    // Right face (p2, p6, p7, p3)
-    cube.addIndex(1);
-    cube.addIndex(5);
-    cube.addIndex(6);
-    cube.addIndex(1);
-    cube.addIndex(6);
-    cube.addIndex(2);
+    cube.addIndex(startIndex + 0);
+    cube.addIndex(startIndex + 1);
+    cube.addIndex(startIndex + 2);
+    cube.addIndex(startIndex + 0);
+    cube.addIndex(startIndex + 2);
+    cube.addIndex(startIndex + 3);
 
-    // Top face (p4, p3, p7, p8)
-    cube.addIndex(3);
-    cube.addIndex(2);
-    cube.addIndex(6);
-    cube.addIndex(3);
-    cube.addIndex(6);
-    cube.addIndex(7);
+    // BACK FACE: vertices: p2, p1, p4, p3 with normal (0, 0, -1)
+    ofVec3f backNormal(0, 0, -1);
+    startIndex = cube.getNumVertices();
+    cube.addVertex(p2);
+    cube.addNormal(backNormal);
 
-    // Bottom face (p1, p2, p6, p5)
-    cube.addIndex(0);
-    cube.addIndex(1);
-    cube.addIndex(5);
-    cube.addIndex(0);
-    cube.addIndex(5);
-    cube.addIndex(4);
+    cube.addVertex(p1);
+    cube.addNormal(backNormal);
+
+    cube.addVertex(p4);
+    cube.addNormal(backNormal);
+
+    cube.addVertex(p3);
+    cube.addNormal(backNormal);
+
+    cube.addIndex(startIndex + 0);
+    cube.addIndex(startIndex + 1);
+    cube.addIndex(startIndex + 2);
+    cube.addIndex(startIndex + 0);
+    cube.addIndex(startIndex + 2);
+    cube.addIndex(startIndex + 3);
+
+    // LEFT FACE: vertices: p1, p5, p8, p4 with normal (-1, 0, 0)
+    ofVec3f leftNormal(-1, 0, 0);
+    startIndex = cube.getNumVertices();
+    cube.addVertex(p1);
+    cube.addNormal(leftNormal);
+
+    cube.addVertex(p5);
+    cube.addNormal(leftNormal);
+
+    cube.addVertex(p8);
+    cube.addNormal(leftNormal);
+
+    cube.addVertex(p4);
+    cube.addNormal(leftNormal);
+
+    cube.addIndex(startIndex + 0);
+    cube.addIndex(startIndex + 1);
+    cube.addIndex(startIndex + 2);
+    cube.addIndex(startIndex + 0);
+    cube.addIndex(startIndex + 2);
+    cube.addIndex(startIndex + 3);
+
+    // RIGHT FACE: vertices: p6, p2, p3, p7 with normal (1, 0, 0)
+    ofVec3f rightNormal(1, 0, 0);
+    startIndex = cube.getNumVertices();
+    cube.addVertex(p6);
+    cube.addNormal(rightNormal);
+
+    cube.addVertex(p2);
+    cube.addNormal(rightNormal);
+
+    cube.addVertex(p3);
+    cube.addNormal(rightNormal);
+
+    cube.addVertex(p7);
+    cube.addNormal(rightNormal);
+
+    cube.addIndex(startIndex + 0);
+    cube.addIndex(startIndex + 1);
+    cube.addIndex(startIndex + 2);
+    cube.addIndex(startIndex + 0);
+    cube.addIndex(startIndex + 2);
+    cube.addIndex(startIndex + 3);
+
+    // TOP FACE: vertices: p4, p8, p7, p3 with normal (0, 1, 0)
+    ofVec3f topNormal(0, 1, 0);
+    startIndex = cube.getNumVertices();
+    cube.addVertex(p4);
+    cube.addNormal(topNormal);
+
+    cube.addVertex(p8);
+    cube.addNormal(topNormal);
+
+    cube.addVertex(p7);
+    cube.addNormal(topNormal);
+
+    cube.addVertex(p3);
+    cube.addNormal(topNormal);
+
+    cube.addIndex(startIndex + 0);
+    cube.addIndex(startIndex + 1);
+    cube.addIndex(startIndex + 2);
+    cube.addIndex(startIndex + 0);
+    cube.addIndex(startIndex + 2);
+    cube.addIndex(startIndex + 3);
+
+    // BOTTOM FACE: vertices: p1, p2, p6, p5 with normal (0, -1, 0)
+    ofVec3f bottomNormal(0, -1, 0);
+    startIndex = cube.getNumVertices();
+    cube.addVertex(p1);
+    cube.addNormal(bottomNormal);
+
+    cube.addVertex(p2);
+    cube.addNormal(bottomNormal);
+
+    cube.addVertex(p6);
+    cube.addNormal(bottomNormal);
+
+    cube.addVertex(p5);
+    cube.addNormal(bottomNormal);
+
+    cube.addIndex(startIndex + 0);
+    cube.addIndex(startIndex + 1);
+    cube.addIndex(startIndex + 2);
+    cube.addIndex(startIndex + 0);
+    cube.addIndex(startIndex + 2);
+    cube.addIndex(startIndex + 3);
+
+    // Scale all vertices to size
+    for (size_t i = 0; i < cube.getNumVertices(); i++)
+    {
+        ofPoint p = cube.getVertex(i);
+        p.x *= width;
+        p.y *= height;
+        p.z *= depth;
+        cube.setVertex(i, p);
+    }
 
     return of3dPrimitive{cube};
 }
 
-of3dPrimitive PrimitiveCreator::createSphere(int lat, int longi)
+of3dPrimitive PrimitiveCreator::createSphere(int lat, int longi, float radius)
 {
     ofMesh sphere;
     sphere.setMode(OF_PRIMITIVE_TRIANGLES);
+    sphere.enableNormals();
+    sphere.enableColors();
 
     float r = 1.0f;
     ofPoint top = ofPoint{0.0f, 1.0f, 0.0f};
@@ -177,11 +273,22 @@ of3dPrimitive PrimitiveCreator::createSphere(int lat, int longi)
         sphere.addIndex(top_right);
     }
 
+    // scale points to radius
+    for (size_t i = 0; i < sphere.getNumVertices(); i++)
+    {
+        sphere.setVertex(i, sphere.getVertex(i) * radius);
+    }
+
+    // calculate normals
+    for (size_t i = 0; i < sphere.getNumVertices(); i++)
+    {
+        sphere.addNormal(normalize(sphere.getVertex(i)));
+    }
 
     return of3dPrimitive{sphere};
 }
 
-of3dPrimitive PrimitiveCreator::createLasagna(float l_w_ratio, int periods, int resolution_l, int resolution_w)
+of3dPrimitive PrimitiveCreator::createLasagna(float l_w_ratio, int periods, int resolution_l, int resolution_w, float w, float h, float d)
 {
     assert(resolution_w >= 2);
     assert(resolution_l >= 2);
@@ -200,7 +307,7 @@ of3dPrimitive PrimitiveCreator::createLasagna(float l_w_ratio, int periods, int 
         float z_0 = -l_w_ratio;
         for (int i = 0; i < resolution_w; i++)
         {
-            lasagna.addVertex(ofPoint(x_f, sin(k * (x_f - 2.0f)), z_0));
+            lasagna.addVertex(ofPoint(x_f, std::sin(k * (x_f - 2.0f)), z_0));
             z_0 += d_w;
         }
         x_f += d_x;
@@ -228,33 +335,84 @@ of3dPrimitive PrimitiveCreator::createLasagna(float l_w_ratio, int periods, int 
             lasagna.addIndex(p4);
         }
     }
+
+    // scale points to size
+    for (size_t i = 0; i < lasagna.getNumVertices(); i++)
+    {
+        lasagna.setVertex(i, lasagna.getVertex(i) * ofPoint{w, h, d});
+    }
+
+    // calculate normals
+    for (size_t i = 0; i < lasagna.getNumVertices(); i++)
+    {
+        lasagna.addNormal(normalize(lasagna.getVertex(i)));
+    }
+
     return of3dPrimitive{lasagna};
 }
 
-of3dPrimitive PrimitiveCreator::createPyramid(int sides)
+of3dPrimitive PrimitiveCreator::createPyramid(int sides, float width, float height, float depth)
 {
     float delta_theta = 2.0f * float(std::numbers::pi) / float(sides);
     ofMesh pyramid;
     pyramid.setMode(OF_PRIMITIVE_TRIANGLES);
 
-    for (int i = 0; i < sides; i++)
-    {
-        pyramid.addVertex(ofPoint(cos(float(i) * delta_theta), -1, sin(float(i) * delta_theta)));
-    }
-    pyramid.addVertex(ofPoint(0, 1, 0));
-    pyramid.addVertex(ofPoint(0, -1, 0));
+    ofPoint apex(0, -1, 0);
+    ofPoint baseCenter(0, 1, 0);
 
     for (int i = 0; i < sides; i++)
     {
-        pyramid.addIndex(sides);
-        pyramid.addIndex(i);
-        pyramid.addIndex((i + 1) % sides);
-
-        pyramid.addIndex(sides + 1);
-        pyramid.addIndex((i + 1) % sides);
-        pyramid.addIndex(i);
+        int next = (i + 1) % sides;
+        float theta_i = static_cast<float>(i) * delta_theta;
+        float theta_next = static_cast<float>(next) * delta_theta;
+        ofPoint base_i(std::cos(theta_i), 1, std::sin(theta_i));
+        ofPoint base_next(std::cos(theta_next), 1, std::sin(theta_next));
+        ofPoint v0 = apex;
+        ofPoint v1 = base_next;
+        ofPoint v2 = base_i;
+        ofVec3f edge1 = v1 - v0;
+        ofVec3f edge2 = v2 - v0;
+        ofVec3f normal = (edge1.cross(edge2)).normalize() * -1;
+        size_t startIndex = pyramid.getNumVertices();
+        pyramid.addVertex(v0);
+        pyramid.addNormal(normal);
+        pyramid.addVertex(v1);
+        pyramid.addNormal(normal);
+        pyramid.addVertex(v2);
+        pyramid.addNormal(normal);
+        pyramid.addIndex(startIndex + 0);
+        pyramid.addIndex(startIndex + 1);
+        pyramid.addIndex(startIndex + 2);
     }
 
+    ofVec3f baseNormal(0, 1, 0);
+    for (int i = 0; i < sides; i++)
+    {
+        int next = (i + 1) % sides;
+        float theta_i = static_cast<float>(i) * delta_theta;
+        float theta_next = static_cast<float>(next) * delta_theta;
+        ofPoint base_i(std::cos(theta_i), 1, std::sin(theta_i));
+        ofPoint base_next(std::cos(theta_next), 1, std::sin(theta_next));
+        size_t startIndex = pyramid.getNumVertices();
+        pyramid.addVertex(baseCenter);
+        pyramid.addNormal(baseNormal);
+        pyramid.addVertex(base_i);
+        pyramid.addNormal(baseNormal);
+        pyramid.addVertex(base_next);
+        pyramid.addNormal(baseNormal);
+        pyramid.addIndex(startIndex + 0);
+        pyramid.addIndex(startIndex + 1);
+        pyramid.addIndex(startIndex + 2);
+    }
+
+    for (size_t i = 0; i < pyramid.getNumVertices(); i++)
+    {
+        ofPoint p = pyramid.getVertex(i);
+        p.x *= width;
+        p.y *= height;
+        p.z *= depth;
+        pyramid.setVertex(i, p);
+    }
 
     return of3dPrimitive{pyramid};
 }

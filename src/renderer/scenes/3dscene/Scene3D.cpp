@@ -5,10 +5,13 @@
 #include "3dscene/commands/SetRotationCommand.h"
 #include "3dscene/commands/SetScaleCommand.h"
 #include "3dscene/createShapes/CreateCubeUI.h"
+#include "3dscene/createShapes/CreateLasagnaUI.h"
 #include "3dscene/createShapes/CreateLightUI.h"
+#include "3dscene/createShapes/CreatePyramidUI.h"
 #include "3dscene/createShapes/CreateSphereUI.h"
 #include "3dscene/createShapes/CreateCameraUI.h"
 #include "imgui.h"
+#include "of3dPrimitives.h"
 #include "ofAppRunner.h"
 #include "ofGraphics.h"
 #include <cmath>
@@ -34,6 +37,8 @@ void Scene3D::setup()
     this->createShapeUIs.push_back(std::make_unique<CreateCubeUI>(CreateCubeUI(this->sharedParams, this->history)));
     this->createShapeUIs.emplace_back(std::make_unique<CreateSphereUI>(CreateSphereUI(this->sharedParams, this->history)));
     this->createShapeUIs.emplace_back(std::make_unique<CreateLightUI>(CreateLightUI(this->sharedParams, this->history)));
+    this->createShapeUIs.emplace_back(std::make_unique<CreateLasagnaUI>(CreateLasagnaUI(this->sharedParams, this->history)));
+    this->createShapeUIs.push_back(std::make_unique<CreatePyramidUI>(CreatePyramidUI(this->sharedParams, this->history)));
     this->createShapeUIs.emplace_back(std::make_unique<CreateCameraUI>(CreateCameraUI(this->sharedParams, this->history)));
 
     material.setDiffuseColor(ofFloatColor(1.0, 0.5, 0.5));
@@ -50,6 +55,8 @@ void Scene3D::setup()
 
     auto light_ptr = std::make_shared<Node>("Light", std::make_shared<ofLight>(light));
     this->sceneGraph.AddNode(light_ptr);
+
+    ofBoxPrimitive box(100, 100, 100);
 
     // Add base camera
     //cam
@@ -199,7 +206,7 @@ void Scene3D::updateViewPorts()
         }
 
 
-        
+
     }
     else if (camNumber == 2)
     {
@@ -235,6 +242,7 @@ void Scene3D::updateViewPorts()
 
 void Scene3D::draw()
 {
+    ofClear(0, 77, 98);
     ofSetColor(0, 255, 0);
     this->DrawSceneGraphWindow();
     this->DrawSelectedNodeWindow();
@@ -262,7 +270,7 @@ void Scene3D::draw()
 
 void Scene3D::drawScene() {
 
-    
+
     material.begin();
     sceneGraph.Draw();
 
@@ -270,9 +278,9 @@ void Scene3D::drawScene() {
     {
         selectionMesh.enableColors();
         selectionMesh.setColorForIndices(255, 255, 0);
-        
+
         selectionMesh.draw();
-        
+
     }
 
     material.end();
@@ -294,14 +302,15 @@ void Scene3D::DrawSelectedNodeWindow()
         ImGui::SetNextWindowPos(ImVec2(320, 30), ImGuiCond_FirstUseEver);
         ImGui::SetNextWindowSize(ImVec2(300, 400), ImGuiCond_FirstUseEver);
 
-        if (ImGui::Begin((*this->selectedNode)->GetName().c_str()))
+        if (ImGui::Begin("Selected Node"))
         {
+            ImGui::Text("Selected node: %s", (*this->selectedNode)->GetName().c_str());
             if (ImGui::Button("Delete node"))
             {
                 if (auto camera = std::dynamic_pointer_cast<ofCamera>(this->selectedNode.get()->get()->GetInner()); camera)
                 {
                     NodeId id = this->selectedNode.get()->get()->GetId();
-                    
+
                     cameraMap.erase(id);
                     updateViewPorts();
                 }
@@ -344,7 +353,7 @@ void Scene3D::DrawSelectedNodeWindow()
 
                 this->DrawModifyCameraNodeSliders(*this->selectedNode, camera);
             }
-            
+
 
             if (ImGui::CollapsingHeader("Add child", ImGuiTreeNodeFlags_DefaultOpen))
             {
@@ -428,7 +437,7 @@ void Scene3D::DrawModifyNodeSliders(const std::shared_ptr<Node>& node)
 
     // Scales
     const glm::vec3 currentScale = inner->getScale();
-    if (ImGui::SliderFloat3("Scale", this->scale, 0.001f, 100.0f))
+    if (ImGui::SliderFloat3("Scale", this->scale, 0.001f, 10.0f))
     {
         inner->setScale(this->scale[0], this->scale[1], this->scale[2]);
     }
@@ -650,7 +659,7 @@ ofVec3f Scene3D::worldToViewPort(ofVec3f worldPos)
     {
         screenPos.y -= (ofGetHeight() - current_viewPort.getHeight());
     }
-    
+
     return screenPos;
 }
 
@@ -749,7 +758,7 @@ void Scene3D::mousePressed(int x, int y, int button)
             minY = std::min(minY, corner.y);
             maxY = std::max(maxY, corner.y);
         }
-    
+
         onScreenCorners = ofRectangle(minX, minY, maxX - minX, maxY - minY);
 
         if (minX < x && x < maxX && minY < y && y < maxY)
@@ -762,7 +771,7 @@ void Scene3D::mousePressed(int x, int y, int button)
                 initialSelectedPosition = primitive->getGlobalPosition();
                 initialSelectedScale = primitive->getScale();
                 SelectNode(sceneGraph.GetNode(id).value());
-                
+
                 ofLog() << "Object : " << i << " selected. ";
             }
         }
@@ -852,7 +861,7 @@ void Scene3D::keyPressed(int key)
                 is_key_press_up = true;
                 storeCameraRotation();
             }
-            
+
             break;
         case 57358://right
             if (!is_key_press_right)
@@ -905,7 +914,7 @@ void Scene3D::keyPressed(int key)
                 is_key_press_minus = true;
                 storeCameraRotation();
             }
-            
+
             break;
         case 61:
             if (!is_key_press_minus)
@@ -913,7 +922,7 @@ void Scene3D::keyPressed(int key)
                 is_key_press_plus = true;
                 storeCameraRotation();
             }
-            
+
             break;
         case 'p':
             toggleOrtho();
@@ -1006,7 +1015,7 @@ void Scene3D::toggleOrtho() {
     else {
         camera->disableOrtho();
     }
-    
+
 
 }
 
@@ -1102,7 +1111,7 @@ std::vector<std::pair<std::shared_ptr<SceneObject>, NodeId>> Scene3D::getSceneOb
 void Scene3D::storeCameraRotation() {
     int count = getCameraRotationCommands();
     ofLog() << "Storing Camera rotation" << count;
-    if (count == 1) 
+    if (count == 1)
     {
         initialCameraRotation = camera->getOrientationQuat();
     }
@@ -1123,7 +1132,7 @@ void Scene3D::applyCameraRotation()
             shared_ptr<Node> node = optionalNode.value();
             this->history.executeCommand(std::make_shared<SetRotationCommand>(node, camR, this->initialRotation));
         }
-        
+
     }
 
 }
@@ -1154,9 +1163,9 @@ void Scene3D::applyCameraTranslation()
             shared_ptr<Node> node = optionalNode.value();
             this->history.executeCommand(std::make_shared<SetPositionCommand>(node, glm::vec3(current_pos[0], current_pos[1], current_pos[2]), initial));
         }
-        
+
     }
-    
+
 }
 
 

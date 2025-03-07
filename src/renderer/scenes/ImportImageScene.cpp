@@ -18,7 +18,7 @@ void ImportImageScene::draw()
     }
 
     float xOffset = 20;
-    for (auto& img : generatedImages)
+    for (auto& img: generatedImages)
     {
         img.draw(xOffset, 20);
         xOffset += img.getWidth() + 10;
@@ -51,7 +51,7 @@ void ImportImageScene::SampleImage()
 
     generatedImages.clear();
     int numParts = 3;
-    for (auto& img : images)
+    for (auto& img: images)
     {
         if (img.image.getWidth() < numParts) return;
 
@@ -75,7 +75,7 @@ void ImportImageScene::GenerateNewImages()
     if (generatedImages.empty()) return;
 
     float xOffset = 20;
-    for (auto& img : generatedImages)
+    for (auto& img: generatedImages)
     {
         if (img.isAllocated())
         {
@@ -84,5 +84,3 @@ void ImportImageScene::GenerateNewImages()
         }
     }
 }
-
-
