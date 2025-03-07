@@ -45,7 +45,8 @@ public:
                     mesh.addColor(color);
                 }
 
-                auto lasagna_ptr = std::make_shared<Node>("Lasagna", std::make_shared<of3dPrimitive>(lasagna));
+                auto lasagna_3d = Primitive3D(lasagna);
+                auto lasagna_ptr = std::make_shared<Node>("Lasagna", std::make_shared<Primitive3D>(lasagna_3d));
                 history.executeCommand(std::make_shared<AddChildToNodeCommand>(*sharedParams->selectedNode, lasagna_ptr));
             }
 
