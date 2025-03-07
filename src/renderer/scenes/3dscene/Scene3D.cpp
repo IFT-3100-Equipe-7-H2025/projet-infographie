@@ -794,10 +794,7 @@ std::vector<ofVec3f> Scene3D::getPrimitiveVertices(of3dPrimitive& primitive)
 
 void Scene3D::focus()
 {
-    /*if (is_selected)
-    {
-        camera->lookAt(primitives[selected_primitive].getPosition());
-    }*/
+    camera->lookAt(selectedNode->get()->GetInner()->getGlobalPosition());
 }
 
 
