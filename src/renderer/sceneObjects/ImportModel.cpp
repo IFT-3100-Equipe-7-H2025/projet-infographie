@@ -4,6 +4,7 @@
 
 std::vector<ofVec3f> ImportModel::getMeshVertices(ofMesh mesh)
 {
+    model.calculateDimensions();
     ofMatrix4x4 transform = getGlobalTransformMatrix()  * model.getModelMatrix();
 
 
@@ -17,7 +18,31 @@ std::vector<ofVec3f> ImportModel::getMeshVertices(ofMesh mesh)
 };
 
 std::pair<ofVec3f, ofVec3f> ImportModel::getBoundingVertices() {
-    vector<ofVec3f> vertices = getMeshVertices(getCombinedMesh());
+    //vector<ofVec3f> vertices = getMeshVertices(getCombinedMesh());
+    ofVec3f min3 = model.getSceneMinModelSpace();
+    ofVec3f max3 = model.getSceneMaxModelSpace();
+    ofVec4f min = ofVec4f(min3.x, min3.y, min3.z, 1);
+    ofVec4f max = ofVec4f(max3.x, max3.y, max3.z, 1);
+    //ofLog() << "Before " << min;
+    //ofLog() << "Before " << getGlobalTransformMatrix();
+    min =  getGlobalTransformMatrix() * min;
+    //ofLog() << "After " << min;
+    max = getGlobalTransformMatrix() * max;
+
+    vector<ofVec3f> corners = {
+            ofVec3f(min.x, min.y, min.z),
+            ofVec3f(min.x, max.y, min.z),
+            ofVec3f(max.x, max.y, min.z),
+            ofVec3f(max.x, min.y, min.z),
+
+            ofVec3f(min.x, min.y, max.z),
+            ofVec3f(min.x, max.y, max.z),
+            ofVec3f(max.x, max.y, max.z),
+            ofVec3f(max.x, min.y, max.z)};
+
+
+   vector<ofVec3f> vertices = corners;
+    
 
     return getBoundingVerticesFromVector(vertices);
 }

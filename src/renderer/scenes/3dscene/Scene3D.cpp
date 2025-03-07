@@ -660,13 +660,11 @@ ofVec3f Scene3D::worldToViewPort(ofVec3f worldPos)
 
 ofVec3f Scene3D::screenToViewPort(ofVec3f screenPos)
 {
-    ofLog() << "Before screen to viewPort : X : " << screenPos.x << " Y " << screenPos.y << " Z " << screenPos.z;
     ofVec3f viewPos;
     viewPos.x = (float) screenPos.x * ((float) current_viewPort.getHeight() / (float) ofGetHeight()) + current_viewPort.x;
     viewPos.y = (float) screenPos.y * (current_viewPort.getHeight() / (float) ofGetHeight()) + current_viewPort.y;
     viewPos.z = (float) screenPos.z;
 
-    ofLog() << "After screen to viewPort : X : " << viewPos.x << " Y " << viewPos.y << " Z " << viewPos.z;
     return viewPos;
 }
 
@@ -704,15 +702,11 @@ void Scene3D::mousePressed(int x, int y, int button)
     previous_y = y;
     if ( ImGui::GetIO().WantCaptureMouse )
     {
-        ofLog() << "Mouse wanted";
         return;
     }
 
 
     updateViewPorts();
-
-    ofLog() << "Current View Port  Y " << current_viewPort.y << " X " << current_viewPort.x << " Width " << current_viewPort.width << " Height " << current_viewPort.height;
-
     
     float closeness = -1;
     std::vector<std::pair<std::shared_ptr<SceneObject>, NodeId>> primitive_pairs = getSceneObjects();
@@ -770,8 +764,6 @@ void Scene3D::mousePressed(int x, int y, int button)
                 initialSelectedPosition = primitive->getGlobalPosition();
                 initialSelectedScale = primitive->getScale();
                 SelectNode(sceneGraph.GetNode(id).value());
-
-                ofLog() << "Object : " << i << " selected. ";
             }
         }
     }
@@ -789,7 +781,10 @@ void Scene3D::dragEvent(ofDragInfo dragInfo)
         {
             model->setPosition(0, 0, 0);
             shared_ptr<Node> node = make_shared<Node>("Object ", model);
-            sceneGraph.AddNode(node);
+            shared_ptr<Node> parent = *selectedNode;
+            history.executeCommand(std::make_shared<AddChildToNodeCommand>(parent, node));
+
+
         }
         else
         {
@@ -1130,7 +1125,6 @@ std::vector<std::pair<std::shared_ptr<SceneObject>, NodeId>> Scene3D::getSceneOb
 
 void Scene3D::storeCameraRotation() {
     int count = getCameraRotationCommands();
-    ofLog() << "Storing Camera rotation" << count;
     if (count == 1)
     {
         initialCameraRotation = camera->getOrientationQuat();
@@ -1140,10 +1134,8 @@ void Scene3D::storeCameraRotation() {
 void Scene3D::applyCameraRotation()
 {
     int count = getCameraRotationCommands();
-    ofLog() << "applying Camera rotation" << count;
     if (count == 0)
     {
-        ofLog() << "Applied";
         glm::quat camR = camera->getOrientationQuat();
 
         std::optional<std::shared_ptr<Node>> optionalNode = sceneGraph.GetNode(current_camera_id);
@@ -1161,7 +1153,6 @@ void Scene3D::applyCameraRotation()
 void Scene3D::storeCameraTranslation()
 {
     int count = getCameraTranslationCommands();
-    ofLog() << "storing Camera transl" << count;
     if (count == 1)
     {
         initialCameraPosition = camera->getPosition();
@@ -1171,10 +1162,8 @@ void Scene3D::storeCameraTranslation()
 void Scene3D::applyCameraTranslation()
 {
     int count = getCameraTranslationCommands();
-    ofLog() << "applying Camera transl" << count;
     if (count == 0)
     {
-        ofLog() << "Applied";
         ofVec3f current_pos = camera->getPosition();
         glm::vec3 initial = glm::vec3(initialCameraPosition.x, initialCameraPosition.y, initialCameraPosition.z);
         std::optional<std::shared_ptr<Node>> optionalNode = sceneGraph.GetNode(current_camera_id);
