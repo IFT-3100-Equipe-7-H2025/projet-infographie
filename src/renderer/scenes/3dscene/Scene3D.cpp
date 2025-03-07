@@ -791,7 +791,7 @@ void Scene3D::focus()
 
 void Scene3D::keyPressed(int key)
 {
-    switch (key)
+    switch (std::tolower(key))
     {
         case 119://w
             if ( !is_key_press_w )
@@ -898,7 +898,7 @@ void Scene3D::keyPressed(int key)
 
 void Scene3D::keyReleased(int key)
 {
-    switch (key)
+    switch (std::tolower(key))
     {
         case 119://w
             is_key_press_w = false;
