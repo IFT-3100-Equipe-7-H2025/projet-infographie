@@ -554,7 +554,7 @@ void Scene3D::mouseReleased(int x, int y, int button) {
         // translate
         if (is_selected) {
 
-            ofVec3f current_pos = selectedNode->get()->GetInner()->getGlobalPosition();
+            ofVec3f current_pos = selectedNode->get()->GetInner()->getPosition();
             glm::vec3 initial = glm::vec3(initialSelectedPosition.x, initialSelectedPosition.y, initialSelectedPosition.z);
             shared_ptr<Node> node = *(this->selectedNode);
             this->history.executeCommand(std::make_shared<SetPositionCommand>(node, glm::vec3(current_pos[0], current_pos[1], current_pos[2]), initial));
