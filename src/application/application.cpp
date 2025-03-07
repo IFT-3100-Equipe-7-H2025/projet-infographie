@@ -104,7 +104,7 @@ void Application::draw()
 
 void Application::keyPressed(int key)
 {
-    ofLog() << "<app::keyPressed: " << key << ">";
+    //ofLog() << "<app::keyPressed: " << key << ">";
     try
     {
         auto selectedScene = renderer.scenes.GetSelectedScene();
@@ -121,9 +121,9 @@ void Application::keyPressed(int key)
 void Application::dragEvent(ofDragInfo dragInfo)
 {
 
-    ofLog() << "<app::dragged: >";
-    ofLog() << "<app::ofDragInfo file[0]: " << dragInfo.files.at(0)
-            << " at : " << dragInfo.position << ">";
+    //ofLog() << "<app::dragged: >";
+    //ofLog() << "<app::ofDragInfo file[0]: " << dragInfo.files.at(0)
+            //<< " at : " << dragInfo.position << ">";
     try
     {
         auto selectedScene = renderer.scenes.GetSelectedScene();
@@ -142,7 +142,7 @@ void Application::dragEvent(ofDragInfo dragInfo)
 
 void Application::keyReleased(int key)
 {
-    ofLog() << "<app::keyReleased: " << key << ">";
+    //ofLog() << "<app::keyReleased: " << key << ">";
     try
     {
         auto selectedScene = renderer.scenes.GetSelectedScene();
@@ -158,7 +158,18 @@ void Application::keyReleased(int key)
 
 void Application::mouseReleased(int x, int y, int button)
 {
-    ofLog() << "<app::mouse released at: (" << x << ", " << y << ")>";
+    //ofLog() << "<app::mouse released at: (" << x << ", " << y << ")>";
+    try
+    {
+        auto selectedScene = renderer.scenes.GetSelectedScene();
+        if (selectedScene)
+        {
+            selectedScene->mouseReleased(x, y, button);
+        }
+    } catch (std::exception& e)
+    {
+        ofLog() << "Aucune scène sélectionnée pour mouseReleased : " << e.what();
+    }
 }
 
 void Application::mousePressed(int x, int y, int button)

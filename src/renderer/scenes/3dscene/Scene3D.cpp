@@ -97,7 +97,7 @@ void Scene3D::updateViewPorts()
 {
 
     cameras.clear();
-    vector<pair<shared_ptr<ofCamera>, bool>> activatedCameras;
+    vector<pair<NodeId, pair<shared_ptr<ofCamera>, bool>>> activatedCameras;
     for (auto& [id, pair]: cameraMap)
     {
         auto& [camera, toggled] = pair;
@@ -107,7 +107,7 @@ void Scene3D::updateViewPorts()
             auto ptr = camera.lock();
             if (ptr)
             {
-                activatedCameras.push_back(std::pair(ptr, toggled.second));
+                activatedCameras.push_back(std::pair(id, std::pair(ptr, toggled.second)));
             }
             else
             {
@@ -121,22 +121,24 @@ void Scene3D::updateViewPorts()
     int prev_width = 0;
     if (camNumber >= 3)
     {
-        cameras.push_back(std::pair(activatedCameras[0].first, pair(ofRectangle(0, 0, ofGetWidth() / 2, ofGetHeight() / 2),activatedCameras[0].second)));
-        cameras.push_back(std::pair(activatedCameras[1].first, pair(ofRectangle(ofGetWidth() / 2, 0, ofGetWidth() / 2, ofGetHeight() / 2),activatedCameras[1].second)));
+        cameras.push_back(std::pair(activatedCameras[0].second.first, pair(ofRectangle(0, 0, ofGetWidth() / 2, ofGetHeight() / 2), activatedCameras[0].second.second)));
+        cameras.push_back(std::pair(activatedCameras[1].second.first, pair(ofRectangle(ofGetWidth() / 2, 0, ofGetWidth() / 2, ofGetHeight() / 2), activatedCameras[1].second.second)));
         if (camNumber == 3)
         {
-            cameras.push_back(std::pair(activatedCameras[2].first, pair(ofRectangle(0, ofGetHeight() / 2, ofGetWidth(), ofGetHeight() / 2), activatedCameras[2].second)));
+            cameras.push_back(std::pair(activatedCameras[2].second.first, pair(ofRectangle(0, ofGetHeight() / 2, ofGetWidth(), ofGetHeight() / 2), activatedCameras[2].second.second)));
             if (previous_x < ofGetWidth() / 2)
             {
                 if (previous_y < ofGetHeight() / 2)
                 {
                     camera = cameras[0].first;
                     current_viewPort = cameras[0].second.first;
+                    current_camera_id = activatedCameras[0].first;
                 }
                 else
                 {
                     camera = cameras[2].first;
                     current_viewPort = cameras[2].second.first;
+                    current_camera_id = activatedCameras[2].first;
                 }
             }
 
@@ -146,19 +148,21 @@ void Scene3D::updateViewPorts()
                 {
                     camera = cameras[1].first;
                     current_viewPort = cameras[1].second.first;
+                    current_camera_id = activatedCameras[1].first;
                 }
                 else
                 {
                     camera = cameras[2].first;
                     current_viewPort = cameras[2].second.first;
+                    current_camera_id = activatedCameras[2].first;
                 }
             }
 
         }
         else
         {
-            cameras.push_back(std::pair(activatedCameras[2].first, pair(ofRectangle(0, ofGetHeight() / 2, ofGetWidth() / 2, ofGetHeight() / 2), activatedCameras[2].second)));
-            cameras.push_back(std::pair(activatedCameras[3].first, pair(ofRectangle(ofGetWidth() / 2, ofGetHeight() / 2, ofGetWidth() / 2, ofGetHeight() / 2), activatedCameras[3].second)));
+            cameras.push_back(std::pair(activatedCameras[2].second.first, pair(ofRectangle(0, ofGetHeight() / 2, ofGetWidth() / 2, ofGetHeight() / 2), activatedCameras[2].second.second)));
+            cameras.push_back(std::pair(activatedCameras[3].second.first, pair(ofRectangle(ofGetWidth() / 2, ofGetHeight() / 2, ofGetWidth() / 2, ofGetHeight() / 2), activatedCameras[3].second.second)));
 
 
             if (previous_x < ofGetWidth() / 2)
@@ -167,11 +171,13 @@ void Scene3D::updateViewPorts()
                 {
                     camera = cameras[0].first;
                     current_viewPort = cameras[0].second.first;
+                    current_camera_id = activatedCameras[0].first;
                 }
                 else
                 {
                     camera = cameras[2].first;
                     current_viewPort = cameras[2].second.first;
+                    current_camera_id = activatedCameras[2].first;
                 }
             }
 
@@ -181,11 +187,13 @@ void Scene3D::updateViewPorts()
                 {
                     camera = cameras[1].first;
                     current_viewPort = cameras[1].second.first;
+                    current_camera_id = activatedCameras[1].first;
                 }
                 else
                 {
                     camera = cameras[3].first;
                     current_viewPort = cameras[3].second.first;
+                    current_camera_id = activatedCameras[3].first;
                 }
             }
         }
@@ -196,28 +204,31 @@ void Scene3D::updateViewPorts()
     else if (camNumber == 2)
     {
 
-        cameras.push_back(std::pair(activatedCameras[0].first, pair(ofRectangle(0, 0, ofGetWidth(), ofGetHeight() / 2), activatedCameras[0].second)));
-        cameras.push_back(std::pair(activatedCameras[1].first, pair(ofRectangle(0, ofGetHeight() / 2, ofGetWidth(), ofGetHeight() / 2), activatedCameras[1].second)));
+        cameras.push_back(std::pair(activatedCameras[0].second.first, pair(ofRectangle(0, 0, ofGetWidth(), ofGetHeight() / 2), activatedCameras[0].second.second)));
+        cameras.push_back(std::pair(activatedCameras[1].second.first, pair(ofRectangle(0, ofGetHeight() / 2, ofGetWidth(), ofGetHeight() / 2), activatedCameras[1].second.second)));
 
         if (previous_y < ofGetHeight() / 2)
         {
             camera = cameras[0].first;
             current_viewPort = cameras[0].second.first;
+            current_camera_id = activatedCameras[0].first;
         }
         else
         {
             camera = cameras[1].first;
             current_viewPort = cameras[1].second.first;
+            current_camera_id = activatedCameras[1].first;
         }
     }
     else if (camNumber == 1)
     {
         current_viewPort = ofRectangle(0, 0, ofGetWidth(), ofGetHeight());
 
-        cameras.push_back(std::pair(activatedCameras[0].first, pair(ofRectangle(0, 0, ofGetWidth(), ofGetHeight()), activatedCameras[0].second)));
+        cameras.push_back(std::pair(activatedCameras[0].second.first, pair(ofRectangle(0, 0, ofGetWidth(), ofGetHeight()), activatedCameras[0].second.second)));
 
         camera = cameras[0].first;
         current_viewPort = cameras[0].second.first;
+        current_camera_id = activatedCameras[0].first;
     }
 
 }
@@ -287,6 +298,13 @@ void Scene3D::DrawSelectedNodeWindow()
         {
             if (ImGui::Button("Delete node"))
             {
+                if (auto camera = std::dynamic_pointer_cast<ofCamera>(this->selectedNode.get()->get()->GetInner()); camera)
+                {
+                    NodeId id = this->selectedNode.get()->get()->GetId();
+                    
+                    cameraMap.erase(id);
+                    updateViewPorts();
+                }
                 this->history.executeCommand(std::make_shared<RemoveNodeCommand>(*this->selectedNode));
                 this->SelectNode(this->sceneGraph.GetRoot());
             }
@@ -551,6 +569,34 @@ void Scene3D::reset()
     camera->resetTransform();
 }
 
+void Scene3D::mouseReleased(int x, int y, int button) {
+    ofVec3f difference = ofVec3f(x - pressed_x, y - pressed_y, 0);
+
+    if (button == 0) {
+        // translate
+        if (is_selected) {
+
+            ofVec3f current_pos = selectedNode->get()->GetInner()->getGlobalPosition();
+            glm::vec3 initial = glm::vec3(initialSelectedPosition.x, initialSelectedPosition.y, initialSelectedPosition.z);
+            shared_ptr<Node> node = *(this->selectedNode);
+            this->history.executeCommand(std::make_shared<SetPositionCommand>(node, glm::vec3(current_pos[0], current_pos[1], current_pos[2]), initial));
+        }
+
+    }
+    else if (button == 2)
+    {
+        // scale
+        if (is_selected)
+        {
+
+            ofVec3f current_scale = selectedNode->get()->GetInner()->getScale();
+            glm::vec3 initial = glm::vec3(initialSelectedScale.x, initialSelectedScale.y, initialSelectedScale.z);
+            shared_ptr<Node> node = *(this->selectedNode);
+            this->history.executeCommand(std::make_shared<SetScaleCommand>(node, glm::vec3(current_scale[0], current_scale[1], current_scale[2]), initial));
+        }
+    }
+}
+
 void Scene3D::mouseDragged(int x, int y, int button)
 {
     switch (button)
@@ -649,6 +695,8 @@ ofVec3f Scene3D::viewPortToScreen(ofVec3f viewPos)
 
 void Scene3D::mousePressed(int x, int y, int button)
 {
+    pressed_x = x;
+    pressed_y = y;
     previous_x = x;
     previous_y = y;
 
@@ -711,6 +759,8 @@ void Scene3D::mousePressed(int x, int y, int button)
                 closeness = new_closeness;
                 selectionMesh = primitive->getSelectionBox();
                 is_selected = true;
+                initialSelectedPosition = primitive->getGlobalPosition();
+                initialSelectedScale = primitive->getScale();
                 SelectNode(sceneGraph.GetNode(id).value());
                 
                 ofLog() << "Object : " << i << " selected. ";
@@ -718,19 +768,6 @@ void Scene3D::mousePressed(int x, int y, int button)
         }
     }
 }
-
-
-//void Scene3D::nextCam()
-//{
-//    current_cam = ++current_cam < cameras.size() ? current_cam : 0;
-//    camera = &cameras[current_cam];
-//}
-//
-//void Scene3D::previousCam()
-//{
-//    current_cam = --current_cam >= 0 ? current_cam : cameras.size() - 1;
-//    camera = &cameras[current_cam];
-//}
 
 void Scene3D::dragEvent(ofDragInfo dragInfo)
 {
@@ -782,34 +819,79 @@ void Scene3D::keyPressed(int key)
     switch (key)
     {
         case 119://w
-            is_key_press_w = true;
+            if (!is_key_press_w) {
+                is_key_press_w = true;
+                storeCameraTranslation();
+            }
             break;
         case 100://d
-            is_key_press_d = true;
+            if (!is_key_press_d)
+            {
+                is_key_press_d = true;
+                storeCameraTranslation();
+            }
             break;
         case 115://s
-            is_key_press_s = true;
+            if (!is_key_press_s)
+            {
+                is_key_press_s = true;
+                storeCameraTranslation();
+            }
             break;
         case 97://a
-            is_key_press_a = true;
+            if (!is_key_press_a)
+            {
+                is_key_press_a = true;
+                storeCameraTranslation();
+            }
+
             break;
         case 57357://up
-            is_key_press_up = true;
+            if (!is_key_press_up)
+            {
+                is_key_press_up = true;
+                storeCameraRotation();
+            }
+            
             break;
         case 57358://right
-            is_key_press_right = true;
+            if (!is_key_press_right)
+            {
+                is_key_press_right = true;
+                storeCameraRotation();
+            }
+
             break;
         case 57359://down
-            is_key_press_down = true;
+            if (!is_key_press_down)
+            {
+                is_key_press_down = true;
+                storeCameraRotation();
+            }
+
+
             break;
         case 57356://left
-            is_key_press_left = true;
+            if (!is_key_press_left)
+            {
+                is_key_press_left = true;
+                storeCameraRotation();
+            }
             break;
         case 113://q
-            is_key_press_q = true;
+            if (!is_key_press_q)
+            {
+                is_key_press_q = true;
+                storeCameraTranslation();
+            }
             break;
         case 101://e
-            is_key_press_e = true;
+            if (!is_key_press_e)
+            {
+                is_key_press_e = true;
+                storeCameraTranslation();
+            }
+
             break;
         case 102://f
             is_key_press_f = true;
@@ -818,10 +900,20 @@ void Scene3D::keyPressed(int key)
             is_key_press_g = true;
             break;
         case 45://-
-            is_key_press_minus = true;
+            if (!is_key_press_minus)
+            {
+                is_key_press_minus = true;
+                storeCameraRotation();
+            }
+            
             break;
         case 61:
-            is_key_press_plus = true;
+            if (!is_key_press_minus)
+            {
+                is_key_press_plus = true;
+                storeCameraRotation();
+            }
+            
             break;
         case 'p':
             toggleOrtho();
@@ -834,33 +926,43 @@ void Scene3D::keyReleased(int key)
     {
         case 119://w
             is_key_press_w = false;
+            applyCameraTranslation();
             break;
         case 100://d
             is_key_press_d = false;
+            applyCameraTranslation();
             break;
         case 115://s
             is_key_press_s = false;
+            applyCameraTranslation();
             break;
         case 97://a
             is_key_press_a = false;
+            applyCameraTranslation();
             break;
         case 57357://up
             is_key_press_up = false;
+            applyCameraRotation();
             break;
         case 57358://right
             is_key_press_right = false;
+            applyCameraRotation();
             break;
         case 57359://down
             is_key_press_down = false;
+            applyCameraRotation();
             break;
         case 57356://left
             is_key_press_left = false;
+            applyCameraRotation();
             break;
         case 113://q
             is_key_press_q = false;
+            applyCameraTranslation();
             break;
         case 101://e
             is_key_press_e = false;
+            applyCameraTranslation();
             break;
         case 102://f
             is_key_press_f = false;
@@ -869,19 +971,27 @@ void Scene3D::keyReleased(int key)
             is_key_press_g = false;
             break;
         case 114://r
+            storeCameraTranslation();
+            storeCameraRotation();
             reset();
+            applyCameraTranslation();
+            applyCameraRotation();
             break;
         case 45://-
             is_key_press_minus = false;
+            applyCameraRotation();
             break;
         case 61:
             is_key_press_plus = false;
+            applyCameraRotation();
             break;
         case 107://k
             debugger = !debugger;
             break;
         case 'y':
+            storeCameraRotation();
             focus();
+            applyCameraRotation();
             break;
     }
 }
@@ -987,4 +1097,87 @@ std::vector<std::pair<std::shared_ptr<SceneObject>, NodeId>> Scene3D::getSceneOb
         }
     }
     return sceneObjects;
+}
+
+void Scene3D::storeCameraRotation() {
+    int count = getCameraRotationCommands();
+    ofLog() << "Storing Camera rotation" << count;
+    if (count == 1) 
+    {
+        initialCameraRotation = camera->getOrientationQuat();
+    }
+}
+
+void Scene3D::applyCameraRotation()
+{
+    int count = getCameraRotationCommands();
+    ofLog() << "applying Camera rotation" << count;
+    if (count == 0)
+    {
+        ofLog() << "Applied";
+        glm::quat camR = camera->getOrientationQuat();
+
+        std::optional<std::shared_ptr<Node>> optionalNode = sceneGraph.GetNode(current_camera_id);
+        if (optionalNode.has_value())
+        {
+            shared_ptr<Node> node = optionalNode.value();
+            this->history.executeCommand(std::make_shared<SetRotationCommand>(node, camR, this->initialRotation));
+        }
+        
+    }
+
+}
+
+
+void Scene3D::storeCameraTranslation()
+{
+    int count = getCameraTranslationCommands();
+    ofLog() << "storing Camera transl" << count;
+    if (count == 1)
+    {
+        initialCameraPosition = camera->getGlobalPosition();
+    }
+}
+
+void Scene3D::applyCameraTranslation()
+{
+    int count = getCameraTranslationCommands();
+    ofLog() << "applying Camera transl" << count;
+    if (count == 0)
+    {
+        ofLog() << "Applied";
+        ofVec3f current_pos = camera->getGlobalPosition();
+        glm::vec3 initial = glm::vec3(initialCameraPosition.x, initialCameraPosition.y, initialCameraPosition.z);
+        std::optional<std::shared_ptr<Node>> optionalNode = sceneGraph.GetNode(current_camera_id);
+        if (optionalNode.has_value())
+        {
+            shared_ptr<Node> node = optionalNode.value();
+            this->history.executeCommand(std::make_shared<SetPositionCommand>(node, glm::vec3(current_pos[0], current_pos[1], current_pos[2]), initial));
+        }
+        
+    }
+    
+}
+
+
+int Scene3D::getCameraRotationCommands()
+{
+    vector<bool> vec = {is_key_press_up,
+                        is_key_press_left,
+                        is_key_press_down,
+                        is_key_press_right,
+                        is_key_press_minus,
+                        is_key_press_plus};
+    return std::count(vec.begin(), vec.end(), true);
+}
+
+int Scene3D::getCameraTranslationCommands()
+{
+    vector<bool> vec = {is_key_press_w,
+                        is_key_press_a,
+                        is_key_press_s,
+                        is_key_press_d,
+                        is_key_press_q,
+                        is_key_press_e};
+    return std::count(vec.begin(), vec.end(), true);
 }

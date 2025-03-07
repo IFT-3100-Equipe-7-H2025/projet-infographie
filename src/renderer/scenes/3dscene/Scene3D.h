@@ -40,6 +40,7 @@ public:
     void update() override;
     void mousePressed(int x, int y, int button) override;
     void mouseDragged(int x, int y, int button) override;
+    void mouseReleased(int x, int y, int button) override;
     void dragEvent(ofDragInfo dragInfo) override;
     void keyPressed(int key) override;
     void keyReleased(int key) override;
@@ -79,19 +80,25 @@ private:
 
 
     std::shared_ptr<ofCamera> camera;
+    NodeId current_camera_id;
     ofRectangle current_viewPort;
 
 
-    //std::vector<std::shared_ptr<ofCamera>> cameras;
     ofMesh selectionMesh;
+    ofVec3f initialSelectedPosition;
+    ofVec3f initialSelectedScale;
+
+
+    int cameraTranslateCount = 0;
+    int cameraRotateCount = 0;
+    ofVec3f initialCameraPosition;
+    glm::quat initialCameraRotation;
+    float initialCameraFov;
+
+
     ofRectangle onScreenCorners;
     bool is_selected;
     bool debugger;
-    int current_cam = 0;
-    int selected_primitive = 0;
-
-
-    std::vector<std::shared_ptr<ofxAssimpModelLoader>> objects;
 
 
     float time_current;
@@ -119,6 +126,8 @@ private:
     float speed_translation;
     float speed_rotation;
 
+    int pressed_x;
+    int pressed_y;
     int previous_x;
     int previous_y;
 
@@ -141,5 +150,14 @@ private:
 
     bool ortho;
     void toggleOrtho();
+
+    void storeCameraRotation();
+    void applyCameraRotation();
+    
+    void storeCameraTranslation();
+    void applyCameraTranslation();
+
+    int getCameraRotationCommands();
+    int getCameraTranslationCommands();
 
 };
