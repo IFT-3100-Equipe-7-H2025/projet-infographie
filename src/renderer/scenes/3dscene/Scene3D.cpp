@@ -333,8 +333,8 @@ void Scene3D::DrawSelectedNodeWindow()
                     updateViewPorts();
                 }
 
-                bool& frustrumActivated = cameraMap.at(id).second.second;
-                if (ImGui::Checkbox("Visible Frustrum", &frustrumActivated))
+                bool& frustumActivated = cameraMap.at(id).second.second;
+                if (ImGui::Checkbox("Visible Frustum", &frustumActivated))
                 {
                     updateViewPorts();
                 }
@@ -385,18 +385,6 @@ void Scene3D::DrawModifyCameraNodeSliders(const std::shared_ptr<Node>& node, sha
     {
         this->initialFov = current_fov;
     }
- /*   if (ImGui::IsItemDeactivatedAfterEdit())
-    {
-        this->history.executeCommand(std::make_shared<SetPositionCommand>(node, glm::vec3(this->translate[0], this->translate[1], this->translate[2]), this->initialPosition));
-    }*/
-
-
-
-    /*if (ImGui::Checkbox("Visible Frustrum", &activated))
-    {
-        updateViewPorts();
-    }*/
-
 }
 
 void Scene3D::DrawModifyNodeSliders(const std::shared_ptr<Node>& node)
@@ -704,17 +692,23 @@ ofVec3f Scene3D::viewPortToScreen(ofVec3f viewPos)
 
 void Scene3D::mousePressed(int x, int y, int button)
 {
+    is_selected = false;
     pressed_x = x;
     pressed_y = y;
     previous_x = x;
     previous_y = y;
-
+    if (ImGui::GetIO().WantCaptureMouse)
+    {
+        ofLog() << "Mouse wanted";
+        return;
+    }
+    
 
     updateViewPorts();
 
     ofLog() << "Current View Port  Y " << current_viewPort.y << " X " << current_viewPort.x << " Width " << current_viewPort.width << " Height " << current_viewPort.height;
 
-    is_selected = false;
+    
     float closeness = -1;
     std::vector<std::pair<std::shared_ptr<SceneObject>, NodeId>> primitive_pairs = getSceneObjects();
     for (int i = 0; i < primitive_pairs.size(); i++)
