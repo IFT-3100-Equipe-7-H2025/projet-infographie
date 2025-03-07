@@ -69,35 +69,8 @@ void Scene3D::setup()
     cameraMap.emplace(cam_ptr.get()->GetId(), std::pair(camera, pair(true,false)));
     updateViewPorts();
 
-
-    shared_ptr<ofCamera> camera2 = std::make_shared<ofCamera>();
-    camera2->setPosition(0, 0, -200);
-    camera2->lookAt(ofVec3f(0, 0, 0));
-    auto cam_ptr2 = std::make_shared<Node>("Camera", camera2);
-    this->sceneGraph.AddNode(cam_ptr2);
-    cameraMap.emplace(cam_ptr2.get()->GetId(), std::pair(camera2, pair(true, false)));
-    updateViewPorts();
-
-
-    shared_ptr<ofCamera> camera3 = std::make_shared<ofCamera>();
-    camera3->setPosition(0, 0, -200);
-    camera3->lookAt(ofVec3f(0, 0, 0));
-    auto cam_ptr3 = std::make_shared<Node>("Camera", camera3);
-    this->sceneGraph.AddNode(cam_ptr3);
-    cameraMap.emplace(cam_ptr3.get()->GetId(), std::pair(camera3, pair(true, false)));
-    updateViewPorts();
-
-
-    shared_ptr<ofCamera> camera4 = std::make_shared<ofCamera>();
-    camera4->setPosition(0, 0, -200);
-    camera4->lookAt(ofVec3f(0, 0, 0));
-    auto cam_ptr4 = std::make_shared<Node>("Camera", camera4);
-    this->sceneGraph.AddNode(cam_ptr4);
-    cameraMap.emplace(cam_ptr4.get()->GetId(), std::pair(camera4, pair(true, false)));
-    updateViewPorts();
-
-    translate_speed = 1000;
-    rotate_speed = 100;
+    translate_speed = 750;
+    rotate_speed = 75;
 }
 
 void Scene3D::updateViewPorts()
@@ -1138,7 +1111,7 @@ void Scene3D::storeCameraTranslation()
     ofLog() << "storing Camera transl" << count;
     if (count == 1)
     {
-        initialCameraPosition = camera->getGlobalPosition();
+        initialCameraPosition = camera->getPosition();
     }
 }
 
@@ -1149,7 +1122,7 @@ void Scene3D::applyCameraTranslation()
     if (count == 0)
     {
         ofLog() << "Applied";
-        ofVec3f current_pos = camera->getGlobalPosition();
+        ofVec3f current_pos = camera->getPosition();
         glm::vec3 initial = glm::vec3(initialCameraPosition.x, initialCameraPosition.y, initialCameraPosition.z);
         std::optional<std::shared_ptr<Node>> optionalNode = sceneGraph.GetNode(current_camera_id);
         if (optionalNode.has_value())
