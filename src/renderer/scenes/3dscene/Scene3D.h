@@ -160,4 +160,6 @@ private:
     int getCameraRotationCommands();
     int getCameraTranslationCommands();
 
+    int charToLower(int key);
+
 };
