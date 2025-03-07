@@ -19,6 +19,7 @@
 #include "renderer/sceneObjects/ImportModel.h"
 #include "SceneObject.h"
 #include "Light.h"
+#include "MoveChildCommand.h"
 #include "SetCameraFovCommand.h"
 
 #include <ranges>
@@ -221,9 +222,8 @@ void Scene3D::draw()
     this->DrawSelectedNodeWindow();
     this->DrawCommandHistoryWindow();
 
-
-
-    for (auto& [camera, info] : cameras) {
+    for ( auto& [camera, info]: cameras )
+    {
         camera->begin(info.first);
         for (auto& [camera, info]: cameras)
         {
@@ -238,6 +238,8 @@ void Scene3D::draw()
     }
 
     ofSetColor(255, 255, 255);
+
+    this->ExecuteQueuedCommands();
 }
 
 void Scene3D::drawScene() {
@@ -277,9 +279,9 @@ void Scene3D::DrawSelectedNodeWindow()
             ImGui::Text("Selected node: %s", (*this->selectedNode)->GetName().c_str());
             if (ImGui::Button("Delete node"))
             {
-                if (auto camera = std::dynamic_pointer_cast<ofCamera>(this->selectedNode.get()->get()->GetInner()); camera)
+                if ( auto camera = std::dynamic_pointer_cast<ofCamera>(this->selectedNode->get()->GetInner()); camera )
                 {
-                    NodeId id = this->selectedNode.get()->get()->GetId();
+                    NodeId id = this->selectedNode->get()->GetId();
 
                     cameraMap.erase(id);
                     updateViewPorts();
@@ -291,9 +293,9 @@ void Scene3D::DrawSelectedNodeWindow()
             this->DrawModifyNodeSliders(*this->selectedNode);
 
 
-            if (auto camera = std::dynamic_pointer_cast<ofCamera>(this->selectedNode.get()->get()->GetInner()); camera)
+            if ( auto camera = std::dynamic_pointer_cast<ofCamera>(this->selectedNode->get()->GetInner()); camera )
             {
-                NodeId id = this->selectedNode.get()->get()->GetId();
+                NodeId id = this->selectedNode->get()->GetId();
                 if (!cameraMap.contains(id)) {
                     cameraMap.emplace(id, std::pair(camera, pair(false, false)));
                 }
@@ -354,18 +356,6 @@ void Scene3D::DrawModifyCameraNodeSliders(const std::shared_ptr<Node>& node, sha
         this->initialFov = current_fov;
     }
     if ( ImGui::IsItemDeactivatedAfterEdit() ) { this->history.executeCommand(std::make_shared<SetCameraFovCommand>(camera, this->fov, this->initialFov)); }
- /*   if (ImGui::IsItemDeactivatedAfterEdit())
-    {
-        this->history.executeCommand(std::make_shared<SetPositionCommand>(node, glm::vec3(this->translate[0], this->translate[1], this->translate[2]), this->initialPosition));
-    }*/
-
-
-
-    /*if (ImGui::Checkbox("Visible Frustrum", &activated))
-    {
-        updateViewPorts();
-    }*/
-
 }
 
 void Scene3D::DrawModifyNodeSliders(const std::shared_ptr<Node>& node)
@@ -430,20 +420,33 @@ void Scene3D::DrawCommandHistoryWindow()
     auto& undoStack = this->history.GetUndoStack();
     auto& redoStack = this->history.GetRedoStack();
 
-    ImGui::BeginDisabled(undoStack.size() == 0);
+    ImGui::BeginDisabled(undoStack.empty());
     if (ImGui::Button("Undo"))
     {
         this->history.undo();
-        this->ResetParams(*this->selectedNode);
+        if ( !this->sceneGraph.IsNodeCurrentlyInGraph(this->selectedNode->get()->GetId()) )
+        {
+            this->SelectNode(this->sceneGraph.GetRoot());
+        }
+        else {
+            this->ResetParams(*this->selectedNode);
+        }
     }
     ImGui::EndDisabled();
 
     ImGui::SameLine();
-    ImGui::BeginDisabled(redoStack.size() == 0);
+    ImGui::BeginDisabled(redoStack.empty());
     if (ImGui::Button("Redo"))
     {
         this->history.redo();
-        this->ResetParams(*this->selectedNode);
+        if ( !this->sceneGraph.IsNodeCurrentlyInGraph(this->selectedNode->get()->GetId()) )
+        {
+            this->SelectNode(this->sceneGraph.GetRoot());
+        }
+        else
+        {
+            this->ResetParams(*this->selectedNode);
+        }
     }
     ImGui::EndDisabled();
 
@@ -499,9 +502,29 @@ void Scene3D::ShowChildren(const std::shared_ptr<Node>& node)
 
     bool nodeOpen = ImGui::TreeNodeEx(node->GetName().c_str(), flags);
 
+
     if (ImGui::IsItemClicked())
     {
         this->SelectNode(node);
+    }
+
+    if ( ImGui::BeginDragDropTarget() )
+    {
+        if ( const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("DRAG_NODE") )
+        {
+            IM_ASSERT(payload->DataSize == sizeof(std::shared_ptr<Node>));
+
+            if ( std::shared_ptr<Node> payload_node = *static_cast<std::shared_ptr<Node>*>(payload->Data)
+                ; !payload_node->GetId() == 0 ) { commandQueue.push(std::make_shared<MoveChildCommand>(payload_node, node)); }
+            else { ofLogError() << "Cannot move the root node"; }
+        }
+        ImGui::EndDragDropTarget();
+    }
+
+    if ( ImGui::BeginDragDropSource() )
+    {
+        ImGui::SetDragDropPayload("DRAG_NODE", &node, sizeof(node));
+        ImGui::EndDragDropSource();
     }
 
     if (nodeOpen)
@@ -789,7 +812,7 @@ std::vector<ofVec3f> Scene3D::getPrimitiveVertices(of3dPrimitive& primitive)
 
 void Scene3D::focus()
 {
-        camera->lookAt(selectedNode->get()->GetInner()->getGlobalPosition());
+    camera->lookAt(selectedNode->get()->GetInner()->getGlobalPosition());
 }
 
 int Scene3D::charToLower(int key)
@@ -797,8 +820,6 @@ int Scene3D::charToLower(int key)
     if (key >= 65 && key <= 90) { return key + 32; }
     return key;
 }
-
-
 
 void Scene3D::keyPressed(int key)
 {
