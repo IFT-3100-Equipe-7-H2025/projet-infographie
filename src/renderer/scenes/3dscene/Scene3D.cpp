@@ -900,13 +900,12 @@ void Scene3D::keyPressed(int key)
             }
 
             break;
-        case 61:
-            if (!is_key_press_minus)
+        case 61: // +
+            if (!is_key_press_plus)
             {
                 is_key_press_plus = true;
                 storeCameraRotation();
             }
-
             break;
         case 'p':
             toggleOrtho();
