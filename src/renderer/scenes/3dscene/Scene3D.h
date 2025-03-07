@@ -61,8 +61,8 @@ private:
     float rotate[3] = {0.0f, 0.0f, 0.0f};
     glm::quat initialRotation;// Used to store the initial rotation of the selected node when using the sliders, so that we can undo the change in a single command
 
-    float fov;
-    float initialFov;
+    float fov = 0;
+    float initialFov = 0;
 
     std::shared_ptr<SharedShapeCreationParams> sharedParams;
 
@@ -70,7 +70,7 @@ private:
 
     ofMaterial material;
 
-    map<NodeId, std::pair<weak_ptr<ofCamera>, bool>> cameraMap;
+    map<NodeId, std::pair<weak_ptr<ofCamera>, pair<bool, bool>>> cameraMap;
 
 
 
@@ -122,7 +122,7 @@ private:
     int previous_x;
     int previous_y;
 
-    std::vector<std::pair<shared_ptr<ofCamera>, ofRectangle>> cameras;
+    std::vector<std::pair<shared_ptr<ofCamera>, pair<ofRectangle, bool>>> cameras;
 
     ofRectangle viewport1;
     ofRectangle viewport2;
@@ -138,5 +138,8 @@ private:
     ofVec3f screenToViewPort(ofVec3f screenPos);
     ofVec3f viewPortToWorld(ofVec3f worldPos);
     ofVec3f viewPortToScreen(ofVec3f viewPos);
+
+    bool ortho;
+    void toggleOrtho();
 
 };

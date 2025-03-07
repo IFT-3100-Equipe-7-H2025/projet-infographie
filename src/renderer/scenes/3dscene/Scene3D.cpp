@@ -7,6 +7,7 @@
 #include "3dscene/createShapes/CreateCubeUI.h"
 #include "3dscene/createShapes/CreateLightUI.h"
 #include "3dscene/createShapes/CreateSphereUI.h"
+#include "3dscene/createShapes/CreateCameraUI.h"
 #include "imgui.h"
 #include "ofAppRunner.h"
 #include "ofGraphics.h"
@@ -33,6 +34,7 @@ void Scene3D::setup()
     this->createShapeUIs.push_back(std::make_unique<CreateCubeUI>(CreateCubeUI(this->sharedParams, this->history)));
     this->createShapeUIs.emplace_back(std::make_unique<CreateSphereUI>(CreateSphereUI(this->sharedParams, this->history)));
     this->createShapeUIs.emplace_back(std::make_unique<CreateLightUI>(CreateLightUI(this->sharedParams, this->history)));
+    this->createShapeUIs.emplace_back(std::make_unique<CreateCameraUI>(CreateCameraUI(this->sharedParams, this->history)));
 
     material.setDiffuseColor(ofFloatColor(1.0, 0.5, 0.5));
     material.setSpecularColor(ofFloatColor(1.0, 1.0, 1.0));
@@ -57,7 +59,7 @@ void Scene3D::setup()
     camera->lookAt(ofVec3f(0, 0, 0));
     auto cam_ptr = std::make_shared<Node>("Camera", camera);
     this->sceneGraph.AddNode(cam_ptr);
-    cameraMap.emplace(cam_ptr.get()->GetId(), std::pair(camera, true));
+    cameraMap.emplace(cam_ptr.get()->GetId(), std::pair(camera, pair(true,false)));
     updateViewPorts();
 
 
@@ -66,7 +68,7 @@ void Scene3D::setup()
     camera2->lookAt(ofVec3f(0, 0, 0));
     auto cam_ptr2 = std::make_shared<Node>("Camera", camera2);
     this->sceneGraph.AddNode(cam_ptr2);
-    cameraMap.emplace(cam_ptr2.get()->GetId(), std::pair(camera2, true));
+    cameraMap.emplace(cam_ptr2.get()->GetId(), std::pair(camera2, pair(true, false)));
     updateViewPorts();
 
 
@@ -75,7 +77,7 @@ void Scene3D::setup()
     camera3->lookAt(ofVec3f(0, 0, 0));
     auto cam_ptr3 = std::make_shared<Node>("Camera", camera3);
     this->sceneGraph.AddNode(cam_ptr3);
-    cameraMap.emplace(cam_ptr3.get()->GetId(), std::pair(camera3, false));
+    cameraMap.emplace(cam_ptr3.get()->GetId(), std::pair(camera3, pair(true, false)));
     updateViewPorts();
 
 
@@ -84,7 +86,7 @@ void Scene3D::setup()
     camera4->lookAt(ofVec3f(0, 0, 0));
     auto cam_ptr4 = std::make_shared<Node>("Camera", camera4);
     this->sceneGraph.AddNode(cam_ptr4);
-    cameraMap.emplace(cam_ptr4.get()->GetId(), std::pair(camera4, false));
+    cameraMap.emplace(cam_ptr4.get()->GetId(), std::pair(camera4, pair(true, false)));
     updateViewPorts();
 
     translate_speed = 1000;
@@ -95,17 +97,17 @@ void Scene3D::updateViewPorts()
 {
 
     cameras.clear();
-    vector<shared_ptr<ofCamera>> activatedCameras;
+    vector<pair<shared_ptr<ofCamera>, bool>> activatedCameras;
     for (auto& [id, pair]: cameraMap)
     {
         auto& [camera, toggled] = pair;
 
-        if (toggled)
+        if (toggled.first)
         {
             auto ptr = camera.lock();
             if (ptr)
             {
-                activatedCameras.push_back(ptr);
+                activatedCameras.push_back(std::pair(ptr, toggled.second));
             }
             else
             {
@@ -119,22 +121,22 @@ void Scene3D::updateViewPorts()
     int prev_width = 0;
     if (camNumber >= 3)
     {
-        cameras.push_back(std::pair(activatedCameras[0], ofRectangle(0, 0, ofGetWidth() / 2, ofGetHeight() / 2)));
-        cameras.push_back(std::pair(activatedCameras[1], ofRectangle(ofGetWidth() / 2, 0, ofGetWidth() / 2, ofGetHeight() / 2)));
+        cameras.push_back(std::pair(activatedCameras[0].first, pair(ofRectangle(0, 0, ofGetWidth() / 2, ofGetHeight() / 2),activatedCameras[0].second)));
+        cameras.push_back(std::pair(activatedCameras[1].first, pair(ofRectangle(ofGetWidth() / 2, 0, ofGetWidth() / 2, ofGetHeight() / 2),activatedCameras[1].second)));
         if (camNumber == 3)
         {
-            cameras.push_back(std::pair(activatedCameras[2], ofRectangle(0, ofGetHeight() / 2, ofGetWidth(), ofGetHeight() / 2)));
+            cameras.push_back(std::pair(activatedCameras[2].first, pair(ofRectangle(0, ofGetHeight() / 2, ofGetWidth(), ofGetHeight() / 2), activatedCameras[2].second)));
             if (previous_x < ofGetWidth() / 2)
             {
                 if (previous_y < ofGetHeight() / 2)
                 {
                     camera = cameras[0].first;
-                    current_viewPort = cameras[0].second;
+                    current_viewPort = cameras[0].second.first;
                 }
                 else
                 {
                     camera = cameras[2].first;
-                    current_viewPort = cameras[2].second;
+                    current_viewPort = cameras[2].second.first;
                 }
             }
 
@@ -143,20 +145,20 @@ void Scene3D::updateViewPorts()
                 if (previous_y < ofGetHeight() / 2)
                 {
                     camera = cameras[1].first;
-                    current_viewPort = cameras[1].second;
+                    current_viewPort = cameras[1].second.first;
                 }
                 else
                 {
                     camera = cameras[2].first;
-                    current_viewPort = cameras[2].second;
+                    current_viewPort = cameras[2].second.first;
                 }
             }
 
         }
         else
         {
-            cameras.push_back(std::pair(activatedCameras[2], ofRectangle(0, ofGetHeight() / 2, ofGetWidth() / 2, ofGetHeight() / 2)));
-            cameras.push_back(std::pair(activatedCameras[3], ofRectangle(ofGetWidth() / 2, ofGetHeight() / 2, ofGetWidth() / 2, ofGetHeight() / 2)));
+            cameras.push_back(std::pair(activatedCameras[2].first, pair(ofRectangle(0, ofGetHeight() / 2, ofGetWidth() / 2, ofGetHeight() / 2), activatedCameras[2].second)));
+            cameras.push_back(std::pair(activatedCameras[3].first, pair(ofRectangle(ofGetWidth() / 2, ofGetHeight() / 2, ofGetWidth() / 2, ofGetHeight() / 2), activatedCameras[3].second)));
 
 
             if (previous_x < ofGetWidth() / 2)
@@ -164,12 +166,12 @@ void Scene3D::updateViewPorts()
                 if (previous_y < ofGetHeight() / 2)
                 {
                     camera = cameras[0].first;
-                    current_viewPort = cameras[0].second;
+                    current_viewPort = cameras[0].second.first;
                 }
                 else
                 {
                     camera = cameras[2].first;
-                    current_viewPort = cameras[2].second;
+                    current_viewPort = cameras[2].second.first;
                 }
             }
 
@@ -178,12 +180,12 @@ void Scene3D::updateViewPorts()
                 if (previous_y < ofGetHeight() / 2)
                 {
                     camera = cameras[1].first;
-                    current_viewPort = cameras[1].second;
+                    current_viewPort = cameras[1].second.first;
                 }
                 else
                 {
                     camera = cameras[3].first;
-                    current_viewPort = cameras[3].second;
+                    current_viewPort = cameras[3].second.first;
                 }
             }
         }
@@ -193,55 +195,55 @@ void Scene3D::updateViewPorts()
     }
     else if (camNumber == 2)
     {
-        ofLog() << "Changing Viewport" << current_viewPort.x;
-        current_viewPort = ofRectangle(0, 0, ofGetWidth(), ofGetHeight() / 2);
-        camera = activatedCameras[0];
-        cameras.push_back(std::pair(activatedCameras[0], ofRectangle(0, 0, ofGetWidth(), ofGetHeight() / 2)));
-        cameras.push_back(std::pair(activatedCameras[1], ofRectangle(0, ofGetHeight() / 2, ofGetWidth(), ofGetHeight() / 2 )));
+
+        cameras.push_back(std::pair(activatedCameras[0].first, pair(ofRectangle(0, 0, ofGetWidth(), ofGetHeight() / 2), activatedCameras[0].second)));
+        cameras.push_back(std::pair(activatedCameras[1].first, pair(ofRectangle(0, ofGetHeight() / 2, ofGetWidth(), ofGetHeight() / 2), activatedCameras[1].second)));
 
         if (previous_y < ofGetHeight() / 2)
         {
             camera = cameras[0].first;
-            current_viewPort = cameras[0].second;
+            current_viewPort = cameras[0].second.first;
         }
         else
         {
             camera = cameras[1].first;
-            current_viewPort = cameras[1].second;
+            current_viewPort = cameras[1].second.first;
         }
     }
     else if (camNumber == 1)
     {
         current_viewPort = ofRectangle(0, 0, ofGetWidth(), ofGetHeight());
-        cameras.push_back(std::pair(activatedCameras[0], ofRectangle(0, 0, ofGetWidth(), ofGetHeight())));
+
+        cameras.push_back(std::pair(activatedCameras[0].first, pair(ofRectangle(0, 0, ofGetWidth(), ofGetHeight()), activatedCameras[0].second)));
+
         camera = cameras[0].first;
-        current_viewPort = cameras[0].second;
+        current_viewPort = cameras[0].second.first;
     }
 
 }
 
 void Scene3D::draw()
 {
+    ofSetColor(0, 255, 0);
     this->DrawSceneGraphWindow();
     this->DrawSelectedNodeWindow();
     this->DrawCommandHistoryWindow();
 
 
 
-    for (auto& [camera, box] : cameras) {
-        camera->begin(box);
-        for (auto& [camera, box]: cameras)
+    for (auto& [camera, info] : cameras) {
+        camera->begin(info.first);
+        for (auto& [camera, info]: cameras)
         {
-            camera->drawFrustum();
+            if (info.second) {
+                camera->drawFrustum();
+            }
         }
         drawScene();
         camera->end();
         ofNoFill();
-        ofDrawRectangle(box);
+        ofDrawRectangle(info.first);
     }
-    
-    ofSetColor(0, 255, 0);
-    ofDrawRectangle(onScreenCorners);
 
     ofSetColor(255, 255, 255);
 
@@ -249,11 +251,11 @@ void Scene3D::draw()
 
 void Scene3D::drawScene() {
 
-    ofSetColor(0, 255, 0);
+    
     material.begin();
     sceneGraph.Draw();
 
-    if (is_selected || debugger)
+    if (is_selected)
     {
         selectionMesh.enableColors();
         selectionMesh.setColorForIndices(255, 255, 0);
@@ -296,15 +298,33 @@ void Scene3D::DrawSelectedNodeWindow()
             {
                 NodeId id = this->selectedNode.get()->get()->GetId();
                 if (!cameraMap.contains(id)) {
-                    cameraMap.emplace(id, std::pair(camera, false));
+                    cameraMap.emplace(id, std::pair(camera, pair(false, false)));
                 }
-                bool &activated = cameraMap.at(id).second;
+                bool &activated = cameraMap.at(id).second.first;
                 if (ImGui::Checkbox("Activate", &activated))
                 {
                     updateViewPorts();
                 }
 
-                //this->DrawModifyCameraNodeSliders(*this->selectedNode, camera);
+                bool& frustrumActivated = cameraMap.at(id).second.second;
+                if (ImGui::Checkbox("Visible Frustrum", &frustrumActivated))
+                {
+                    updateViewPorts();
+                }
+
+                bool tempOrtho = camera->getOrtho();
+                if (ImGui::Checkbox("Orthogonal Projection", &tempOrtho))
+                {
+                    if (tempOrtho) {
+                        camera->enableOrtho();
+                    }
+                    else {
+                        camera->disableOrtho();
+                    }
+                    updateViewPorts();
+                }
+
+                this->DrawModifyCameraNodeSliders(*this->selectedNode, camera);
             }
             
 
@@ -330,7 +350,7 @@ void Scene3D::DrawModifyCameraNodeSliders(const std::shared_ptr<Node>& node, sha
 
     // Fov
     const float current_fov = camera->getFov();
-    if (ImGui::SliderFloat("FOV", &this->fov, 0, 360))
+    if (ImGui::SliderFloat("FOV", &this->fov, 0, 180))
     {
         camera->setFov(fov);
     }
@@ -517,6 +537,12 @@ void Scene3D::ResetParams(const std::shared_ptr<Node>& node)
     rotate[0] = eulerRotation.x;
     rotate[1] = eulerRotation.y;
     rotate[2] = eulerRotation.z;
+
+
+    if (auto camera = std::dynamic_pointer_cast<ofCamera>(node.get()->GetInner()); camera) {
+        const float currentFov = camera->getFov();
+        fov = currentFov;
+    }
 }
 
 
@@ -656,8 +682,6 @@ void Scene3D::mousePressed(int x, int y, int button)
                 worldToViewPort(ofVec3f(maxVertex.x, minVertex.y, minVertex.z)),
         };
 
-        selectionMesh = primitive->getSelectionBox();
-
         ofVec3f camPos = camera->getPosition();
         ofVec3f objPos = primitive->getPosition();
         float new_closeness = camPos.distance(objPos);
@@ -715,16 +739,16 @@ void Scene3D::dragEvent(ofDragInfo dragInfo)
     {
         auto model = std::make_shared<ImportModel>();
         std::string filePath = dragInfo.files[0];// Get the first dropped file
-        if (ofFilePath::getFileExt(filePath) == "obj")
+        model->loadModel(filePath);
+        if (model->loaded())
         {
-            model->loadModel(filePath);// Load the OBJ model
             model->setPosition(0, 0, 0);
             shared_ptr<Node> node = make_shared<Node>("Object ", model);
             sceneGraph.AddNode(node);
         }
         else
         {
-            ofLog() << "Not an OBJ file!";
+            ofLog() << "Cannot Import.";
         }
     }
 }
@@ -799,6 +823,8 @@ void Scene3D::keyPressed(int key)
         case 61:
             is_key_press_plus = true;
             break;
+        case 'p':
+            toggleOrtho();
     }
 }
 
@@ -860,6 +886,19 @@ void Scene3D::keyReleased(int key)
     }
 }
 
+void Scene3D::toggleOrtho() {
+
+    if (!camera->getOrtho()) {
+        ofRectangle viewPort = current_viewPort;
+        //camera->setOrtho(viewPort.getLeft(), viewPort.getRight(), viewPort.getTop(), viewPort.getBottom(), -1000, 1000);
+        camera->enableOrtho();
+    }
+    else {
+        camera->disableOrtho();
+    }
+    
+
+}
 
 void Scene3D::update()
 {
@@ -914,11 +953,11 @@ void Scene3D::update()
     }
     if (is_key_press_f)
     {
-        camera->setFov(camera->getFov() + 0.2);
+        camera->setFov(camera->getFov() + 1);
     }
     if (is_key_press_g)
     {
-        camera->setFov(camera->getFov() - 0.2);
+        camera->setFov(camera->getFov() - 1);
     }
     if (is_key_press_plus)
     {

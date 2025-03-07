@@ -14,6 +14,11 @@ public:
         ofPopMatrix();
     }
 
+    bool loaded() {
+        return model.getNumMeshes() > 0;
+    }
+
+
     std::vector<ofVec3f> getMeshVertices(ofMesh mesh) override;
 
     std::pair<ofVec3f, ofVec3f> getBoundingVertices() override;

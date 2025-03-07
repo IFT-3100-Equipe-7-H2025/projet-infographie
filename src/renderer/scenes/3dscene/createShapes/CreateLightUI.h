@@ -25,7 +25,7 @@ public:
                 light.setAmbientColor(ofFloatColor(0.2, 0.2, 0.2));
                 light.lookAt(ofVec3f((float) ofGetWidth() / 2.0f, (float) ofGetHeight() / 2.0f, 0));
 
-                auto light_ptr = std::make_shared<Node>("Light", std::make_shared<Light>(light));
+                auto light_ptr = std::make_shared<Node>("Light", std::make_shared<ofLight>(light));
 
                 history.executeCommand(std::make_shared<AddChildToNodeCommand>(*sharedParams->selectedNode, light_ptr));
             }
