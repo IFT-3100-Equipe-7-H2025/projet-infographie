@@ -13,10 +13,10 @@ public:
         ofLogVerbose() << "~ Deleting node {" << this->GetName() << "}";
     }
 
-    void AddChild(std::shared_ptr<Node> child);
+    bool AddChild(std::shared_ptr<Node> child);
     void RemoveChild(NodeId id);
 
-    void Delete();
+    bool Delete();
 
     void Draw() const;
 

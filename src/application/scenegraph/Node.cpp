@@ -4,16 +4,18 @@
 
 Node::Node(std::string name, std::shared_ptr<ofNode> node) : inner(std::move(node)), name(std::move(name)), id(nextId++) {}
 
-void Node::AddChild(std::shared_ptr<Node> child)
+bool Node::AddChild(std::shared_ptr<Node> child)
 {
     if (child->GetId() == this->id)
     {
         ofLogError() << "Cannot add a node as a child of itself";
-        return;
+        return false;
     }
+
     child->inner->setParent(*this->inner);
     child->parent = shared_from_this();
     children.push_back(std::move(child));
+    return true;
 }
 
 void Node::RemoveChild(NodeId id)
@@ -30,19 +32,28 @@ void Node::RemoveChild(NodeId id)
     }
 }
 
-void Node::Delete()
+bool Node::Delete()
 {
+    if ( this->GetId() == 0 )
+    {
+        ofLogError() << "Cannot delete the root node";
+        return false;
+    }
+
     for (const auto& child: this->children)
     {
         child->parent.reset();
     }
 
+    this->children.clear();
+
     if (!this->parent.expired())
     {
         this->parent.lock()->RemoveChild(this->id);
+        return true;
     }
 
-    this->children.clear();
+    return false;
 }
 
 // NOLINTNEXTLINE(misc-no-recursion)

@@ -14,9 +14,9 @@ public:
         this->name = ss.str();
     }
 
-    void Execute() override
+    bool Execute() override
     {
-        this->node->AddChild(child);
+        return this->node->AddChild(child);
     }
 
     void Undo() override

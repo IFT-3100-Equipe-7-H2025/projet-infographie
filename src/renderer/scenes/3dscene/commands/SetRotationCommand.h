@@ -20,9 +20,10 @@ public:
         this->name = ss.str();
     }
 
-    void Execute() override
+    bool Execute() override
     {
         this->node->GetInner()->setOrientation(this->newRotation);
+        return true;
     }
 
     void Undo() override

@@ -22,9 +22,10 @@ public:
         this->name = ss.str();
     }
 
-    void Execute() override
+    bool Execute() override
     {
         this->node->GetInner()->setPosition(this->newPosition);
+        return true;
     }
 
     void Undo() override

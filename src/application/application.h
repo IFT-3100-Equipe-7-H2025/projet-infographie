@@ -30,6 +30,8 @@ public:
     void mouseDragged(int x, int y, int button) override;
     void exit() override;
 
+    void windowResized(int w, int h) override;
+
     void SetDarkishBlueTheme();
     void SetDarkGlassTheme();
     void SetWinXpTheme();

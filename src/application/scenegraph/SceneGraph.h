@@ -18,7 +18,7 @@ public:
     [[nodiscard]] std::optional<std::shared_ptr<Node>> GetNode(NodeId id) const;
     std::vector<std::shared_ptr<Node>> GetNodes() const;
 
-    void RemoveNode(NodeId id);
+    bool RemoveNode(NodeId id);
 
     void DebugPrint() const
     {

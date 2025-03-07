@@ -22,7 +22,7 @@ void Application::setup()
     static const ImWchar* normalCharRanges = ImGui::GetIO().Fonts->GetGlyphRangesDefault();
     static const ImWchar* myCharRanges = normalCharRanges;
     customFont = gui.addFont("fonts/Tahoma_Regular_font.ttf", fontSize, nullptr, myCharRanges, false);
-    SetDarkishBlueTheme();
+    SetDarkGlassTheme();
     renderer.Setup();
 
     this->geometryScene = std::make_shared<GeometryScene>();
@@ -206,6 +206,15 @@ void Application::mouseDragged(int x, int y, int button)
     {
         ofLog() << "Aucune scène sélectionnée pour mouseDragged : " << e.what();
     }
+}
+
+void Application::windowResized(int w, int h)
+{
+    try
+    {
+        auto selectedScene = renderer.scenes.GetSelectedScene();
+        if ( selectedScene ) { selectedScene->windowResized(w, h); }
+    } catch ( std::exception& e ) { ofLog() << "Aucune scène sélectionnée pour windowResized : " << e.what(); }
 }
 
 void Application::exit()
