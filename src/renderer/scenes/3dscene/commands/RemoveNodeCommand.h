@@ -17,9 +17,9 @@ public:
         this->children = this->node->GetChildren();
     }
 
-    void Execute() override
+    bool Execute() override
     {
-        this->node->Delete();
+        return this->node->Delete();
     }
 
     void Undo() override

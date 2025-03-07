@@ -19,6 +19,8 @@
 #include "renderer/sceneObjects/ImportModel.h"
 #include "SceneObject.h"
 #include "Light.h"
+#include "SetCameraFovCommand.h"
+
 #include <ranges>
 
 Scene3D::Scene3D() : history(CommandHistory()),
@@ -111,10 +113,9 @@ void Scene3D::updateViewPorts()
 
         if (toggled.first)
         {
-            auto ptr = camera.lock();
-            if (ptr)
+            if ( auto ptr = camera.lock(); ptr )
             {
-                activatedCameras.push_back(std::pair(id, std::pair(ptr, toggled.second)));
+                activatedCameras.emplace_back(id, std::pair(ptr, toggled.second));
             }
             else
             {
@@ -128,11 +129,11 @@ void Scene3D::updateViewPorts()
     int prev_width = 0;
     if (camNumber >= 3)
     {
-        cameras.push_back(std::pair(activatedCameras[0].second.first, pair(ofRectangle(0, 0, ofGetWidth() / 2, ofGetHeight() / 2), activatedCameras[0].second.second)));
-        cameras.push_back(std::pair(activatedCameras[1].second.first, pair(ofRectangle(ofGetWidth() / 2, 0, ofGetWidth() / 2, ofGetHeight() / 2), activatedCameras[1].second.second)));
+        cameras.emplace_back(activatedCameras[0].second.first, pair(ofRectangle(0, 0, ofGetWidth() / 2, ofGetHeight() / 2), activatedCameras[0].second.second));
+        cameras.emplace_back(activatedCameras[1].second.first, pair(ofRectangle(ofGetWidth() / 2, 0, ofGetWidth() / 2, ofGetHeight() / 2), activatedCameras[1].second.second));
         if (camNumber == 3)
         {
-            cameras.push_back(std::pair(activatedCameras[2].second.first, pair(ofRectangle(0, ofGetHeight() / 2, ofGetWidth(), ofGetHeight() / 2), activatedCameras[2].second.second)));
+            cameras.emplace_back(activatedCameras[2].second.first, pair(ofRectangle(0, ofGetHeight() / 2, ofGetWidth(), ofGetHeight() / 2), activatedCameras[2].second.second));
             if (previous_x < ofGetWidth() / 2)
             {
                 if (previous_y < ofGetHeight() / 2)
@@ -168,8 +169,8 @@ void Scene3D::updateViewPorts()
         }
         else
         {
-            cameras.push_back(std::pair(activatedCameras[2].second.first, pair(ofRectangle(0, ofGetHeight() / 2, ofGetWidth() / 2, ofGetHeight() / 2), activatedCameras[2].second.second)));
-            cameras.push_back(std::pair(activatedCameras[3].second.first, pair(ofRectangle(ofGetWidth() / 2, ofGetHeight() / 2, ofGetWidth() / 2, ofGetHeight() / 2), activatedCameras[3].second.second)));
+            cameras.emplace_back(activatedCameras[2].second.first, pair(ofRectangle(0, ofGetHeight() / 2, ofGetWidth() / 2, ofGetHeight() / 2), activatedCameras[2].second.second));
+            cameras.emplace_back(activatedCameras[3].second.first, pair(ofRectangle(ofGetWidth() / 2, ofGetHeight() / 2, ofGetWidth() / 2, ofGetHeight() / 2), activatedCameras[3].second.second));
 
 
             if (previous_x < ofGetWidth() / 2)
@@ -210,9 +211,8 @@ void Scene3D::updateViewPorts()
     }
     else if (camNumber == 2)
     {
-
-        cameras.push_back(std::pair(activatedCameras[0].second.first, pair(ofRectangle(0, 0, ofGetWidth(), ofGetHeight() / 2), activatedCameras[0].second.second)));
-        cameras.push_back(std::pair(activatedCameras[1].second.first, pair(ofRectangle(0, ofGetHeight() / 2, ofGetWidth(), ofGetHeight() / 2), activatedCameras[1].second.second)));
+        cameras.emplace_back(activatedCameras[0].second.first, pair(ofRectangle(0, 0, ofGetWidth(), ofGetHeight() / 2), activatedCameras[0].second.second));
+        cameras.emplace_back(activatedCameras[1].second.first, pair(ofRectangle(0, ofGetHeight() / 2, ofGetWidth(), ofGetHeight() / 2), activatedCameras[1].second.second));
 
         if (previous_y < ofGetHeight() / 2)
         {
@@ -231,7 +231,7 @@ void Scene3D::updateViewPorts()
     {
         current_viewPort = ofRectangle(0, 0, ofGetWidth(), ofGetHeight());
 
-        cameras.push_back(std::pair(activatedCameras[0].second.first, pair(ofRectangle(0, 0, ofGetWidth(), ofGetHeight()), activatedCameras[0].second.second)));
+        cameras.emplace_back(activatedCameras[0].second.first, pair(ofRectangle(0, 0, ofGetWidth(), ofGetHeight()), activatedCameras[0].second.second));
 
         camera = cameras[0].first;
         current_viewPort = cameras[0].second.first;
@@ -265,12 +265,9 @@ void Scene3D::draw()
     }
 
     ofSetColor(255, 255, 255);
-
 }
 
 void Scene3D::drawScene() {
-
-
     material.begin();
     sceneGraph.Draw();
 
@@ -334,7 +331,7 @@ void Scene3D::DrawSelectedNodeWindow()
                 }
 
                 bool& frustumActivated = cameraMap.at(id).second.second;
-                if (ImGui::Checkbox("Visible Frustum", &frustumActivated))
+                if ( ImGui::Checkbox("Visible Frustum", &frustumActivated) )
                 {
                     updateViewPorts();
                 }
@@ -364,10 +361,8 @@ void Scene3D::DrawSelectedNodeWindow()
                     createShapeUI->Draw();
                 }
             }
-
-
-            ImGui::End();
         }
+        ImGui::End();
     }
 }
 
@@ -385,6 +380,19 @@ void Scene3D::DrawModifyCameraNodeSliders(const std::shared_ptr<Node>& node, sha
     {
         this->initialFov = current_fov;
     }
+    if ( ImGui::IsItemDeactivatedAfterEdit() ) { this->history.executeCommand(std::make_shared<SetCameraFovCommand>(camera, this->fov, this->initialFov)); }
+ /*   if (ImGui::IsItemDeactivatedAfterEdit())
+    {
+        this->history.executeCommand(std::make_shared<SetPositionCommand>(node, glm::vec3(this->translate[0], this->translate[1], this->translate[2]), this->initialPosition));
+    }*/
+
+
+
+    /*if (ImGui::Checkbox("Visible Frustrum", &activated))
+    {
+        updateViewPorts();
+    }*/
+
 }
 
 void Scene3D::DrawModifyNodeSliders(const std::shared_ptr<Node>& node)
@@ -634,6 +642,9 @@ void Scene3D::mouseDragged(int x, int y, int button)
     previous_y = y;
 }
 
+void Scene3D::windowResized(int w, int h) { updateViewPorts(); }
+
+
 ofVec3f Scene3D::worldToViewPort(ofVec3f worldPos)
 {
     camera->begin(current_viewPort);
@@ -697,12 +708,12 @@ void Scene3D::mousePressed(int x, int y, int button)
     pressed_y = y;
     previous_x = x;
     previous_y = y;
-    if (ImGui::GetIO().WantCaptureMouse)
+    if ( ImGui::GetIO().WantCaptureMouse )
     {
         ofLog() << "Mouse wanted";
         return;
     }
-    
+
 
     updateViewPorts();
 

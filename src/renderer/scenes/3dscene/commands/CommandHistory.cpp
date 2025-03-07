@@ -2,7 +2,7 @@
 
 void CommandHistory::executeCommand(std::shared_ptr<Command> command)
 {
-    command->Execute();
+    if ( !command->Execute() ) { return; }
     if (this->undoStack.size() >= MAX_COMMAND_HISTORY)
     {
         this->undoStack.erase(this->undoStack.begin());

@@ -44,6 +44,7 @@ public:
     void dragEvent(ofDragInfo dragInfo) override;
     void keyPressed(int key) override;
     void keyReleased(int key) override;
+    void windowResized(int w, int h) override;
     /*void nextCam();
     void previousCam();*/
 
@@ -71,7 +72,10 @@ private:
 
     ofMaterial material;
 
-    map<NodeId, std::pair<weak_ptr<ofCamera>, pair<bool, bool>>> cameraMap;
+    using Toggled = bool;
+    using DrawFrustum = bool;
+
+    map<NodeId, std::pair<weak_ptr<ofCamera>, pair<Toggled, DrawFrustum>>> cameraMap;
 
     std::shared_ptr<ofCamera> camera;
     NodeId current_camera_id;
@@ -125,7 +129,9 @@ private:
     int previous_x;
     int previous_y;
 
-    std::vector<std::pair<shared_ptr<ofCamera>, pair<ofRectangle, bool>>> cameras;
+    using ViewPort = ofRectangle;
+
+    std::vector<std::pair<shared_ptr<ofCamera>, pair<ViewPort, DrawFrustum>>> cameras;
 
     ofRectangle viewport1;
     ofRectangle viewport2;

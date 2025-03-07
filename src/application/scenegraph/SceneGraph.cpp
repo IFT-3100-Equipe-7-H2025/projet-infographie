@@ -79,12 +79,12 @@ std::vector<std::shared_ptr<Node>> SceneGraph::GetNodes() const
     return output;
 }
 
-void SceneGraph::RemoveNode(NodeId id)
+bool SceneGraph::RemoveNode(NodeId id)
 {
     if (id == this->root->GetId())
     {
         ofLogError() << "Cannot remove the root node";
-        return;
+        return false;
     }
 
     if (this->nodes.count(id))
@@ -94,7 +94,7 @@ void SceneGraph::RemoveNode(NodeId id)
             node->Delete();
         }
         this->nodes.erase(id);
-        return;
+        return true;
     }
 
     std::stack<Node*> nodes;
@@ -110,7 +110,7 @@ void SceneGraph::RemoveNode(NodeId id)
             std::shared_ptr<Node> found = current->shared_from_this();
             found->Delete();
             this->nodes.erase(id);
-            return;
+            return true;
         }
 
         for (const auto& child: current->GetChildren())
@@ -118,4 +118,6 @@ void SceneGraph::RemoveNode(NodeId id)
             nodes.push(child.get());
         }
     }
+
+    return false;
 }
