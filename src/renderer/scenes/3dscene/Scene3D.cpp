@@ -513,8 +513,10 @@ void Scene3D::ShowChildren(const std::shared_ptr<Node>& node)
         if ( const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("DRAG_NODE") )
         {
             IM_ASSERT(payload->DataSize == sizeof(std::shared_ptr<Node>));
-            std::shared_ptr<Node> payload_node = *static_cast<std::shared_ptr<Node>*>(payload->Data);
-            commandQueue.push(std::make_shared<MoveChildCommand>(payload_node, node));
+
+            if ( std::shared_ptr<Node> payload_node = *static_cast<std::shared_ptr<Node>*>(payload->Data)
+                ; !payload_node->GetId() == 0 ) { commandQueue.push(std::make_shared<MoveChildCommand>(payload_node, node)); }
+            else { ofLogError() << "Cannot move the root node"; }
         }
         ImGui::EndDragDropTarget();
     }
