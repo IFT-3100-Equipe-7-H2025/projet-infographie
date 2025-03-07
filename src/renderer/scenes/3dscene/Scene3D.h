@@ -162,4 +162,15 @@ private:
 
     int charToLower(int key);
 
+    std::queue<std::shared_ptr<Command>> commandQueue;
+
+    void ExecuteQueuedCommands()
+    {
+        while ( !commandQueue.empty() )
+        {
+            auto command = commandQueue.front();
+            commandQueue.pop();
+            this->history.executeCommand(command);
+        }
+    }
 };
