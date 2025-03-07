@@ -15,7 +15,7 @@ public:
     {
         if (sharedParams->selectedNode == nullptr) { return; }
 
-        if (ImGui::TreeNode("Add Camera"))
+        if ( ImGui::TreeNode("Add camera") )
         {
             if (ImGui::Button("Add"))
             {

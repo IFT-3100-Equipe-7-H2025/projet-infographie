@@ -31,7 +31,6 @@ public:
             if (ImGui::Button("Add"))
             {
                 auto pyramid = PrimitiveCreator::createPyramid(sides, width, height, depth);
-                // pyramid.rotateDeg(180, glm::vec3(0, 0, 1));
 
                 auto& mesh = pyramid.getMesh();
 
@@ -41,7 +40,8 @@ public:
                     mesh.addColor(color);
                 }
 
-                auto pyramid_ptr = std::make_shared<Node>("Pyramid", std::make_shared<of3dPrimitive>(pyramid));
+                auto pyramid_3d = Primitive3D(pyramid);
+                auto pyramid_ptr = std::make_shared<Node>("Pyramid", std::make_shared<Primitive3D>(pyramid_3d));
 
                 history.executeCommand(std::make_shared<AddChildToNodeCommand>(*sharedParams->selectedNode, pyramid_ptr));
             }
