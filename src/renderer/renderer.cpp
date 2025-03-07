@@ -16,7 +16,7 @@ void Renderer::Setup()
     ofEnableDepthTest();
     ofEnableLighting();
 
-    ofSetLogLevel(ofLogLevel::OF_LOG_VERBOSE);
+    //ofSetLogLevel(ofLogLevel::OF_LOG_VERBOSE);
 
     font.load("fonts/JetBrainsMono-Regular.ttf", FPS_FONT_SIZE, true, true);
 }

@@ -7,7 +7,7 @@
 class ImportModel : public SceneObject
 {
 public:
-    void loadModel(string filePath) { model.loadModel(filePath);}
+    void loadModel(string filePath) { model.load(filePath);}
     void customDraw() override{
         ofPushMatrix();
         model.drawFaces();
