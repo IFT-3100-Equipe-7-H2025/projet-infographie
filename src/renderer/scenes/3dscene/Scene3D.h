@@ -73,12 +73,6 @@ private:
 
     map<NodeId, std::pair<weak_ptr<ofCamera>, pair<bool, bool>>> cameraMap;
 
-
-
-
-
-
-
     std::shared_ptr<ofCamera> camera;
     NodeId current_camera_id;
     ofRectangle current_viewPort;

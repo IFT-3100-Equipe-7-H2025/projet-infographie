@@ -16,7 +16,7 @@
 #include "ofGraphics.h"
 #include <cmath>
 #include <numbers>
-#include "renderer/ImportModel.h"
+#include "renderer/sceneObjects/ImportModel.h"
 #include "SceneObject.h"
 #include "Light.h"
 #include <ranges>
