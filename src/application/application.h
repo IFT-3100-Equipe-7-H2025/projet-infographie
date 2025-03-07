@@ -22,6 +22,7 @@ public:
     void update() override;
     void draw() override;
     void keyPressed(int key) override;
+    void keyPressed(ofKeyEventArgs& key) override;
     void keyReleased(int key) override;
     void dragEvent(ofDragInfo dragInfo) override;
 

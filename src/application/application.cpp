@@ -124,6 +124,15 @@ void Application::keyPressed(int key)
     }
 }
 
+void Application::keyPressed(ofKeyEventArgs& key)
+{
+    try
+    {
+        auto selectedScene = renderer.scenes.GetSelectedScene();
+        if ( selectedScene ) { selectedScene->keyPressed(key); }
+    } catch ( std::exception& e ) { ofLog() << "Aucune scène sélectionnée pour keyPressed : " << e.what(); }
+}
+
 void Application::dragEvent(ofDragInfo dragInfo)
 {
 

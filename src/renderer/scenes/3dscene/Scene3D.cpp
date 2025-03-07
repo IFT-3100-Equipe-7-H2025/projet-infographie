@@ -686,8 +686,6 @@ ofVec3f Scene3D::viewPortToWorld(ofVec3f viewPos)
     return worldPos;
 }
 
-
-
 ofVec3f Scene3D::viewPortToScreen(ofVec3f viewPos)
 {
     ofVec3f screenPos;
@@ -930,6 +928,22 @@ void Scene3D::keyPressed(int key)
             break;
         case 'p':
             toggleOrtho();
+    }
+}
+
+void Scene3D::keyPressed(ofKeyEventArgs& key)
+{
+    if ( key.hasModifier(OF_KEY_CONTROL) )
+    {
+        switch ( charToLower(key.key) )
+        {
+            case 26:
+                this->history.undo();
+                break;
+            case 25:
+                this->history.redo();
+                break;
+        }
     }
 }
 
