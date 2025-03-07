@@ -25,9 +25,6 @@ void Application::setup()
     SetDarkGlassTheme();
     renderer.Setup();
 
-    this->geometryScene = std::make_shared<GeometryScene>();
-    this->geometryScene->setup();
-    renderer.scenes.AddScene(this->geometryScene);
     this->scene3D = std::make_shared<Scene3D>();
     this->scene3D->setup();
     renderer.scenes.AddScene(this->scene3D);
