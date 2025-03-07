@@ -18,6 +18,8 @@ public:
     [[nodiscard]] std::optional<std::shared_ptr<Node>> GetNode(NodeId id) const;
     std::vector<std::shared_ptr<Node>> GetNodes() const;
 
+    bool IsNodeCurrentlyInGraph(NodeId id) const;
+
     bool RemoveNode(NodeId id);
 
     void DebugPrint() const

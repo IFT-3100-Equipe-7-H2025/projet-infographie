@@ -354,18 +354,6 @@ void Scene3D::DrawModifyCameraNodeSliders(const std::shared_ptr<Node>& node, sha
         this->initialFov = current_fov;
     }
     if ( ImGui::IsItemDeactivatedAfterEdit() ) { this->history.executeCommand(std::make_shared<SetCameraFovCommand>(camera, this->fov, this->initialFov)); }
- /*   if (ImGui::IsItemDeactivatedAfterEdit())
-    {
-        this->history.executeCommand(std::make_shared<SetPositionCommand>(node, glm::vec3(this->translate[0], this->translate[1], this->translate[2]), this->initialPosition));
-    }*/
-
-
-
-    /*if (ImGui::Checkbox("Visible Frustrum", &activated))
-    {
-        updateViewPorts();
-    }*/
-
 }
 
 void Scene3D::DrawModifyNodeSliders(const std::shared_ptr<Node>& node)
@@ -430,20 +418,33 @@ void Scene3D::DrawCommandHistoryWindow()
     auto& undoStack = this->history.GetUndoStack();
     auto& redoStack = this->history.GetRedoStack();
 
-    ImGui::BeginDisabled(undoStack.size() == 0);
+    ImGui::BeginDisabled(undoStack.empty());
     if (ImGui::Button("Undo"))
     {
         this->history.undo();
-        this->ResetParams(*this->selectedNode);
+        if ( !this->sceneGraph.IsNodeCurrentlyInGraph(this->selectedNode->get()->GetId()) )
+        {
+            this->SelectNode(this->sceneGraph.GetRoot());
+        }
+        else {
+            this->ResetParams(*this->selectedNode);
+        }
     }
     ImGui::EndDisabled();
 
     ImGui::SameLine();
-    ImGui::BeginDisabled(redoStack.size() == 0);
+    ImGui::BeginDisabled(redoStack.empty());
     if (ImGui::Button("Redo"))
     {
         this->history.redo();
-        this->ResetParams(*this->selectedNode);
+        if ( !this->sceneGraph.IsNodeCurrentlyInGraph(this->selectedNode->get()->GetId()) )
+        {
+            this->SelectNode(this->sceneGraph.GetRoot());
+        }
+        else
+        {
+            this->ResetParams(*this->selectedNode);
+        }
     }
     ImGui::EndDisabled();
 

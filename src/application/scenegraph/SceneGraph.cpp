@@ -57,6 +57,27 @@ void SceneGraph::Draw() const
     return std::nullopt;
 }
 
+bool SceneGraph::IsNodeCurrentlyInGraph(NodeId id) const
+{
+    std::stack<Node*> traversal;
+    traversal.push(root.get());
+
+    while (!traversal.empty())
+    {
+        Node* current = traversal.top();
+        traversal.pop();
+        if (current->GetId() == id)
+        {
+            return true;
+        }
+        for (const auto& child: current->GetChildren())
+        {
+            traversal.push(child.get());
+        }
+    }
+    return false;
+ }
+
 
 std::vector<std::shared_ptr<Node>> SceneGraph::GetNodes() const
 {
