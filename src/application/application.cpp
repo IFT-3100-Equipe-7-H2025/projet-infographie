@@ -108,22 +108,6 @@ void Application::draw()
     gui.end();
 }
 
-void Application::keyPressed(int key)
-{
-    //ofLog() << "<app::keyPressed: " << key << ">";
-    try
-    {
-        auto selectedScene = renderer.scenes.GetSelectedScene();
-        if (selectedScene)
-        {
-            selectedScene->keyPressed(key);
-        }
-    } catch (std::exception& e)
-    {
-        ofLog() << "Aucune scène sélectionnée pour keyPressed : " << e.what();
-    }
-}
-
 void Application::keyPressed(ofKeyEventArgs& key)
 {
     try

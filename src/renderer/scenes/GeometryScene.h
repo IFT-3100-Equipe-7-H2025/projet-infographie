@@ -23,7 +23,7 @@ public:
     void mousePressed(int x, int y, int button) override;
     void mouseDragged(int x, int y, int button) override;
     void dragEvent(ofDragInfo dragInfo) override;
-    void keyPressed(int key) override;
+void     keyPressed(ofKeyEventArgs& key) override;
     void keyReleased(int key) override;
     void nextCam();
     void previousCam();

@@ -932,14 +932,15 @@ void Scene3D::keyPressed(ofKeyEventArgs& key)
     {
         switch ( charToLower(key.key) )
         {
-            case 26:
+            case 26: //z
                 this->history.undo();
                 break;
-            case 25:
+            case 25: //y
                 this->history.redo();
                 break;
         }
     }
+    else { this->keyPressed(key.key); }
 }
 
 void Scene3D::keyReleased(int key)
@@ -1125,7 +1126,7 @@ std::vector<std::pair<std::shared_ptr<SceneObject>, NodeId>> Scene3D::getSceneOb
 
 void Scene3D::storeCameraRotation() {
     int count = getCameraRotationCommands();
-    if (count == 1)
+    if ( count == 1 )
     {
         initialCameraRotation = camera->getOrientationQuat();
     }
@@ -1134,7 +1135,7 @@ void Scene3D::storeCameraRotation() {
 void Scene3D::applyCameraRotation()
 {
     int count = getCameraRotationCommands();
-    if (count == 0)
+    if ( count == 0 )
     {
         glm::quat camR = camera->getOrientationQuat();
 
@@ -1153,7 +1154,7 @@ void Scene3D::applyCameraRotation()
 void Scene3D::storeCameraTranslation()
 {
     int count = getCameraTranslationCommands();
-    if (count == 1)
+    if ( count == 1 )
     {
         initialCameraPosition = camera->getPosition();
     }
@@ -1162,10 +1163,10 @@ void Scene3D::storeCameraTranslation()
 void Scene3D::applyCameraTranslation()
 {
     int count = getCameraTranslationCommands();
-    if (count == 0)
+    if ( count == 0 )
     {
-        ofVec3f current_pos = camera->getPosition();
-        glm::vec3 initial = glm::vec3(initialCameraPosition.x, initialCameraPosition.y, initialCameraPosition.z);
+        ofVec3f                              current_pos = camera->getPosition();
+        auto                                 initial = glm::vec3(initialCameraPosition.x, initialCameraPosition.y, initialCameraPosition.z);
         std::optional<std::shared_ptr<Node>> optionalNode = sceneGraph.GetNode(current_camera_id);
         if (optionalNode.has_value())
         {
