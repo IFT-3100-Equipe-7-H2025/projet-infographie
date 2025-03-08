@@ -633,6 +633,9 @@ void Scene3D::mouseDragged(int x, int y, int button)
 
                 float scale = 1 + ((x - previous_x) + (previous_y - y)) * 0.1;
                 ofVec3f scaleVec = selectedNode->get()->GetInner()->getScale() * scale;
+                scaleVec.x = std::max(0.01f, scaleVec.x);
+                scaleVec.y = std::max(0.01f, scaleVec.y);
+                scaleVec.z = std::max(0.01f, scaleVec.z);
                 selectedNode->get()->GetInner()->setScale(scaleVec);
             }
     }
@@ -782,8 +785,6 @@ void Scene3D::dragEvent(ofDragInfo dragInfo)
             shared_ptr<Node> node = make_shared<Node>("Object ", model);
             shared_ptr<Node> parent = *selectedNode;
             history.executeCommand(std::make_shared<AddChildToNodeCommand>(parent, node));
-
-
         }
         else
         {
