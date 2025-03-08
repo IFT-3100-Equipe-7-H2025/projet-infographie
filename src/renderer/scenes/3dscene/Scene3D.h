@@ -142,12 +142,12 @@ private:
     void focus();
     void drawScene();
 
-    std::vector<std::pair<std::shared_ptr<SceneObject>, NodeId>> getSceneObjects();
-    void updateViewPorts();
-    ofVec3f worldToViewPort(ofVec3f worldPos);
-    ofVec3f screenToViewPort(ofVec3f screenPos);
-    ofVec3f viewPortToWorld(ofVec3f worldPos);
-    ofVec3f viewPortToScreen(ofVec3f viewPos);
+    std::vector<std::pair<std::shared_ptr<SceneObject>, NodeId>> getSceneObjects() const;
+    void                                                         updateViewPorts();
+    ofVec3f                                                      worldToViewPort(ofVec3f worldPos) const;
+    ofVec3f                                                      screenToViewPort(ofVec3f screenPos) const;
+    ofVec3f                                                      viewPortToWorld(ofVec3f worldPos) const;
+    ofVec3f                                                      viewPortToScreen(ofVec3f viewPos) const;
 
     bool ortho;
     void toggleOrtho();
@@ -158,8 +158,8 @@ private:
     void storeCameraTranslation();
     void applyCameraTranslation();
 
-    int getCameraRotationCommands();
-    int getCameraTranslationCommands();
+    int getCameraRotationCommands() const;
+    int getCameraTranslationCommands() const;
 
     int charToLower(int key);
 
