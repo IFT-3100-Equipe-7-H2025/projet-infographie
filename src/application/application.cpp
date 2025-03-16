@@ -113,8 +113,11 @@ void Application::keyPressed(ofKeyEventArgs& key)
     try
     {
         auto selectedScene = renderer.scenes.GetSelectedScene();
-        if ( selectedScene ) { selectedScene->keyPressed(key); }
-    } catch ( std::exception& e ) { ofLog() << "Aucune scène sélectionnée pour keyPressed : " << e.what(); }
+        if (selectedScene) { selectedScene->keyPressed(key); }
+    } catch (std::exception& e)
+    {
+        ofLog() << "Aucune scène sélectionnée pour keyPressed : " << e.what();
+    }
 }
 
 void Application::dragEvent(ofDragInfo dragInfo)
@@ -122,7 +125,7 @@ void Application::dragEvent(ofDragInfo dragInfo)
 
     //ofLog() << "<app::dragged: >";
     //ofLog() << "<app::ofDragInfo file[0]: " << dragInfo.files.at(0)
-            //<< " at : " << dragInfo.position << ">";
+    //<< " at : " << dragInfo.position << ">";
     try
     {
         auto selectedScene = renderer.scenes.GetSelectedScene();
@@ -203,8 +206,11 @@ void Application::windowResized(int w, int h)
     try
     {
         auto selectedScene = renderer.scenes.GetSelectedScene();
-        if ( selectedScene ) { selectedScene->windowResized(w, h); }
-    } catch ( std::exception& e ) { ofLog() << "Aucune scène sélectionnée pour windowResized : " << e.what(); }
+        if (selectedScene) { selectedScene->windowResized(w, h); }
+    } catch (std::exception& e)
+    {
+        ofLog() << "Aucune scène sélectionnée pour windowResized : " << e.what();
+    }
 }
 
 void Application::exit()

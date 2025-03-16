@@ -1,9 +1,9 @@
 #pragma once
 #include "3dscene/commands/AddShapeChildToNodeCommand.h"
 #include "CreateShapeUI.h"
+#include "Primitive3D.h"
 #include "imgui.h"
 #include "of3dPrimitives.h"
-#include "Primitive3D.h"
 #include "renderer/PrimitiveCreator.h"
 
 constexpr float DEFAULT_CUBE_WIDTH = 100.0f;

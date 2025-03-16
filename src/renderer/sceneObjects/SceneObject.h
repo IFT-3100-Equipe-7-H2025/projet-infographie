@@ -3,8 +3,7 @@
 #include "ofMain.h"
 
 
-
-class SceneObject : public ofNode 
+class SceneObject : public ofNode
 {
 public:
     virtual std::pair<ofVec3f, ofVec3f> getBoundingVertices() = 0;
@@ -22,20 +21,21 @@ public:
         return transformedVertices;
     }
 
-    std::pair<ofVec3f, ofVec3f> getBoundingVerticesFromVector(std::vector<ofVec3f> vertices){
+    std::pair<ofVec3f, ofVec3f> getBoundingVerticesFromVector(std::vector<ofVec3f> vertices)
+    {
         ofVec3f minVertex = vertices[0];
         ofVec3f maxVertex = vertices[0];
 
         for (int i = 0; i < vertices.size(); i++)
         {
-            minVertex.x = min(vertices[i].x, minVertex.x);
-            maxVertex.x = max(vertices[i].x, maxVertex.x);
-            minVertex.y = min(vertices[i].y, minVertex.y);
-            maxVertex.y = max(vertices[i].y, maxVertex.y);
-            minVertex.z = min(vertices[i].z, minVertex.z);
-            maxVertex.z = max(vertices[i].z, maxVertex.z);
+            minVertex.x = std::min(vertices[i].x, minVertex.x);
+            maxVertex.x = std::max(vertices[i].x, maxVertex.x);
+            minVertex.y = std::min(vertices[i].y, minVertex.y);
+            maxVertex.y = std::max(vertices[i].y, maxVertex.y);
+            minVertex.z = std::min(vertices[i].z, minVertex.z);
+            maxVertex.z = std::max(vertices[i].z, maxVertex.z);
         }
-        
+
         return std::pair(minVertex, maxVertex);
     };
 
@@ -78,5 +78,4 @@ public:
 
         return new_mesh;
     }
-    
 };

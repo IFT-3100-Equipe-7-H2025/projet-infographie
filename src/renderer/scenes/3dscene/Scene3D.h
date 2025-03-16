@@ -2,12 +2,13 @@
 
 #include "3dscene/commands/CommandHistory.h"
 #include "Scene.h"
+#include "SceneObject.h"
 #include "createShapes/CreateShapeUI.h"
 #include "createShapes/SharedShapeCreationParams.h"
+#include "ofMain.h"
+#include "sceneObjects/SceneObject.h"
 #include "scenegraph/SceneGraph.h"
 #include <ofxAssimpModelLoader.h>
-#include "ofMain.h"
-#include "SceneObject.h"
 
 class Scene3D : public Scene
 {
@@ -143,18 +144,18 @@ private:
     void drawScene();
 
     std::vector<std::pair<std::shared_ptr<SceneObject>, NodeId>> getSceneObjects() const;
-    void                                                         updateViewPorts();
-    ofVec3f                                                      worldToViewPort(ofVec3f worldPos) const;
-    ofVec3f                                                      screenToViewPort(ofVec3f screenPos) const;
-    ofVec3f                                                      viewPortToWorld(ofVec3f worldPos) const;
-    ofVec3f                                                      viewPortToScreen(ofVec3f viewPos) const;
+    void updateViewPorts();
+    ofVec3f worldToViewPort(ofVec3f worldPos) const;
+    ofVec3f screenToViewPort(ofVec3f screenPos) const;
+    ofVec3f viewPortToWorld(ofVec3f worldPos) const;
+    ofVec3f viewPortToScreen(ofVec3f viewPos) const;
 
     bool ortho;
     void toggleOrtho();
 
     void storeCameraRotation();
     void applyCameraRotation();
-    
+
     void storeCameraTranslation();
     void applyCameraTranslation();
 
@@ -167,7 +168,7 @@ private:
 
     void ExecuteQueuedCommands()
     {
-        while ( !commandQueue.empty() )
+        while (!commandQueue.empty())
         {
             auto command = commandQueue.front();
             commandQueue.pop();
