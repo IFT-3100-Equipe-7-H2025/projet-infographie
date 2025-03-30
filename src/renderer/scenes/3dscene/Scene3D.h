@@ -28,6 +28,8 @@ public:
 
     void DrawSceneGraphWindow();
     void DrawSelectedNodeWindow();
+
+    void DrawModifyLightSliders(const std::shared_ptr<ofLight>& light);
     void DrawModifyCameraNodeSliders(const std::shared_ptr<Node>& node, shared_ptr<ofCamera> camera);
 
     void DrawModifyNodeSliders(const std::shared_ptr<Node>& node);

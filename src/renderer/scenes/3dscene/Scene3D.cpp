@@ -4,23 +4,23 @@
 #include "3dscene/commands/SetPositionCommand.h"
 #include "3dscene/commands/SetRotationCommand.h"
 #include "3dscene/commands/SetScaleCommand.h"
+#include "3dscene/createShapes/CreateCameraUI.h"
 #include "3dscene/createShapes/CreateCubeUI.h"
 #include "3dscene/createShapes/CreateLasagnaUI.h"
 #include "3dscene/createShapes/CreateLightUI.h"
 #include "3dscene/createShapes/CreatePyramidUI.h"
 #include "3dscene/createShapes/CreateSphereUI.h"
-#include "3dscene/createShapes/CreateCameraUI.h"
+#include "Light.h"
+#include "MoveChildCommand.h"
+#include "SceneObject.h"
+#include "SetCameraFovCommand.h"
 #include "imgui.h"
 #include "of3dPrimitives.h"
 #include "ofAppRunner.h"
 #include "ofGraphics.h"
+#include "renderer/sceneObjects/ImportModel.h"
 #include <cmath>
 #include <numbers>
-#include "renderer/sceneObjects/ImportModel.h"
-#include "SceneObject.h"
-#include "Light.h"
-#include "MoveChildCommand.h"
-#include "SetCameraFovCommand.h"
 
 #include <ranges>
 
@@ -44,6 +44,7 @@ void Scene3D::setup()
     this->createShapeUIs.push_back(std::make_unique<CreatePyramidUI>(CreatePyramidUI(this->sharedParams, this->history)));
     this->createShapeUIs.emplace_back(std::make_unique<CreateCameraUI>(CreateCameraUI(this->sharedParams, this->history)));
 
+    material.setAmbientColor(ofFloatColor(0.1, 0.1, 0.1));
     material.setDiffuseColor(ofFloatColor(1.0, 0.5, 0.5));
     material.setSpecularColor(ofFloatColor(1.0, 1.0, 1.0));
     material.setShininess(64);
@@ -53,7 +54,7 @@ void Scene3D::setup()
     light.enable();
     light.setDiffuseColor(ofFloatColor(1.0, 1.0, 1.0));
     light.setSpecularColor(ofFloatColor(1.0, 1.0, 1.0));
-    light.setAmbientColor(ofFloatColor(0.2, 0.2, 0.2));
+    light.setAmbientColor(ofFloatColor(0.1, 0.1, 0.1));
     light.lookAt(ofVec3f((float) ofGetWidth() / 2.0f, (float) ofGetHeight() / 2.0f, 0));
 
     auto light_ptr = std::make_shared<Node>("Light", std::make_shared<ofLight>(light));
@@ -69,150 +70,13 @@ void Scene3D::setup()
     camera->lookAt(ofVec3f(0, 0, 0));
     auto cam_ptr = std::make_shared<Node>("Camera", camera);
     this->sceneGraph.AddNode(cam_ptr);
-    cameraMap.emplace(cam_ptr.get()->GetId(), std::pair(camera, pair(true,false)));
+    cameraMap.emplace(cam_ptr->GetId(), std::pair(camera, pair(true, false)));
     updateViewPorts();
 
     translate_speed = 750;
     rotate_speed = 75;
 }
 
-void Scene3D::updateViewPorts()
-{
-
-    cameras.clear();
-    vector<pair<NodeId, pair<shared_ptr<ofCamera>, bool>>> activatedCameras;
-    for (auto& [id, pair]: cameraMap)
-    {
-        auto& [camera, toggled] = pair;
-
-        if (toggled.first)
-        {
-            if ( auto ptr = camera.lock(); ptr )
-            {
-                activatedCameras.emplace_back(id, std::pair(ptr, toggled.second));
-            }
-            else
-            {
-                cameraMap.erase(id);
-            }
-        }
-    }
-
-    int camNumber = activatedCameras.size();
-    int prev_height = 0;
-    int prev_width = 0;
-    if (camNumber >= 3)
-    {
-        cameras.emplace_back(activatedCameras[0].second.first, pair(ofRectangle(0, 0, ofGetWidth() / 2, ofGetHeight() / 2), activatedCameras[0].second.second));
-        cameras.emplace_back(activatedCameras[1].second.first, pair(ofRectangle(ofGetWidth() / 2, 0, ofGetWidth() / 2, ofGetHeight() / 2), activatedCameras[1].second.second));
-        if (camNumber == 3)
-        {
-            cameras.emplace_back(activatedCameras[2].second.first, pair(ofRectangle(0, ofGetHeight() / 2, ofGetWidth(), ofGetHeight() / 2), activatedCameras[2].second.second));
-            if (previous_x < ofGetWidth() / 2)
-            {
-                if (previous_y < ofGetHeight() / 2)
-                {
-                    camera = cameras[0].first;
-                    current_viewPort = cameras[0].second.first;
-                    current_camera_id = activatedCameras[0].first;
-                }
-                else
-                {
-                    camera = cameras[2].first;
-                    current_viewPort = cameras[2].second.first;
-                    current_camera_id = activatedCameras[2].first;
-                }
-            }
-
-            else
-            {
-                if (previous_y < ofGetHeight() / 2)
-                {
-                    camera = cameras[1].first;
-                    current_viewPort = cameras[1].second.first;
-                    current_camera_id = activatedCameras[1].first;
-                }
-                else
-                {
-                    camera = cameras[2].first;
-                    current_viewPort = cameras[2].second.first;
-                    current_camera_id = activatedCameras[2].first;
-                }
-            }
-
-        }
-        else
-        {
-            cameras.emplace_back(activatedCameras[2].second.first, pair(ofRectangle(0, ofGetHeight() / 2, ofGetWidth() / 2, ofGetHeight() / 2), activatedCameras[2].second.second));
-            cameras.emplace_back(activatedCameras[3].second.first, pair(ofRectangle(ofGetWidth() / 2, ofGetHeight() / 2, ofGetWidth() / 2, ofGetHeight() / 2), activatedCameras[3].second.second));
-
-
-            if (previous_x < ofGetWidth() / 2)
-            {
-                if (previous_y < ofGetHeight() / 2)
-                {
-                    camera = cameras[0].first;
-                    current_viewPort = cameras[0].second.first;
-                    current_camera_id = activatedCameras[0].first;
-                }
-                else
-                {
-                    camera = cameras[2].first;
-                    current_viewPort = cameras[2].second.first;
-                    current_camera_id = activatedCameras[2].first;
-                }
-            }
-
-            else
-            {
-                if (previous_y < ofGetHeight() / 2)
-                {
-                    camera = cameras[1].first;
-                    current_viewPort = cameras[1].second.first;
-                    current_camera_id = activatedCameras[1].first;
-                }
-                else
-                {
-                    camera = cameras[3].first;
-                    current_viewPort = cameras[3].second.first;
-                    current_camera_id = activatedCameras[3].first;
-                }
-            }
-        }
-
-
-
-    }
-    else if (camNumber == 2)
-    {
-        cameras.emplace_back(activatedCameras[0].second.first, pair(ofRectangle(0, 0, ofGetWidth(), ofGetHeight() / 2), activatedCameras[0].second.second));
-        cameras.emplace_back(activatedCameras[1].second.first, pair(ofRectangle(0, ofGetHeight() / 2, ofGetWidth(), ofGetHeight() / 2), activatedCameras[1].second.second));
-
-        if (previous_y < ofGetHeight() / 2)
-        {
-            camera = cameras[0].first;
-            current_viewPort = cameras[0].second.first;
-            current_camera_id = activatedCameras[0].first;
-        }
-        else
-        {
-            camera = cameras[1].first;
-            current_viewPort = cameras[1].second.first;
-            current_camera_id = activatedCameras[1].first;
-        }
-    }
-    else if (camNumber == 1)
-    {
-        current_viewPort = ofRectangle(0, 0, ofGetWidth(), ofGetHeight());
-
-        cameras.emplace_back(activatedCameras[0].second.first, pair(ofRectangle(0, 0, ofGetWidth(), ofGetHeight()), activatedCameras[0].second.second));
-
-        camera = cameras[0].first;
-        current_viewPort = cameras[0].second.first;
-        current_camera_id = activatedCameras[0].first;
-    }
-
-}
 
 void Scene3D::draw()
 {
@@ -222,12 +86,13 @@ void Scene3D::draw()
     this->DrawSelectedNodeWindow();
     this->DrawCommandHistoryWindow();
 
-    for ( auto& [camera, info]: cameras )
+    for (auto& [camera, info]: cameras)
     {
         camera->begin(info.first);
         for (auto& [camera, info]: cameras)
         {
-            if (info.second) {
+            if (info.second)
+            {
                 camera->drawFrustum();
             }
         }
@@ -242,7 +107,8 @@ void Scene3D::draw()
     this->ExecuteQueuedCommands();
 }
 
-void Scene3D::drawScene() {
+void Scene3D::drawScene()
+{
     material.begin();
     sceneGraph.Draw();
 
@@ -252,7 +118,6 @@ void Scene3D::drawScene() {
         selectionMesh.setColorForIndices(255, 255, 0);
 
         selectionMesh.draw();
-
     }
 
     material.end();
@@ -279,7 +144,7 @@ void Scene3D::DrawSelectedNodeWindow()
             ImGui::Text("Selected node: %s", (*this->selectedNode)->GetName().c_str());
             if (ImGui::Button("Delete node"))
             {
-                if ( auto camera = std::dynamic_pointer_cast<ofCamera>(this->selectedNode->get()->GetInner()); camera )
+                if (auto camera = std::dynamic_pointer_cast<ofCamera>(this->selectedNode->get()->GetInner()); camera)
                 {
                     NodeId id = this->selectedNode->get()->GetId();
 
@@ -293,20 +158,26 @@ void Scene3D::DrawSelectedNodeWindow()
             this->DrawModifyNodeSliders(*this->selectedNode);
 
 
-            if ( auto camera = std::dynamic_pointer_cast<ofCamera>(this->selectedNode->get()->GetInner()); camera )
+            if (auto light = std::dynamic_pointer_cast<ofLight>(this->selectedNode->get()->GetInner()); light)
+            {
+                this->DrawModifyLightSliders(light);
+            }
+
+            if (auto camera = std::dynamic_pointer_cast<ofCamera>(this->selectedNode->get()->GetInner()); camera)
             {
                 NodeId id = this->selectedNode->get()->GetId();
-                if (!cameraMap.contains(id)) {
+                if (!cameraMap.contains(id))
+                {
                     cameraMap.emplace(id, std::pair(camera, pair(false, false)));
                 }
-                bool &activated = cameraMap.at(id).second.first;
+                bool& activated = cameraMap.at(id).second.first;
                 if (ImGui::Checkbox("Activate", &activated))
                 {
                     updateViewPorts();
                 }
 
                 bool& frustumActivated = cameraMap.at(id).second.second;
-                if ( ImGui::Checkbox("Visible Frustum", &frustumActivated) )
+                if (ImGui::Checkbox("Visible Frustum", &frustumActivated))
                 {
                     updateViewPorts();
                 }
@@ -314,10 +185,12 @@ void Scene3D::DrawSelectedNodeWindow()
                 bool tempOrtho = camera->getOrtho();
                 if (ImGui::Checkbox("Orthogonal Projection", &tempOrtho))
                 {
-                    if (tempOrtho) {
+                    if (tempOrtho)
+                    {
                         camera->enableOrtho();
                     }
-                    else {
+                    else
+                    {
                         camera->disableOrtho();
                     }
                     updateViewPorts();
@@ -326,8 +199,7 @@ void Scene3D::DrawSelectedNodeWindow()
                 this->DrawModifyCameraNodeSliders(*this->selectedNode, camera);
             }
 
-            if ( const std::shared_ptr<Primitive3D> prim = std::dynamic_pointer_cast<Primitive3D>(this->selectedNode->get()->GetInner())
-                ; prim ) { ImGui::Checkbox("Wireframe", prim->getWireframe()); }
+            if (const std::shared_ptr<Primitive3D> prim = std::dynamic_pointer_cast<Primitive3D>(this->selectedNode->get()->GetInner()); prim) { ImGui::Checkbox("Wireframe", prim->getWireframe()); }
 
             if (ImGui::CollapsingHeader("Add child", ImGuiTreeNodeFlags_DefaultOpen))
             {
@@ -344,7 +216,95 @@ void Scene3D::DrawSelectedNodeWindow()
 }
 
 
-void Scene3D::DrawModifyCameraNodeSliders(const std::shared_ptr<Node>& node, shared_ptr<ofCamera> camera) {
+void Scene3D::DrawModifyLightSliders(const std::shared_ptr<ofLight>& light)
+{
+    bool tempIsEnabled = light->getIsEnabled();
+    if (ImGui::Checkbox("Activate", &tempIsEnabled))
+    {
+        if (tempIsEnabled)
+        {
+            light->enable();
+        }
+        else
+        {
+            light->disable();
+        }
+    }
+
+    bool isDirectional = light->getIsDirectional();
+    bool isSpotlight = light->getIsSpotlight();
+    bool isPointLight = light->getIsPointLight();
+    if (ImGui::Checkbox("Directional", &isDirectional))
+    {
+        light->setDirectional();
+    }
+    ImGui::SameLine();
+    if (ImGui::Checkbox("Spotlight", &isSpotlight))
+    {
+        light->setSpotlight();
+    }
+    ImGui::SameLine();
+    if (ImGui::Checkbox("Point light", &isPointLight))
+    {
+        light->setPointLight();
+    }
+
+    ofFloatColor diffuseColor = light->getDiffuseColor();
+    float diffuseColorArr[3] = {diffuseColor.r, diffuseColor.g, diffuseColor.b};
+    if (ImGui::ColorEdit3("Diffuse color", diffuseColorArr))
+    {
+        light->setDiffuseColor(ofFloatColor(diffuseColorArr[0], diffuseColorArr[1], diffuseColorArr[2]));
+    }
+
+    ofFloatColor specularColor = light->getSpecularColor();
+    float specularColorArr[3] = {specularColor.r, specularColor.g, specularColor.b};
+    if (ImGui::ColorEdit3("Specular color", specularColorArr))
+    {
+        light->setSpecularColor(ofFloatColor(specularColorArr[0], specularColorArr[1], specularColorArr[2]));
+    }
+
+    isDirectional = light->getIsDirectional();
+    isSpotlight = light->getIsSpotlight();
+    isPointLight = light->getIsPointLight();
+
+    if (isSpotlight)
+    {
+        float spotCutOff = light->getSpotlightCutOff();
+        if (ImGui::SliderFloat("Spotlight cut off", &spotCutOff, 0, 90))
+        {
+            light->setSpotlightCutOff(spotCutOff);
+        }
+
+        float spotConcentration = light->getSpotConcentration();
+        if (ImGui::SliderFloat("Spotlight concentration", &spotConcentration, 0, 128))
+        {
+            light->setSpotConcentration(spotConcentration);
+        }
+    }
+    else if (isPointLight)
+    {
+        float attenuationConstant = light->getAttenuationConstant();
+        if (ImGui::SliderFloat("Attenuation constant", &attenuationConstant, 0, 1))
+        {
+            light->setAttenuation(attenuationConstant, light->getAttenuationLinear(), light->getAttenuationQuadratic());
+        }
+
+        float attenuationLinear = light->getAttenuationLinear();
+        if (ImGui::SliderFloat("Attenuation linear", &attenuationLinear, 0, 0.01, "%.5f"))
+        {
+            light->setAttenuation(attenuationConstant, attenuationLinear, light->getAttenuationQuadratic());
+        }
+
+        float attenuationQuadratic = light->getAttenuationQuadratic();
+        if (ImGui::SliderFloat("Attenuation quadratic", &attenuationQuadratic, 0, 0.001, "%.6f"))
+        {
+            light->setAttenuation(attenuationConstant, attenuationLinear, attenuationQuadratic);
+        }
+    }
+}
+
+void Scene3D::DrawModifyCameraNodeSliders(const std::shared_ptr<Node>& node, shared_ptr<ofCamera> camera)
+{
     const std::shared_ptr<ofNode>& inner = node->GetInner();
 
     // Fov
@@ -357,7 +317,7 @@ void Scene3D::DrawModifyCameraNodeSliders(const std::shared_ptr<Node>& node, sha
     {
         this->initialFov = current_fov;
     }
-    if ( ImGui::IsItemDeactivatedAfterEdit() ) { this->history.executeCommand(std::make_shared<SetCameraFovCommand>(camera, this->fov, this->initialFov)); }
+    if (ImGui::IsItemDeactivatedAfterEdit()) { this->history.executeCommand(std::make_shared<SetCameraFovCommand>(camera, this->fov, this->initialFov)); }
 }
 
 void Scene3D::DrawModifyNodeSliders(const std::shared_ptr<Node>& node)
@@ -426,11 +386,12 @@ void Scene3D::DrawCommandHistoryWindow()
     if (ImGui::Button("Undo"))
     {
         this->history.undo();
-        if ( !this->sceneGraph.IsNodeCurrentlyInGraph(this->selectedNode->get()->GetId()) )
+        if (!this->sceneGraph.IsNodeCurrentlyInGraph(this->selectedNode->get()->GetId()))
         {
             this->SelectNode(this->sceneGraph.GetRoot());
         }
-        else {
+        else
+        {
             this->ResetParams(*this->selectedNode);
         }
     }
@@ -441,7 +402,7 @@ void Scene3D::DrawCommandHistoryWindow()
     if (ImGui::Button("Redo"))
     {
         this->history.redo();
-        if ( !this->sceneGraph.IsNodeCurrentlyInGraph(this->selectedNode->get()->GetId()) )
+        if (!this->sceneGraph.IsNodeCurrentlyInGraph(this->selectedNode->get()->GetId()))
         {
             this->SelectNode(this->sceneGraph.GetRoot());
         }
@@ -510,20 +471,19 @@ void Scene3D::ShowChildren(const std::shared_ptr<Node>& node)
         this->SelectNode(node);
     }
 
-    if ( ImGui::BeginDragDropTarget() )
+    if (ImGui::BeginDragDropTarget())
     {
-        if ( const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("DRAG_NODE") )
+        if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("DRAG_NODE"))
         {
             IM_ASSERT(payload->DataSize == sizeof(std::shared_ptr<Node>));
 
-            if ( std::shared_ptr<Node> payload_node = *static_cast<std::shared_ptr<Node>*>(payload->Data)
-                ; !payload_node->GetId() == 0 ) { commandQueue.push(std::make_shared<MoveChildCommand>(payload_node, node)); }
+            if (std::shared_ptr<Node> payload_node = *static_cast<std::shared_ptr<Node>*>(payload->Data); !payload_node->GetId() == 0) { commandQueue.push(std::make_shared<MoveChildCommand>(payload_node, node)); }
             else { ofLogError() << "Cannot move the root node"; }
         }
         ImGui::EndDragDropTarget();
     }
 
-    if ( ImGui::BeginDragDropSource() )
+    if (ImGui::BeginDragDropSource())
     {
         ImGui::SetDragDropPayload("DRAG_NODE", &node, sizeof(node));
         ImGui::EndDragDropSource();
@@ -560,7 +520,7 @@ void Scene3D::ResetParams(const std::shared_ptr<Node>& node)
     rotate[2] = eulerRotation.z;
 
 
-    if ( auto camera = std::dynamic_pointer_cast<ofCamera>(node->GetInner()); camera )
+    if (auto camera = std::dynamic_pointer_cast<ofCamera>(node->GetInner()); camera)
     {
         const float currentFov = camera->getFov();
         fov = currentFov;
@@ -573,19 +533,21 @@ void Scene3D::reset()
     camera->resetTransform();
 }
 
-void Scene3D::mouseReleased(int x, int y, int button) {
+void Scene3D::mouseReleased(int x, int y, int button)
+{
     auto difference = ofVec3f(static_cast<float>(x - pressed_x), static_cast<float>(y - pressed_y), 0);
 
-    if (button == 0) {
+    if (button == 0)
+    {
         // translate
-        if (is_selected) {
+        if (is_selected)
+        {
 
             ofVec3f current_pos = selectedNode->get()->GetInner()->getPosition();
             glm::vec3 initial = glm::vec3(initialSelectedPosition.x, initialSelectedPosition.y, initialSelectedPosition.z);
             shared_ptr<Node> node = *(this->selectedNode);
             this->history.executeCommand(std::make_shared<SetPositionCommand>(node, glm::vec3(current_pos[0], current_pos[1], current_pos[2]), initial));
         }
-
     }
     else if (button == 2)
     {
@@ -676,7 +638,7 @@ ofVec3f Scene3D::screenToViewPort(ofVec3f screenPos) const
 
 ofVec3f Scene3D::viewPortToWorld(ofVec3f viewPos) const
 {
-    if ( !(current_viewPort.y > 0) )
+    if (!(current_viewPort.y > 0))
     {
         viewPos.y += (ofGetHeight() - current_viewPort.getHeight());
     }
@@ -706,18 +668,18 @@ void Scene3D::mousePressed(int x, int y, int button)
     pressed_y = y;
     previous_x = x;
     previous_y = y;
-    if ( ImGui::GetIO().WantCaptureMouse )
+    if (ImGui::GetIO().WantCaptureMouse)
     {
         return;
     }
 
     updateViewPorts();
-    
+
     float closeness = -1;
-    for ( const std::vector<std::pair<std::shared_ptr<SceneObject>, NodeId>> primitive_pairs = getSceneObjects(); auto& primitive_pair: primitive_pairs )
+    for (const std::vector<std::pair<std::shared_ptr<SceneObject>, NodeId>> primitive_pairs = getSceneObjects(); auto& primitive_pair: primitive_pairs)
     {
         std::shared_ptr<SceneObject> primitive = primitive_pair.first;
-        NodeId                       id = primitive_pair.second;
+        NodeId id = primitive_pair.second;
 
         std::pair<ofVec3f, ofVec3f> vertices = primitive->getBoundingVertices();
         ofVec3f minVertex = vertices.first, maxVertex = vertices.second;
@@ -774,7 +736,7 @@ void Scene3D::mousePressed(int x, int y, int button)
 
 void Scene3D::dragEvent(ofDragInfo dragInfo)
 {
-    if ( !dragInfo.files.empty() )
+    if (!dragInfo.files.empty())
     {
         auto model = std::make_shared<ImportModel>();
         std::string filePath = dragInfo.files[0];// Get the first dropped file
@@ -826,7 +788,8 @@ void Scene3D::keyPressed(int key)
     switch (key)
     {
         case 119://w
-            if (!is_key_press_w) {
+            if (!is_key_press_w)
+            {
                 is_key_press_w = true;
                 storeCameraTranslation();
             }
@@ -914,7 +877,7 @@ void Scene3D::keyPressed(int key)
             }
 
             break;
-        case 61: // =
+        case 61:// =
             if (!is_key_press_plus)
             {
                 is_key_press_plus = true;
@@ -928,14 +891,14 @@ void Scene3D::keyPressed(int key)
 
 void Scene3D::keyPressed(ofKeyEventArgs& key)
 {
-    if ( key.hasModifier(OF_KEY_CONTROL) )
+    if (key.hasModifier(OF_KEY_CONTROL))
     {
-        switch ( charToLower(key.key) )
+        switch (charToLower(key.key))
         {
-            case 26: //z
+            case 26://z
                 this->history.undo();
                 break;
-            case 25: //y
+            case 25://y
                 this->history.redo();
                 break;
         }
@@ -1006,7 +969,7 @@ void Scene3D::keyReleased(int key)
             is_key_press_minus = false;
             applyCameraRotation();
             break;
-        case 61: // =
+        case 61:// =
             is_key_press_plus = false;
             applyCameraRotation();
             break;
@@ -1021,14 +984,17 @@ void Scene3D::keyReleased(int key)
     }
 }
 
-void Scene3D::toggleOrtho() {
+void Scene3D::toggleOrtho()
+{
 
-    if (!camera->getOrtho()) {
+    if (!camera->getOrtho())
+    {
         ofRectangle viewPort = current_viewPort;
         //camera->setOrtho(viewPort.getLeft(), viewPort.getRight(), viewPort.getTop(), viewPort.getBottom(), -1000, 1000);
         camera->enableOrtho();
     }
-    else {
+    else
+    {
         camera->disableOrtho();
     }
 }
@@ -1104,14 +1070,14 @@ void Scene3D::update()
 
 std::vector<std::pair<std::shared_ptr<SceneObject>, NodeId>> Scene3D::getSceneObjects() const
 {
-    const std::vector<std::shared_ptr<Node>>                     nodes = sceneGraph.GetNodes();
+    const std::vector<std::shared_ptr<Node>> nodes = sceneGraph.GetNodes();
     std::vector<std::pair<std::shared_ptr<SceneObject>, NodeId>> sceneObjects{};
 
     for (const auto& node: nodes)
     {
-        if ( auto inner = node->GetInner() )
+        if (auto inner = node->GetInner())
         {
-            if ( auto prim = std::dynamic_pointer_cast<SceneObject>(inner) )
+            if (auto prim = std::dynamic_pointer_cast<SceneObject>(inner))
             {
                 sceneObjects.emplace_back(prim, node->GetId());
             }
@@ -1120,8 +1086,9 @@ std::vector<std::pair<std::shared_ptr<SceneObject>, NodeId>> Scene3D::getSceneOb
     return sceneObjects;
 }
 
-void Scene3D::storeCameraRotation() {
-    if ( const int count = getCameraRotationCommands(); count == 1 )
+void Scene3D::storeCameraRotation()
+{
+    if (const int count = getCameraRotationCommands(); count == 1)
     {
         initialCameraRotation = camera->getOrientationQuat();
     }
@@ -1129,23 +1096,21 @@ void Scene3D::storeCameraRotation() {
 
 void Scene3D::applyCameraRotation()
 {
-    if ( const int count = getCameraRotationCommands(); count == 0 )
+    if (const int count = getCameraRotationCommands(); count == 0)
     {
         glm::quat camR = camera->getOrientationQuat();
 
-        if ( const std::optional<std::shared_ptr<Node>> optionalNode = sceneGraph.GetNode(current_camera_id); optionalNode.has_value() )
+        if (const std::optional<std::shared_ptr<Node>> optionalNode = sceneGraph.GetNode(current_camera_id); optionalNode.has_value())
         {
             shared_ptr<Node> node = optionalNode.value();
             this->history.executeCommand(std::make_shared<SetRotationCommand>(node, camR, initialCameraRotation));
         }
-
     }
-
 }
 
 void Scene3D::storeCameraTranslation()
 {
-    if ( const int count = getCameraTranslationCommands(); count == 1 )
+    if (const int count = getCameraTranslationCommands(); count == 1)
     {
         initialCameraPosition = camera->getPosition();
     }
@@ -1153,16 +1118,15 @@ void Scene3D::storeCameraTranslation()
 
 void Scene3D::applyCameraTranslation()
 {
-    if ( const int count = getCameraTranslationCommands(); count == 0 )
+    if (const int count = getCameraTranslationCommands(); count == 0)
     {
-        ofVec3f                                    current_pos = camera->getPosition();
-        auto                                       initial = glm::vec3(initialCameraPosition.x, initialCameraPosition.y, initialCameraPosition.z);
-        if ( const std::optional<std::shared_ptr<Node>> optionalNode = sceneGraph.GetNode(current_camera_id); optionalNode.has_value() )
+        ofVec3f current_pos = camera->getPosition();
+        auto initial = glm::vec3(initialCameraPosition.x, initialCameraPosition.y, initialCameraPosition.z);
+        if (const std::optional<std::shared_ptr<Node>> optionalNode = sceneGraph.GetNode(current_camera_id); optionalNode.has_value())
         {
             shared_ptr<Node> node = optionalNode.value();
             this->history.executeCommand(std::make_shared<SetPositionCommand>(node, glm::vec3(current_pos[0], current_pos[1], current_pos[2]), initial));
         }
-
     }
 }
 
@@ -1186,4 +1150,137 @@ int Scene3D::getCameraTranslationCommands() const
                         is_key_press_q,
                         is_key_press_e};
     return std::ranges::count(vec, true);
+}
+
+void Scene3D::updateViewPorts()
+{
+
+    cameras.clear();
+    vector<pair<NodeId, pair<shared_ptr<ofCamera>, bool>>> activatedCameras;
+    for (auto& [id, pair]: cameraMap)
+    {
+        auto& [camera, toggled] = pair;
+
+        if (toggled.first)
+        {
+            if (auto ptr = camera.lock(); ptr)
+            {
+                activatedCameras.emplace_back(id, std::pair(ptr, toggled.second));
+            }
+            else
+            {
+                cameraMap.erase(id);
+            }
+        }
+    }
+
+    int camNumber = activatedCameras.size();
+    int prev_height = 0;
+    int prev_width = 0;
+    if (camNumber >= 3)
+    {
+        cameras.emplace_back(activatedCameras[0].second.first, pair(ofRectangle(0, 0, ofGetWidth() / 2, ofGetHeight() / 2), activatedCameras[0].second.second));
+        cameras.emplace_back(activatedCameras[1].second.first, pair(ofRectangle(ofGetWidth() / 2, 0, ofGetWidth() / 2, ofGetHeight() / 2), activatedCameras[1].second.second));
+        if (camNumber == 3)
+        {
+            cameras.emplace_back(activatedCameras[2].second.first, pair(ofRectangle(0, ofGetHeight() / 2, ofGetWidth(), ofGetHeight() / 2), activatedCameras[2].second.second));
+            if (previous_x < ofGetWidth() / 2)
+            {
+                if (previous_y < ofGetHeight() / 2)
+                {
+                    camera = cameras[0].first;
+                    current_viewPort = cameras[0].second.first;
+                    current_camera_id = activatedCameras[0].first;
+                }
+                else
+                {
+                    camera = cameras[2].first;
+                    current_viewPort = cameras[2].second.first;
+                    current_camera_id = activatedCameras[2].first;
+                }
+            }
+
+            else
+            {
+                if (previous_y < ofGetHeight() / 2)
+                {
+                    camera = cameras[1].first;
+                    current_viewPort = cameras[1].second.first;
+                    current_camera_id = activatedCameras[1].first;
+                }
+                else
+                {
+                    camera = cameras[2].first;
+                    current_viewPort = cameras[2].second.first;
+                    current_camera_id = activatedCameras[2].first;
+                }
+            }
+        }
+        else
+        {
+            cameras.emplace_back(activatedCameras[2].second.first, pair(ofRectangle(0, ofGetHeight() / 2, ofGetWidth() / 2, ofGetHeight() / 2), activatedCameras[2].second.second));
+            cameras.emplace_back(activatedCameras[3].second.first, pair(ofRectangle(ofGetWidth() / 2, ofGetHeight() / 2, ofGetWidth() / 2, ofGetHeight() / 2), activatedCameras[3].second.second));
+
+
+            if (previous_x < ofGetWidth() / 2)
+            {
+                if (previous_y < ofGetHeight() / 2)
+                {
+                    camera = cameras[0].first;
+                    current_viewPort = cameras[0].second.first;
+                    current_camera_id = activatedCameras[0].first;
+                }
+                else
+                {
+                    camera = cameras[2].first;
+                    current_viewPort = cameras[2].second.first;
+                    current_camera_id = activatedCameras[2].first;
+                }
+            }
+
+            else
+            {
+                if (previous_y < ofGetHeight() / 2)
+                {
+                    camera = cameras[1].first;
+                    current_viewPort = cameras[1].second.first;
+                    current_camera_id = activatedCameras[1].first;
+                }
+                else
+                {
+                    camera = cameras[3].first;
+                    current_viewPort = cameras[3].second.first;
+                    current_camera_id = activatedCameras[3].first;
+                }
+            }
+        }
+    }
+    else if (camNumber == 2)
+    {
+        cameras.emplace_back(activatedCameras[0].second.first, pair(ofRectangle(0, 0, ofGetWidth(), ofGetHeight() / 2), activatedCameras[0].second.second));
+        cameras.emplace_back(activatedCameras[1].second.first, pair(ofRectangle(0, ofGetHeight() / 2, ofGetWidth(), ofGetHeight() / 2), activatedCameras[1].second.second));
+
+        if (previous_y < ofGetHeight() / 2)
+        {
+            camera = cameras[0].first;
+            current_viewPort = cameras[0].second.first;
+            current_camera_id = activatedCameras[0].first;
+        }
+        else
+        {
+            camera = cameras[1].first;
+            current_viewPort = cameras[1].second.first;
+            current_camera_id = activatedCameras[1].first;
+        }
+    }
+    else if (camNumber == 1)
+    {
+        current_viewPort = ofRectangle(0, 0, ofGetWidth(), ofGetHeight());
+
+        cameras.emplace_back(activatedCameras[0].second.first, pair(ofRectangle(0, 0, ofGetWidth(), ofGetHeight()), activatedCameras[0].second.second));
+
+        camera = cameras[0].first;
+        current_viewPort = cameras[0].second.first;
+        current_camera_id = activatedCameras[0].first;
+    }
 }
