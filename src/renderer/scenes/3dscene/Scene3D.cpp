@@ -11,9 +11,11 @@
 #include "3dscene/createShapes/CreatePyramidUI.h"
 #include "3dscene/createShapes/CreateSphereUI.h"
 #include "Light.h"
+#include "Material.h"
 #include "MoveChildCommand.h"
 #include "SceneObject.h"
 #include "SetCameraFovCommand.h"
+#include "SetMaterialCommand.h"
 #include "imgui.h"
 #include "of3dPrimitives.h"
 #include "ofAppRunner.h"
@@ -44,10 +46,22 @@ void Scene3D::setup()
     this->createShapeUIs.push_back(std::make_unique<CreatePyramidUI>(CreatePyramidUI(this->sharedParams, this->history)));
     this->createShapeUIs.emplace_back(std::make_unique<CreateCameraUI>(CreateCameraUI(this->sharedParams, this->history)));
 
+    this->registeredMaterials.push_back(std::make_shared<Material>(DEFAULT_MATERIAL, "Default"));
+
+    ofMaterial material;
     material.setAmbientColor(ofFloatColor(0.1, 0.1, 0.1));
     material.setDiffuseColor(ofFloatColor(1.0, 0.5, 0.5));
     material.setSpecularColor(ofFloatColor(1.0, 1.0, 1.0));
     material.setShininess(64);
+    this->registeredMaterials.push_back(std::make_shared<Material>(material, "Old default"));
+
+    ofMaterial matteMaterial;
+    matteMaterial.setShininess(1);
+    matteMaterial.setAmbientColor(ofFloatColor(0.2, 0.2, 0.2, 1.0));
+    matteMaterial.setDiffuseColor(ofFloatColor(0.8, 0.5, 0.2, 1.0));
+    matteMaterial.setSpecularColor(ofFloatColor(0.0, 0.0, 0.0, 1.0));
+    matteMaterial.setEmissiveColor(ofFloatColor(0.6, 0.0, 0.0, 1.0));
+    this->registeredMaterials.push_back(std::make_shared<Material>(matteMaterial, "What"));
 
     // Add base light
     auto light = ofLight();
@@ -85,6 +99,7 @@ void Scene3D::draw()
     this->DrawSceneGraphWindow();
     this->DrawSelectedNodeWindow();
     this->DrawCommandHistoryWindow();
+    this->DrawModifyMaterialWindow();
 
     for (auto& [camera, info]: cameras)
     {
@@ -109,7 +124,6 @@ void Scene3D::draw()
 
 void Scene3D::drawScene()
 {
-    material.begin();
     sceneGraph.Draw();
 
     if (is_selected)
@@ -119,8 +133,6 @@ void Scene3D::drawScene()
 
         selectionMesh.draw();
     }
-
-    material.end();
 }
 
 void Scene3D::DrawSceneGraphWindow()
@@ -369,6 +381,28 @@ void Scene3D::DrawModifyNodeSliders(const std::shared_ptr<Node>& node)
     if (ImGui::IsItemDeactivatedAfterEdit())
     {
         this->history.executeCommand(std::make_shared<SetScaleCommand>(node, glm::vec3(this->scale[0], this->scale[1], this->scale[2]), this->initialScale));
+    }
+}
+
+void Scene3D::DrawModifyMaterialWindow()
+{
+    if ((*this->selectedNode) != nullptr)
+    {
+        ImGui::SetNextWindowPos(ImVec2(320, 440), ImGuiCond_FirstUseEver);
+        ImGui::SetNextWindowSize(ImVec2(300, 400), ImGuiCond_FirstUseEver);
+        ImGui::Begin("Select material");
+        ImGui::Text("Selected node: %s", (*this->selectedNode)->GetName().c_str());
+        ImGui::Text("Material: %s", (*this->selectedNode)->GetMaterial()->GetName().c_str());
+
+        ImGui::Text("Available materials:");
+        for (const std::shared_ptr<Material>& material: this->registeredMaterials)
+        {
+            if (ImGui::Button(material->GetName().c_str()))
+            {
+                this->history.executeCommand(std::make_shared<SetMaterialCommand>(*this->selectedNode, material));
+            }
+        }
+        ImGui::End();
     }
 }
 

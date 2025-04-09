@@ -28,6 +28,7 @@ public:
 
     void DrawSceneGraphWindow();
     void DrawSelectedNodeWindow();
+    void DrawModifyMaterialWindow();
 
     void DrawModifyLightSliders(const std::shared_ptr<ofLight>& light);
     void DrawModifyCameraNodeSliders(const std::shared_ptr<Node>& node, shared_ptr<ofCamera> camera);
@@ -73,8 +74,6 @@ private:
     std::shared_ptr<SharedShapeCreationParams> sharedParams;
 
     std::vector<std::unique_ptr<CreateShapeUI>> createShapeUIs;
-
-    ofMaterial material;
 
     using Toggled = bool;
     using DrawFrustum = bool;
@@ -177,4 +176,6 @@ private:
             this->history.executeCommand(command);
         }
     }
+
+    std::vector<std::shared_ptr<Material>> registeredMaterials;
 };

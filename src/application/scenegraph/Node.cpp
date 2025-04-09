@@ -34,7 +34,7 @@ void Node::RemoveChild(NodeId id)
 
 bool Node::Delete()
 {
-    if ( this->GetId() == 0 )
+    if (this->GetId() == 0)
     {
         ofLogError() << "Cannot delete the root node";
         return false;
@@ -61,7 +61,15 @@ void Node::Draw() const
 {
     if (inner)
     {
+        if (material)
+        {
+            material->begin();
+        }
         inner->draw();
+        if (material)
+        {
+            material->end();
+        }
     }
     for (const auto& child: children)
     {
@@ -69,7 +77,25 @@ void Node::Draw() const
     }
 }
 
-[[nodiscard]] std::string Node::GetName() const { return name + " " + std::to_string(id); }
+void Node::SetMaterial(std::shared_ptr<Material> material)
+{
+    if (material == nullptr)
+    {
+        ofLogError() << "Cannot set material to nullptr";
+        return;
+    }
+    this->material = std::move(material);
+}
+
+[[nodiscard]] const std::shared_ptr<Material>& Node::GetMaterial() const
+{
+    return this->material;
+}
+
+[[nodiscard]] std::string Node::GetName() const
+{
+    return name + " " + std::to_string(id);
+}
 [[nodiscard]] const std::vector<std::shared_ptr<Node>>& Node::GetChildren() const { return children; }
 [[nodiscard]] NodeId Node::GetId() const { return id; }
 [[nodiscard]] const std::weak_ptr<Node>& Node::GetParent() const { return this->parent; }

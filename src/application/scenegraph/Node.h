@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Material.h"
 #include "ofNode.h"
 
 typedef unsigned int NodeId;
@@ -20,6 +21,9 @@ public:
 
     void Draw() const;
 
+    void SetMaterial(std::shared_ptr<Material> material);
+    [[nodiscard]] const std::shared_ptr<Material>& GetMaterial() const;
+
     [[nodiscard]] std::string GetName() const;
     [[nodiscard]] const std::vector<std::shared_ptr<Node>>& GetChildren() const;
     [[nodiscard]] NodeId GetId() const;
@@ -36,6 +40,9 @@ private:
     std::shared_ptr<ofNode> inner;
     std::weak_ptr<Node> parent;
     std::vector<std::shared_ptr<Node>> children;
+
+    std::shared_ptr<Material> material = std::make_shared<Material>(DEFAULT_MATERIAL);
+
     std::string name;
     int id;
     bool isOpen = false;
