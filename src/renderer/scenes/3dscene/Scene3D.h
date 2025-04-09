@@ -48,7 +48,7 @@ public:
     void dragEvent(ofDragInfo dragInfo) override;
     void keyPressed(int key) override;
     void keyPressed(ofKeyEventArgs& key) override;
-    void keyReleased(int key) override;
+    void keyReleased(ofKeyEventArgs& key) override;
     void windowResized(int w, int h) override;
     /*void nextCam();
     void previousCam();*/
@@ -67,6 +67,9 @@ private:
 
     float rotate[3] = {0.0f, 0.0f, 0.0f};
     glm::quat initialRotation;// Used to store the initial rotation of the selected node when using the sliders, so that we can undo the change in a single command
+
+    float color[4] = {1.0f, 1.0f, 1.0f, 1.0f};
+    ofFloatColor initialColor;// Used to store the initial color of the selected node when using the sliders, so that we can undo the change in a single command
 
     float fov = 0;
     float initialFov = 0;

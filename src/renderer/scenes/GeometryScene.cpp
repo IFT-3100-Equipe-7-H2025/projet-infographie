@@ -435,7 +435,7 @@ void GeometryScene::focus()
 void GeometryScene::keyPressed(ofKeyEventArgs& key)
 {
     ofLog() << "<GeometryScene::keyPressed: " << key.key << ">";
-    switch ( key.key )
+    switch (key.key)
     {
         case 119://w
             is_key_press_w = true;
@@ -476,10 +476,10 @@ void GeometryScene::keyPressed(ofKeyEventArgs& key)
     }
 }
 
-void GeometryScene::keyReleased(int key)
+void GeometryScene::keyReleased(ofKeyEventArgs& key)
 {
-    ofLog() << "<GeometryScene::keyReleased: " << key << ">";
-    switch (key)
+    ofLog() << "<GeometryScene::keyReleased: " << key.key << ">";
+    switch (key.key)
     {
         case 119://w
             is_key_press_w = false;

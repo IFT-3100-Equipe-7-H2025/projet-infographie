@@ -2,6 +2,7 @@
 
 #include "3dscene/commands/AddShapeChildToNodeCommand.h"
 #include "CreateShapeUI.h"
+#include "Primitive3D.h"
 #include "imgui.h"
 #include "of3dPrimitives.h"
 #include "renderer/PrimitiveCreator.h"
@@ -36,16 +37,9 @@ public:
             if (ImGui::Button("Add"))
             {
                 auto lasagna = PrimitiveCreator::createLasagna(l_w_ratio, periods, resolution_l, resolution_w, width, height, depth);
-
-                auto& mesh = lasagna.getMesh();
-
-                ofFloatColor color(sharedParams->color[0], sharedParams->color[1], sharedParams->color[2], sharedParams->color[3]);
-                for (size_t i = 0; i < mesh.getNumVertices(); ++i)
-                {
-                    mesh.addColor(color);
-                }
-
                 auto lasagna_3d = Primitive3D(lasagna);
+                lasagna_3d.SetColor(ofFloatColor(sharedParams->color[0], sharedParams->color[1], sharedParams->color[2], sharedParams->color[3]));
+
                 auto lasagna_ptr = std::make_shared<Node>("Lasagna", std::make_shared<Primitive3D>(lasagna_3d));
                 history.executeCommand(std::make_shared<AddChildToNodeCommand>(*sharedParams->selectedNode, lasagna_ptr));
             }

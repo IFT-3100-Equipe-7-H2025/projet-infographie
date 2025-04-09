@@ -15,6 +15,7 @@
 #include "MoveChildCommand.h"
 #include "SceneObject.h"
 #include "SetCameraFovCommand.h"
+#include "SetColorCommand.h"
 #include "SetMaterialCommand.h"
 #include "imgui.h"
 #include "of3dPrimitives.h"
@@ -22,6 +23,7 @@
 #include "ofGraphics.h"
 #include "renderer/sceneObjects/ImportModel.h"
 #include <cmath>
+#include <memory>
 #include <numbers>
 
 #include <ranges>
@@ -382,6 +384,24 @@ void Scene3D::DrawModifyNodeSliders(const std::shared_ptr<Node>& node)
     {
         this->history.executeCommand(std::make_shared<SetScaleCommand>(node, glm::vec3(this->scale[0], this->scale[1], this->scale[2]), this->initialScale));
     }
+
+    // Color
+    if (const auto primitive = std::dynamic_pointer_cast<Primitive3D>(node->GetInner()); primitive)
+    {
+        const ofFloatColor currentColor = primitive->GetColor();
+        if (ImGui::ColorEdit4("Color2", this->color))
+        {
+            primitive->SetColor(ofFloatColor(this->color[0], this->color[1], this->color[2], this->color[3]));
+        }
+        if (ImGui::IsItemActivated())
+        {
+            this->initialColor = currentColor;
+        }
+        if (ImGui::IsItemDeactivatedAfterEdit())
+        {
+            this->history.executeCommand(std::make_shared<SetColorCommand>(node, ofFloatColor(this->color[0], this->color[1], this->color[2], this->color[3]), this->initialColor));
+        }
+    }
 }
 
 void Scene3D::DrawModifyMaterialWindow()
@@ -553,6 +573,14 @@ void Scene3D::ResetParams(const std::shared_ptr<Node>& node)
     rotate[1] = eulerRotation.y;
     rotate[2] = eulerRotation.z;
 
+    if (const auto primitive = std::dynamic_pointer_cast<Primitive3D>(node->GetInner()); primitive)
+    {
+        const ofFloatColor currentColor = primitive->GetColor();
+        color[0] = currentColor.r;
+        color[1] = currentColor.g;
+        color[2] = currentColor.b;
+        color[3] = currentColor.a;
+    }
 
     if (auto camera = std::dynamic_pointer_cast<ofCamera>(node->GetInner()); camera)
     {
@@ -925,96 +953,103 @@ void Scene3D::keyPressed(int key)
 
 void Scene3D::keyPressed(ofKeyEventArgs& key)
 {
+    ofLog() << "Key pressed: " << key.key << " with modifiers: " << key.modifiers;
     if (key.hasModifier(OF_KEY_CONTROL))
     {
         switch (charToLower(key.key))
         {
-            case 26://z
+            case 'z'://z
+                ofLog() << "Undo";
                 this->history.undo();
                 break;
-            case 25://y
+            case 'y'://y
+                ofLog() << "Redo";
                 this->history.redo();
                 break;
         }
+        return;
     }
     else { this->keyPressed(key.key); }
 }
 
-void Scene3D::keyReleased(int key)
+void Scene3D::keyReleased(ofKeyEventArgs& key)
 {
-    key = charToLower(key);
-
-    switch (key)
+    key.key = charToLower(key.key);
+    if (key.modifiers == 0)
     {
-        case 119://w
-            is_key_press_w = false;
-            applyCameraTranslation();
-            break;
-        case 100://d
-            is_key_press_d = false;
-            applyCameraTranslation();
-            break;
-        case 115://s
-            is_key_press_s = false;
-            applyCameraTranslation();
-            break;
-        case 97://a
-            is_key_press_a = false;
-            applyCameraTranslation();
-            break;
-        case 57357://up
-            is_key_press_up = false;
-            applyCameraRotation();
-            break;
-        case 57358://right
-            is_key_press_right = false;
-            applyCameraRotation();
-            break;
-        case 57359://down
-            is_key_press_down = false;
-            applyCameraRotation();
-            break;
-        case 57356://left
-            is_key_press_left = false;
-            applyCameraRotation();
-            break;
-        case 113://q
-            is_key_press_q = false;
-            applyCameraTranslation();
-            break;
-        case 101://e
-            is_key_press_e = false;
-            applyCameraTranslation();
-            break;
-        case 102://f
-            is_key_press_f = false;
-            break;
-        case 103:
-            is_key_press_g = false;
-            break;
-        case 114://r
-            storeCameraTranslation();
-            storeCameraRotation();
-            reset();
-            applyCameraTranslation();
-            applyCameraRotation();
-            break;
-        case 45://-
-            is_key_press_minus = false;
-            applyCameraRotation();
-            break;
-        case 61:// =
-            is_key_press_plus = false;
-            applyCameraRotation();
-            break;
-        case 107://k
-            debugger = !debugger;
-            break;
-        case 'y':
-            storeCameraRotation();
-            focus();
-            applyCameraRotation();
-            break;
+        switch (key.key)
+        {
+            case 119://w
+                is_key_press_w = false;
+                applyCameraTranslation();
+                break;
+            case 100://d
+                is_key_press_d = false;
+                applyCameraTranslation();
+                break;
+            case 115://s
+                is_key_press_s = false;
+                applyCameraTranslation();
+                break;
+            case 97://a
+                is_key_press_a = false;
+                applyCameraTranslation();
+                break;
+            case 57357://up
+                is_key_press_up = false;
+                applyCameraRotation();
+                break;
+            case 57358://right
+                is_key_press_right = false;
+                applyCameraRotation();
+                break;
+            case 57359://down
+                is_key_press_down = false;
+                applyCameraRotation();
+                break;
+            case 57356://left
+                is_key_press_left = false;
+                applyCameraRotation();
+                break;
+            case 113://q
+                is_key_press_q = false;
+                applyCameraTranslation();
+                break;
+            case 101://e
+                is_key_press_e = false;
+                applyCameraTranslation();
+                break;
+            case 102://f
+                is_key_press_f = false;
+                break;
+            case 103:
+                is_key_press_g = false;
+                break;
+            case 114://r
+                storeCameraTranslation();
+                storeCameraRotation();
+                reset();
+                applyCameraTranslation();
+                applyCameraRotation();
+                break;
+            case 45://-
+                is_key_press_minus = false;
+                applyCameraRotation();
+                break;
+            case 61:// =
+                is_key_press_plus = false;
+                applyCameraRotation();
+                break;
+            case 107://k
+                debugger = !debugger;
+                break;
+            case 'y':
+                ofLog() << "focus";
+                storeCameraRotation();
+                focus();
+                applyCameraRotation();
+                break;
+        }
     }
 }
 
