@@ -389,7 +389,7 @@ void Scene3D::DrawModifyNodeSliders(const std::shared_ptr<Node>& node)
     if (const auto primitive = std::dynamic_pointer_cast<Primitive3D>(node->GetInner()); primitive)
     {
         const ofFloatColor currentColor = primitive->GetColor();
-        if (ImGui::ColorEdit4("Color2", this->color))
+        if ( ImGui::ColorEdit4("Color##ChangeColor", this->color) )
         {
             primitive->SetColor(ofFloatColor(this->color[0], this->color[1], this->color[2], this->color[3]));
         }
@@ -953,10 +953,10 @@ void Scene3D::keyPressed(int key)
 
 void Scene3D::keyPressed(ofKeyEventArgs& key)
 {
-    ofLog() << "Key pressed: " << key.key << " with modifiers: " << key.modifiers;
+    ofLog() << "Key pressed: " << key.keycode << " with modifiers: " << key.modifiers;
     if (key.hasModifier(OF_KEY_CONTROL))
     {
-        switch (charToLower(key.key))
+        switch ( charToLower(key.keycode) )
         {
             case 'z'://z
                 ofLog() << "Undo";
