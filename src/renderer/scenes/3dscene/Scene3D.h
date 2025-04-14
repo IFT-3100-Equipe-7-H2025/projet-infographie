@@ -164,6 +164,8 @@ private:
     int getCameraRotationCommands() const;
     int getCameraTranslationCommands() const;
 
+    void divideCamera(int first, int last, int x1, int y1, int width, int height, vector<pair<NodeId, pair<shared_ptr<ofCamera>, bool>>> activatedCameras);
+
     int charToLower(int key);
 
     std::queue<std::shared_ptr<Command>> commandQueue;

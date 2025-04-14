@@ -1152,9 +1152,56 @@ int Scene3D::getCameraTranslationCommands() const
     return std::ranges::count(vec, true);
 }
 
+void Scene3D::divideCamera(int first, int last, int x1, int y1, int width, int height, vector<pair<NodeId, pair<shared_ptr<ofCamera>, bool>>> activatedCameras)
+{
+    int halfWidth = width / 2;
+    int halfHeight = height / 2;
+    ofLog() << "First : " << first << " Last : " << last;
+    if (first == last)
+    {
+        cameras.emplace_back(activatedCameras[first].second.first, pair(ofRectangle(x1, y1, width, height), activatedCameras[0].second.second));
+        if (x1 <= previous_x && previous_x <= x1 + width && y1 <= previous_y && previous_y <= y1 + height)
+        {
+            ofLog() << "Selected camera : " << activatedCameras[first].first;
+            current_camera_id = activatedCameras[first].first;
+            current_viewPort = ofRectangle(x1, y1, width, height);
+            camera = activatedCameras[first].second.first;
+        }
+    }
+    else if (last - first == 1)
+    {
+        ofLog() << "Splitting 2 vert";
+        divideCamera(first, first, x1, y1, width, halfHeight, activatedCameras);
+        divideCamera(last, last, x1, y1 + halfHeight, width, halfHeight, activatedCameras);
+    }
+    else if (last - first == 2)
+    {
+        ofLog() << "Calling 3 recursion";
+
+        divideCamera(first, first, x1, y1, halfWidth, halfHeight, activatedCameras);
+        divideCamera(first + 1, first + 1, halfWidth + x1, y1, halfWidth, halfHeight, activatedCameras);
+        divideCamera(last, last, x1, halfHeight + y1, width, halfHeight, activatedCameras);
+
+    }
+    else {
+        ofLog() << "Calling recursion";
+        //devide into 4 groups
+        int mid = floor((first + last) / 2);
+        int topmid = floor((first + mid) / 2);
+        int bottommid = floor(((mid + 1) + last) / 2);
+        ofLog() << "Mid" << mid << " Topmid : " << topmid << " Bottommid : " << bottommid;
+
+        divideCamera(first, topmid, x1, y1, halfWidth, halfHeight, activatedCameras);
+        divideCamera(topmid + 1, mid, halfWidth + x1, y1, halfWidth, halfHeight, activatedCameras);
+        divideCamera(mid + 1, bottommid, x1, halfHeight + y1, halfWidth, halfHeight, activatedCameras);
+        divideCamera(bottommid + 1, last, halfWidth + x1, y1 + halfHeight, halfWidth, halfHeight, activatedCameras);
+            
+
+    }
+}
+
 void Scene3D::updateViewPorts()
 {
-
     cameras.clear();
     vector<pair<NodeId, pair<shared_ptr<ofCamera>, bool>>> activatedCameras;
     for (auto& [id, pair]: cameraMap)
@@ -1175,112 +1222,8 @@ void Scene3D::updateViewPorts()
     }
 
     int camNumber = activatedCameras.size();
+    ofLog() << "Camnum : " << camNumber;
     int prev_height = 0;
     int prev_width = 0;
-    if (camNumber >= 3)
-    {
-        cameras.emplace_back(activatedCameras[0].second.first, pair(ofRectangle(0, 0, ofGetWidth() / 2, ofGetHeight() / 2), activatedCameras[0].second.second));
-        cameras.emplace_back(activatedCameras[1].second.first, pair(ofRectangle(ofGetWidth() / 2, 0, ofGetWidth() / 2, ofGetHeight() / 2), activatedCameras[1].second.second));
-        if (camNumber == 3)
-        {
-            cameras.emplace_back(activatedCameras[2].second.first, pair(ofRectangle(0, ofGetHeight() / 2, ofGetWidth(), ofGetHeight() / 2), activatedCameras[2].second.second));
-            if (previous_x < ofGetWidth() / 2)
-            {
-                if (previous_y < ofGetHeight() / 2)
-                {
-                    camera = cameras[0].first;
-                    current_viewPort = cameras[0].second.first;
-                    current_camera_id = activatedCameras[0].first;
-                }
-                else
-                {
-                    camera = cameras[2].first;
-                    current_viewPort = cameras[2].second.first;
-                    current_camera_id = activatedCameras[2].first;
-                }
-            }
-
-            else
-            {
-                if (previous_y < ofGetHeight() / 2)
-                {
-                    camera = cameras[1].first;
-                    current_viewPort = cameras[1].second.first;
-                    current_camera_id = activatedCameras[1].first;
-                }
-                else
-                {
-                    camera = cameras[2].first;
-                    current_viewPort = cameras[2].second.first;
-                    current_camera_id = activatedCameras[2].first;
-                }
-            }
-        }
-        else
-        {
-            cameras.emplace_back(activatedCameras[2].second.first, pair(ofRectangle(0, ofGetHeight() / 2, ofGetWidth() / 2, ofGetHeight() / 2), activatedCameras[2].second.second));
-            cameras.emplace_back(activatedCameras[3].second.first, pair(ofRectangle(ofGetWidth() / 2, ofGetHeight() / 2, ofGetWidth() / 2, ofGetHeight() / 2), activatedCameras[3].second.second));
-
-
-            if (previous_x < ofGetWidth() / 2)
-            {
-                if (previous_y < ofGetHeight() / 2)
-                {
-                    camera = cameras[0].first;
-                    current_viewPort = cameras[0].second.first;
-                    current_camera_id = activatedCameras[0].first;
-                }
-                else
-                {
-                    camera = cameras[2].first;
-                    current_viewPort = cameras[2].second.first;
-                    current_camera_id = activatedCameras[2].first;
-                }
-            }
-
-            else
-            {
-                if (previous_y < ofGetHeight() / 2)
-                {
-                    camera = cameras[1].first;
-                    current_viewPort = cameras[1].second.first;
-                    current_camera_id = activatedCameras[1].first;
-                }
-                else
-                {
-                    camera = cameras[3].first;
-                    current_viewPort = cameras[3].second.first;
-                    current_camera_id = activatedCameras[3].first;
-                }
-            }
-        }
-    }
-    else if (camNumber == 2)
-    {
-        cameras.emplace_back(activatedCameras[0].second.first, pair(ofRectangle(0, 0, ofGetWidth(), ofGetHeight() / 2), activatedCameras[0].second.second));
-        cameras.emplace_back(activatedCameras[1].second.first, pair(ofRectangle(0, ofGetHeight() / 2, ofGetWidth(), ofGetHeight() / 2), activatedCameras[1].second.second));
-
-        if (previous_y < ofGetHeight() / 2)
-        {
-            camera = cameras[0].first;
-            current_viewPort = cameras[0].second.first;
-            current_camera_id = activatedCameras[0].first;
-        }
-        else
-        {
-            camera = cameras[1].first;
-            current_viewPort = cameras[1].second.first;
-            current_camera_id = activatedCameras[1].first;
-        }
-    }
-    else if (camNumber == 1)
-    {
-        current_viewPort = ofRectangle(0, 0, ofGetWidth(), ofGetHeight());
-
-        cameras.emplace_back(activatedCameras[0].second.first, pair(ofRectangle(0, 0, ofGetWidth(), ofGetHeight()), activatedCameras[0].second.second));
-
-        camera = cameras[0].first;
-        current_viewPort = cameras[0].second.first;
-        current_camera_id = activatedCameras[0].first;
-    }
+    divideCamera(0, camNumber - 1, 0, 0, ofGetWidth(), ofGetHeight(), activatedCameras);
 }
