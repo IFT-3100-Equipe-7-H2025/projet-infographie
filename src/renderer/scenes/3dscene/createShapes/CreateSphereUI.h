@@ -34,8 +34,9 @@ public:
                 {
                     mesh.addColor(color);
                 }
+                ofLog() << "Creating sphere" << endl;
                 auto sphere_scene = Sphere(sphere, radius);
-                auto sphere_ptr = std::make_shared<Node>("Sphere", std::make_shared<Primitive3D>(sphere_scene));
+                auto sphere_ptr = std::make_shared<Node>("Sphere", std::make_shared<Sphere>(sphere_scene));
                 history.executeCommand(std::make_shared<AddChildToNodeCommand>(*sharedParams->selectedNode, sphere_ptr));
             }
 

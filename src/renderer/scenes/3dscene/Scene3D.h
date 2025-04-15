@@ -138,6 +138,9 @@ private:
 
     using ViewPort = ofRectangle;
 
+    ofImage rayImage;
+    bool hitAnyPixel;
+
     std::vector<std::pair<shared_ptr<ofCamera>, pair<ViewPort, DrawFrustum>>> cameras;
 
     ofRectangle viewport1;

@@ -6,15 +6,17 @@ class Sphere : public Primitive3D
 public:
     Sphere(of3dPrimitive primitive, float radius) : Primitive3D(primitive), radius(radius)
     {
-        center = getPosition();
+        center = getGlobalPosition();
     }
 
     bool hit(const Ray& r, double ray_tmin, double ray_tmax, hit_record& rec) override
     {
+        center = getGlobalPosition();
+        float new_radius = radius * getScale().x;
         auto oc = center - r.getOrigin();
         auto a = r.getDirection().lengthSquared();
         auto h = oc.dot(r.getDirection());
-        auto c = oc.lengthSquared() - radius * radius;
+        auto c = oc.lengthSquared() - new_radius * new_radius;
         auto discriminant = h * h - a * c;
 
         if (discriminant < 0)
@@ -33,7 +35,7 @@ public:
 
         rec.t = root;
         rec.p = r.at(rec.t);
-        ofVec3f outward_normal = (rec.p - center) / radius;
+        ofVec3f outward_normal = (rec.p - center) / new_radius;
         rec.set_face_normal(r, outward_normal);
 
         return true;

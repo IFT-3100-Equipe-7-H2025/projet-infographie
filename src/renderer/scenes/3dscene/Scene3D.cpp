@@ -76,6 +76,15 @@ void Scene3D::setup()
 
     translate_speed = 750;
     rotate_speed = 75;
+
+
+
+    auto aspect_ratio = 16.0 / 9.0;
+    int image_width = 400;
+    int image_height = int(image_width / aspect_ratio);
+
+
+    rayImage.allocate(image_width, image_height, OF_IMAGE_COLOR);
 }
 
 
@@ -92,6 +101,8 @@ void Scene3D::draw()
         camera->begin(info.first);
         for (auto& [camera, info]: cameras)
         {
+            rayImage.draw(0, 0);
+
             if (info.second)
             {
                 camera->drawFrustum();
@@ -1006,9 +1017,9 @@ void Scene3D::update()
     time_elapsed = time_current - time_last;
     time_elapsed_timer = time_current - time_last_timer;
     time_last = time_current;
-    ofLog() << time_elapsed_timer;
-    if (time_elapsed_timer > 3)
+    if (time_elapsed_timer > 1)
     {
+        ofLog() << "Exporting ray trace";
         time_last_timer = time_current;
         exportRayTrace();
     }
@@ -1224,36 +1235,10 @@ void Scene3D::updateViewPorts()
     }
 
     int camNumber = activatedCameras.size();
-    ofLog() << "Camnum : " << camNumber;
     int prev_height = 0;
     int prev_width = 0;
     divideCamera(0, camNumber - 1, 0, 0, ofGetWidth(), ofGetHeight(), activatedCameras);
 }
-
-
-//void Scene3D::exportRayTrace() {
-//    int image_width = 256;
-//    int image_height = 256;
-//    ofImage image;
-//    image.allocate(image_width, image_height, OF_IMAGE_COLOR);
-//
-//    ofPixels& pixels = image.getPixels();
-//
-//    for (int j = 0; j < image_height; j++) {
-//        for (int i = 0; i < image_width; i++) {
-//            int index = (j * image_width + i) * 3;
-//            auto r = double(i) / (image_width - 1);
-//            auto g = double(j) / (image_height - 1);
-//            auto b = 0.25;
-//            pixels[index] = static_cast<unsigned char>(255.99 * r);
-//            pixels[index + 1] = static_cast<unsigned char>(255.99 * g);
-//            pixels[index + 2] = static_cast<unsigned char>(255.99 * b);
-//           
-//        }
-//    }
-//    image.update();
-//    image.save("raytrace.png");
-//}
 
 
 
@@ -1264,76 +1249,71 @@ void Scene3D::exportRayTrace()
     auto aspect_ratio = 16.0 / 9.0;
     int image_width = 400;
 
+
     // Calculate the image height, and ensure that it's at least 1.
     int image_height = int(image_width / aspect_ratio);
     image_height = (image_height < 1) ? 1 : image_height;
 
     // Camera
 
-    auto fov = camera->getFov();
-    auto height = ofGetHeight(); // to fix for multiple cameras
+    ofVec3f forward = -camera->getZAxis();
+    forward = forward.getNormalized();
+    ofVec3f right = camera->getXAxis();
+    right = right.getNormalized();
+    ofVec3f up = camera->getYAxis();
+    up = up.getNormalized();
 
-    //auto focal_length = (height / 2.0f) / tan(ofDegToRad(fov / 2.0f));
-    auto focal_length = 1.0;
-    auto viewport_height = 2.0;
-    auto viewport_width = viewport_height * (double(image_width) / image_height);
-    auto camera_center = ofVec3f(0,0,0);
+    auto fov_rad = ofDegToRad(camera->getFov());
+    auto viewport_height = 2.0f * tan(fov_rad / 2.0f);
+    auto viewport_width = viewport_height * aspect_ratio;
 
+    ofVec3f camera_center = camera->getGlobalPosition();
 
+    // These are scaled world-space directions
+    auto viewport_u = right * viewport_width;
+    auto viewport_v = -up * viewport_height;
 
-    // Calculate the vectors across the horizontal and down the vertical viewport edges.
-    auto viewport_u = ofVec3f(viewport_width, 0, 0);
-    auto viewport_v = ofVec3f(0, -viewport_height, 0);
+    // Focal distance is 1.0, since FOV already affects size
+    float focal_length = 1.0f;
 
-    // Calculate the horizontal and vertical delta vectors from pixel to pixel.
-    auto pixel_delta_u = viewport_u / image_width;
-    auto pixel_delta_v = viewport_v / image_height;
+    ofVec3f viewport_upper_left = camera_center + forward * focal_length - viewport_u * 0.5f - viewport_v * 0.5f;
 
-    // Calculate the location of the upper left pixel.
-    auto viewport_upper_left = camera_center - ofVec3f(0, 0, focal_length) - viewport_u / 2 - viewport_v / 2;
-    auto pixel00_loc = viewport_upper_left + 0.5 * (pixel_delta_u + pixel_delta_v);
+    ofVec3f pixel_delta_u = viewport_u / image_width;
+    ofVec3f pixel_delta_v = viewport_v / image_height;
 
+    ofVec3f pixel00_loc = viewport_upper_left + 0.5f * (pixel_delta_u + pixel_delta_v);
     // Render
 
-    std::cout << "P3\n"
-              << image_width << " " << image_height << "\n255\n";
+    //std::cout << "P3\n"
+    //          << image_width << " " << image_height << "\n255\n";
 
-    ofImage image;
-    image.allocate(image_width, image_height, OF_IMAGE_COLOR);
-
-    ofPixels& pixels = image.getPixels();
-
+    hitAnyPixel = false;
+    ofPixels& pixels = rayImage.getPixels();
     for (int j = 0; j < image_height; j++)
     {
-        std::clog << "\rScanlines remaining: " << (image_height - j) << ' ' << std::flush;
+        std::clog << "\r Scanlines remaining: " << (image_height - j) << ' ' << std::flush;
         for (int i = 0; i < image_width; i++)
         {
-            auto pixel_center = pixel00_loc + (i * pixel_delta_u) + (j * pixel_delta_v);
-            auto ray_direction = pixel_center - camera_center;
+            ofVec3f pixel_center = pixel00_loc + (i * pixel_delta_u) + (j * pixel_delta_v);
+            ofVec3f ray_direction = (pixel_center - camera_center).getNormalized();
             Ray ray(camera_center, ray_direction);
 
-
-            int index = (j * image_width + i) * 3;
-            auto r = double(i) / (image_width - 1);
-            auto g = double(j) / (image_height - 1);
-            auto b = 0.25;
             ofColor color = rayColor(ray);
 
-            pixels[index] = color.r;
-            pixels[index + 1] = color.g;
-            pixels[index + 2] = color.b;
-
-            /*pixels[index] = static_cast<unsigned char>(255.99 * r);
-            pixels[index + 1] = static_cast<unsigned char>(255.99 * g);
-            pixels[index + 2] = static_cast<unsigned char>(255.99 * b);*/
-
-            //color pixel_color = ray_color(r);
-            //write_color(std::cout, pixel_color);
+            pixels.setColor(i, j, color);
         }
     }
-    image.update();
-    image.save("raytrace.png");
-    std::clog << "\rDone.                 \n";
+    if (hitAnyPixel) {
+        ofLog() << "Hit something!";
+    }
+    else
+    {
+        ofLog() << "Hit nothing!";
+    }
+    hitAnyPixel = false;
+    rayImage.update();
+    rayImage.save("raytrace.png");
+    //std::clog << "\rDone.                 \n";
 }
 
 
@@ -1342,16 +1322,12 @@ ofColor Scene3D::rayColor(const Ray& r) {
     hit_record rec;
 
     if (hitAnything(r, 0, INFINITY, rec)) {
-        return 0.5 * ofColor(rec.normal.x + 1, rec.normal.y + 1, rec.normal.z + 1);
+        ofColor normal_color = ofColor(
+                (rec.normal.x + 1) * 127.5f,
+                (rec.normal.y + 1) * 127.5f,
+                (rec.normal.z + 1) * 127.5f);
+        return normal_color;
     }
-
-
-    //auto t = hitSphere(ofVec3f(0, 0, -1), 0.5, r);
-    //if (t > 0.0f) {
-    //    ofVec3f normal = unitVector(r.at(t) - ofVec3f(0, 0, -1));
-    //    ofVec3f colorVec = 0.5f * (normal + ofVec3f(1.0f, 1.0f, 1.0f));
-    //    return ofColor(colorVec.x * 255, colorVec.y * 255, colorVec.z * 255);
-    //}
 
     auto unit_direction = r.getDirection().getNormalized();
     auto a = 0.5 * (unit_direction.y + 1.0);
@@ -1365,10 +1341,11 @@ double Scene3D::hitAnything(const Ray& r, double ray_tmin, double ray_tmax, hit_
     hit_record temp_rec;
     double closest_so_far = ray_tmax;
     bool hit_anything = false;
+
     for (const auto& node: sceneGraph.GetNodes())
     {
 
-        if (auto object = std::dynamic_pointer_cast<SceneObject>(node->GetInner()))
+        if (auto object = std::dynamic_pointer_cast<Primitive3D>(node->GetInner()))
         {
             if (object->hit(r, ray_tmin, closest_so_far, temp_rec))
             {
@@ -1378,6 +1355,10 @@ double Scene3D::hitAnything(const Ray& r, double ray_tmin, double ray_tmax, hit_
             }
         }
 
+    }
+    if (hit_anything)
+    {
+        hitAnyPixel = true;
     }
     return hit_anything;
 }
