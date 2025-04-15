@@ -2,6 +2,9 @@
 
 #include "SceneObject.h"
 #include "ofMain.h"
+#include "renderer/rayTracer/ray.h"
+
+
 
 class Primitive3D : public SceneObject
 {

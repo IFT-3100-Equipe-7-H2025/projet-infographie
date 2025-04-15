@@ -9,6 +9,7 @@
 #include "sceneObjects/SceneObject.h"
 #include "scenegraph/SceneGraph.h"
 #include <ofxAssimpModelLoader.h>
+#include "renderer/rayTracer/ray.h"
 
 class Scene3D : public Scene
 {
@@ -106,6 +107,8 @@ private:
     float time_current;
     float time_elapsed;
     float time_last;
+    float time_last_timer = 0.0f;
+    float time_elapsed_timer = 0.0f;
 
     bool is_key_press_up = false;
     bool is_key_press_right = false;
@@ -164,7 +167,18 @@ private:
     int getCameraRotationCommands() const;
     int getCameraTranslationCommands() const;
 
+    ofColor rayColor(const Ray& r);
+    
+    double hitAnything(const Ray& r, double ray_tmin, double ray_tmax, hit_record& rec);
+
+    ofVec3f unitVector(const ofVec3f& v)
+    {
+        return v / v.length();
+    }
+
+
     void divideCamera(int first, int last, int x1, int y1, int width, int height, vector<pair<NodeId, pair<shared_ptr<ofCamera>, bool>>> activatedCameras);
+    void exportRayTrace();
 
     int charToLower(int key);
 

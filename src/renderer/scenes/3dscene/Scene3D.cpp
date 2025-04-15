@@ -21,6 +21,7 @@
 #include "renderer/sceneObjects/ImportModel.h"
 #include <cmath>
 #include <numbers>
+#include "renderer/rayTracer/ray.h"
 
 #include <ranges>
 
@@ -1003,7 +1004,14 @@ void Scene3D::update()
 {
     time_current = ofGetElapsedTimef();
     time_elapsed = time_current - time_last;
+    time_elapsed_timer = time_current - time_last_timer;
     time_last = time_current;
+    ofLog() << time_elapsed_timer;
+    if (time_elapsed_timer > 3)
+    {
+        time_last_timer = time_current;
+        exportRayTrace();
+    }
 
 
     speed_translation = translate_speed * time_elapsed;
@@ -1156,13 +1164,11 @@ void Scene3D::divideCamera(int first, int last, int x1, int y1, int width, int h
 {
     int halfWidth = width / 2;
     int halfHeight = height / 2;
-    ofLog() << "First : " << first << " Last : " << last;
     if (first == last)
     {
         cameras.emplace_back(activatedCameras[first].second.first, pair(ofRectangle(x1, y1, width, height), activatedCameras[0].second.second));
         if (x1 <= previous_x && previous_x <= x1 + width && y1 <= previous_y && previous_y <= y1 + height)
         {
-            ofLog() << "Selected camera : " << activatedCameras[first].first;
             current_camera_id = activatedCameras[first].first;
             current_viewPort = ofRectangle(x1, y1, width, height);
             camera = activatedCameras[first].second.first;
@@ -1170,13 +1176,11 @@ void Scene3D::divideCamera(int first, int last, int x1, int y1, int width, int h
     }
     else if (last - first == 1)
     {
-        ofLog() << "Splitting 2 vert";
         divideCamera(first, first, x1, y1, width, halfHeight, activatedCameras);
         divideCamera(last, last, x1, y1 + halfHeight, width, halfHeight, activatedCameras);
     }
     else if (last - first == 2)
     {
-        ofLog() << "Calling 3 recursion";
 
         divideCamera(first, first, x1, y1, halfWidth, halfHeight, activatedCameras);
         divideCamera(first + 1, first + 1, halfWidth + x1, y1, halfWidth, halfHeight, activatedCameras);
@@ -1184,12 +1188,10 @@ void Scene3D::divideCamera(int first, int last, int x1, int y1, int width, int h
 
     }
     else {
-        ofLog() << "Calling recursion";
         //devide into 4 groups
         int mid = floor((first + last) / 2);
         int topmid = floor((first + mid) / 2);
         int bottommid = floor(((mid + 1) + last) / 2);
-        ofLog() << "Mid" << mid << " Topmid : " << topmid << " Bottommid : " << bottommid;
 
         divideCamera(first, topmid, x1, y1, halfWidth, halfHeight, activatedCameras);
         divideCamera(topmid + 1, mid, halfWidth + x1, y1, halfWidth, halfHeight, activatedCameras);
@@ -1226,4 +1228,156 @@ void Scene3D::updateViewPorts()
     int prev_height = 0;
     int prev_width = 0;
     divideCamera(0, camNumber - 1, 0, 0, ofGetWidth(), ofGetHeight(), activatedCameras);
+}
+
+
+//void Scene3D::exportRayTrace() {
+//    int image_width = 256;
+//    int image_height = 256;
+//    ofImage image;
+//    image.allocate(image_width, image_height, OF_IMAGE_COLOR);
+//
+//    ofPixels& pixels = image.getPixels();
+//
+//    for (int j = 0; j < image_height; j++) {
+//        for (int i = 0; i < image_width; i++) {
+//            int index = (j * image_width + i) * 3;
+//            auto r = double(i) / (image_width - 1);
+//            auto g = double(j) / (image_height - 1);
+//            auto b = 0.25;
+//            pixels[index] = static_cast<unsigned char>(255.99 * r);
+//            pixels[index + 1] = static_cast<unsigned char>(255.99 * g);
+//            pixels[index + 2] = static_cast<unsigned char>(255.99 * b);
+//           
+//        }
+//    }
+//    image.update();
+//    image.save("raytrace.png");
+//}
+
+
+
+void Scene3D::exportRayTrace()
+{
+    // Image
+
+    auto aspect_ratio = 16.0 / 9.0;
+    int image_width = 400;
+
+    // Calculate the image height, and ensure that it's at least 1.
+    int image_height = int(image_width / aspect_ratio);
+    image_height = (image_height < 1) ? 1 : image_height;
+
+    // Camera
+
+    auto fov = camera->getFov();
+    auto height = ofGetHeight(); // to fix for multiple cameras
+
+    //auto focal_length = (height / 2.0f) / tan(ofDegToRad(fov / 2.0f));
+    auto focal_length = 1.0;
+    auto viewport_height = 2.0;
+    auto viewport_width = viewport_height * (double(image_width) / image_height);
+    auto camera_center = ofVec3f(0,0,0);
+
+
+
+    // Calculate the vectors across the horizontal and down the vertical viewport edges.
+    auto viewport_u = ofVec3f(viewport_width, 0, 0);
+    auto viewport_v = ofVec3f(0, -viewport_height, 0);
+
+    // Calculate the horizontal and vertical delta vectors from pixel to pixel.
+    auto pixel_delta_u = viewport_u / image_width;
+    auto pixel_delta_v = viewport_v / image_height;
+
+    // Calculate the location of the upper left pixel.
+    auto viewport_upper_left = camera_center - ofVec3f(0, 0, focal_length) - viewport_u / 2 - viewport_v / 2;
+    auto pixel00_loc = viewport_upper_left + 0.5 * (pixel_delta_u + pixel_delta_v);
+
+    // Render
+
+    std::cout << "P3\n"
+              << image_width << " " << image_height << "\n255\n";
+
+    ofImage image;
+    image.allocate(image_width, image_height, OF_IMAGE_COLOR);
+
+    ofPixels& pixels = image.getPixels();
+
+    for (int j = 0; j < image_height; j++)
+    {
+        std::clog << "\rScanlines remaining: " << (image_height - j) << ' ' << std::flush;
+        for (int i = 0; i < image_width; i++)
+        {
+            auto pixel_center = pixel00_loc + (i * pixel_delta_u) + (j * pixel_delta_v);
+            auto ray_direction = pixel_center - camera_center;
+            Ray ray(camera_center, ray_direction);
+
+
+            int index = (j * image_width + i) * 3;
+            auto r = double(i) / (image_width - 1);
+            auto g = double(j) / (image_height - 1);
+            auto b = 0.25;
+            ofColor color = rayColor(ray);
+
+            pixels[index] = color.r;
+            pixels[index + 1] = color.g;
+            pixels[index + 2] = color.b;
+
+            /*pixels[index] = static_cast<unsigned char>(255.99 * r);
+            pixels[index + 1] = static_cast<unsigned char>(255.99 * g);
+            pixels[index + 2] = static_cast<unsigned char>(255.99 * b);*/
+
+            //color pixel_color = ray_color(r);
+            //write_color(std::cout, pixel_color);
+        }
+    }
+    image.update();
+    image.save("raytrace.png");
+    std::clog << "\rDone.                 \n";
+}
+
+
+ofColor Scene3D::rayColor(const Ray& r) {
+    // If the ray hits the background, return a color based on the ray direction.
+    hit_record rec;
+
+    if (hitAnything(r, 0, INFINITY, rec)) {
+        return 0.5 * ofColor(rec.normal.x + 1, rec.normal.y + 1, rec.normal.z + 1);
+    }
+
+
+    //auto t = hitSphere(ofVec3f(0, 0, -1), 0.5, r);
+    //if (t > 0.0f) {
+    //    ofVec3f normal = unitVector(r.at(t) - ofVec3f(0, 0, -1));
+    //    ofVec3f colorVec = 0.5f * (normal + ofVec3f(1.0f, 1.0f, 1.0f));
+    //    return ofColor(colorVec.x * 255, colorVec.y * 255, colorVec.z * 255);
+    //}
+
+    auto unit_direction = r.getDirection().getNormalized();
+    auto a = 0.5 * (unit_direction.y + 1.0);
+    return (1.0 - a) * ofColor(255, 255, 255) + a * ofColor(127, 200, 255);
+
+
+}
+
+
+double Scene3D::hitAnything(const Ray& r, double ray_tmin, double ray_tmax, hit_record& rec) {
+    hit_record temp_rec;
+    double closest_so_far = ray_tmax;
+    bool hit_anything = false;
+    for (const auto& node: sceneGraph.GetNodes())
+    {
+
+        if (auto object = std::dynamic_pointer_cast<SceneObject>(node->GetInner()))
+        {
+            if (object->hit(r, ray_tmin, closest_so_far, temp_rec))
+            {
+                hit_anything = true;
+                closest_so_far = temp_rec.t;
+                rec = temp_rec;
+            }
+        }
+
+    }
+    return hit_anything;
 }

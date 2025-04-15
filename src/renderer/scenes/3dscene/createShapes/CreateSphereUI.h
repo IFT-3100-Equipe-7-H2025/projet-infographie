@@ -5,6 +5,7 @@
 #include "imgui.h"
 #include "of3dPrimitives.h"
 #include "Primitive3D.h"
+#include "../Sphere.h"
 #include "renderer/PrimitiveCreator.h"
 
 constexpr float DEFAULT_SPHERE_RADIUS = 100.0f;
@@ -33,7 +34,7 @@ public:
                 {
                     mesh.addColor(color);
                 }
-                auto sphere_scene = Primitive3D(sphere);
+                auto sphere_scene = Sphere(sphere, radius);
                 auto sphere_ptr = std::make_shared<Node>("Sphere", std::make_shared<Primitive3D>(sphere_scene));
                 history.executeCommand(std::make_shared<AddChildToNodeCommand>(*sharedParams->selectedNode, sphere_ptr));
             }

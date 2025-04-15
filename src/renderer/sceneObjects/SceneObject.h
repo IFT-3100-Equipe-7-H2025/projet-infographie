@@ -1,7 +1,23 @@
 #pragma once
 
 #include "ofMain.h"
+#include "renderer/rayTracer/ray.h"
 
+
+class hit_record
+{
+public:
+    ofVec3f p;
+    ofVec3f normal;
+    float t;
+    bool front_face;
+
+    void set_face_normal(const Ray& r, const ofVec3f& outward_normal)
+    {
+        front_face = r.getDirection().dot(outward_normal) < 0;
+        normal = front_face ? outward_normal : -outward_normal;
+    }
+};
 
 class SceneObject : public ofNode
 {
@@ -19,6 +35,12 @@ public:
             transformedVertices.push_back(ofVec3f(transformedVertex.x, transformedVertex.y, transformedVertex.z));
         }
         return transformedVertices;
+    }
+
+    
+    virtual bool hit(const Ray& r, double ray_tmin, double ray_tmax, hit_record& rec)
+    {
+        return false;
     }
 
     std::pair<ofVec3f, ofVec3f> getBoundingVerticesFromVector(std::vector<ofVec3f> vertices)
@@ -78,4 +100,5 @@ public:
 
         return new_mesh;
     }
+
 };
