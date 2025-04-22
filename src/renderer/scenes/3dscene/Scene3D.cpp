@@ -101,7 +101,7 @@ void Scene3D::draw()
         camera->begin(info.first);
         for (auto& [camera, info]: cameras)
         {
-            ofSetColor(0, 0, 0);
+            ofSetColor(0, 77, 98);
             rayImage.draw(0, 0);
             ofSetColor(0, 255, 0);
 
@@ -1260,12 +1260,12 @@ inline double random_double(double min, double max)
     return min + (max - min) * random_double();
 }
 
-inline double random_double()
-{
-    static std::uniform_real_distribution<double> distribution(0.0, 1.0);
-    static std::mt19937 generator;
-    return distribution(generator);
-}
+//inline double random_double()
+//{
+//    static std::uniform_real_distribution<double> distribution(0.0, 1.0);
+//    static std::mt19937 generator;
+//    return distribution(generator);
+//}
 
 void Scene3D::exportRayTrace()
 {
@@ -1325,9 +1325,9 @@ void Scene3D::exportRayTrace()
 
             ofColor color = rayColor(ray);
             static const Interval intensity(0.000, 255.000);
-            color.r = int(intensity.clamp(color.r));
-            color.g = int(intensity.clamp(color.g));
-            color.b = int(intensity.clamp(color.b));
+            //color.r = int(intensity.clamp(color.r));
+            //color.g = int(intensity.clamp(color.g));
+            //color.b = int(intensity.clamp(color.b));
 
             pixels.setColor(i, j, color);
         }
@@ -1391,3 +1391,15 @@ double Scene3D::hitAnything(const Ray& r, Interval ray_t, hit_record& rec) {
     }
     return hit_anything;
 }
+
+//Ray getRay(int i, int j) const
+//{
+//    auto offset = sampleSquare();
+//    auto pixel_sample = pixel100_loc
+//}
+//
+//
+//ofVec3f sampleSquare() const
+//{
+//    return ofVec3f(random_double() - 0.5, random_double() - 0.5, 0);
+//}
