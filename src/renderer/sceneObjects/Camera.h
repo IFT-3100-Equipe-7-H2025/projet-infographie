@@ -6,32 +6,24 @@
 #include "ofLight.h"
 #include "ofMain.h"
 
-class Light : public SceneObject
+using ViewPort = ofRectangle;
+
+class Camera : public ofCamera
 {
 public:
-
-    void lookAt(const ofVec3f& target)
-    {
-        light->lookAt(target);
+    void setViewPort(ofRectangle p_viewport) {
+        viewPort = p_viewport;
     }
 
-    void customDraw() override
-    {
-        ofPushMatrix();
-        light->draw();
-        //light->setPosition(ofNode::getPosition());
-        ofPopMatrix();
+    ViewPort getViewPort() {
+        return viewPort;
     }
-
-    std::pair<ofVec3f, ofVec3f> getBoundingVertices() override
-    {
-        ofVec3f pos = getGlobalPosition();
-        ofVec3f minVertex = ofVec3f(pos.x - 5, pos.y - 5, pos.z - 5);
-        ofVec3f maxVertex = ofVec3f(pos.x + 5, pos.y + 5, pos.z + 5);
-
-        return std::pair(minVertex, maxVertex);
-    };
+    bool isActivated() {
+        return activated;
+    }
 
 private:
-    std::shared_ptr<ofLight> light;
+    bool activated;
+    ViewPort viewPort;
+
 };

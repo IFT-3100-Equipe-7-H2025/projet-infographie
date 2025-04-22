@@ -101,7 +101,9 @@ void Scene3D::draw()
         camera->begin(info.first);
         for (auto& [camera, info]: cameras)
         {
+            ofSetColor(0, 0, 0);
             rayImage.draw(0, 0);
+            ofSetColor(0, 255, 0);
 
             if (info.second)
             {
@@ -1240,7 +1242,30 @@ void Scene3D::updateViewPorts()
     divideCamera(0, camNumber - 1, 0, 0, ofGetWidth(), ofGetHeight(), activatedCameras);
 }
 
+const double pi = 3.14159265358979323846;
 
+inline double degrees_to_radians(double degrees)
+{
+    return degrees * pi / 180.0;
+}
+
+
+inline double random_double()
+{
+    return std::rand() / (RAND_MAX + 1.0);
+}
+
+inline double random_double(double min, double max)
+{
+    return min + (max - min) * random_double();
+}
+
+inline double random_double()
+{
+    static std::uniform_real_distribution<double> distribution(0.0, 1.0);
+    static std::mt19937 generator;
+    return distribution(generator);
+}
 
 void Scene3D::exportRayTrace()
 {
@@ -1299,6 +1324,10 @@ void Scene3D::exportRayTrace()
             Ray ray(camera_center, ray_direction);
 
             ofColor color = rayColor(ray);
+            static const Interval intensity(0.000, 255.000);
+            color.r = int(intensity.clamp(color.r));
+            color.g = int(intensity.clamp(color.g));
+            color.b = int(intensity.clamp(color.b));
 
             pixels.setColor(i, j, color);
         }
@@ -1321,7 +1350,7 @@ ofColor Scene3D::rayColor(const Ray& r) {
     // If the ray hits the background, return a color based on the ray direction.
     hit_record rec;
 
-    if (hitAnything(r, 0, INFINITY, rec)) {
+    if (hitAnything(r, Interval(0, INFINITY), rec)) {
         ofColor normal_color = ofColor(
                 (rec.normal.x + 1) * 127.5f,
                 (rec.normal.y + 1) * 127.5f,
@@ -1337,9 +1366,9 @@ ofColor Scene3D::rayColor(const Ray& r) {
 }
 
 
-double Scene3D::hitAnything(const Ray& r, double ray_tmin, double ray_tmax, hit_record& rec) {
+double Scene3D::hitAnything(const Ray& r, Interval ray_t, hit_record& rec) {
     hit_record temp_rec;
-    double closest_so_far = ray_tmax;
+    double closest_so_far = ray_t.max;
     bool hit_anything = false;
 
     for (const auto& node: sceneGraph.GetNodes())
@@ -1347,7 +1376,7 @@ double Scene3D::hitAnything(const Ray& r, double ray_tmin, double ray_tmax, hit_
 
         if (auto object = std::dynamic_pointer_cast<Primitive3D>(node->GetInner()))
         {
-            if (object->hit(r, ray_tmin, closest_so_far, temp_rec))
+            if (object->hit(r, Interval(ray_t.min, closest_so_far), temp_rec))
             {
                 hit_anything = true;
                 closest_so_far = temp_rec.t;

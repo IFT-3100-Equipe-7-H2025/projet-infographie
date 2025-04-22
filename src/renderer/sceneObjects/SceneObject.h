@@ -2,6 +2,7 @@
 
 #include "ofMain.h"
 #include "renderer/rayTracer/ray.h"
+#include "renderer/Interval.h"
 
 
 class hit_record
@@ -38,7 +39,7 @@ public:
     }
 
     
-    virtual bool hit(const Ray& r, double ray_tmin, double ray_tmax, hit_record& rec)
+    virtual bool hit(const Ray& r, Interval ray_t, hit_record& rec)
     {
         return false;
     }
