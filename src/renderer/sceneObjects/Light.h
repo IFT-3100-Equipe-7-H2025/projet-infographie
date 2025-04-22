@@ -6,39 +6,129 @@
 #include "ofMain.h"
 #include "ofLight.h"
 
+enum class LightType
+{
+    POINT,
+    DIRECTIONAL,
+    SPOT,
+    AMBIENT
+};
+
 class Light : public SceneObject
 {
 public:
-
-    Light(ofLight light)
+    Light(ofLight light, LightType type)
     {
         this->light = std::make_shared<ofLight>(light);
+        this->lightType = type;
+        this->attenuationConstant = light.getAttenuationConstant();
+        this->attenuationLinear = light.getAttenuationLinear();
+        this->attenuationQuadratic = light.getAttenuationQuadratic();
     }
 
-    void enable()
+    void Enable()
     {
         light->enable();
     }
 
-    void setDiffuseColor(const ofFloatColor& color)
+    void Disable()
+    {
+        light->disable();
+    }
+
+    bool GetIsEnabled() const { return light->getIsEnabled(); }
+
+    void SetLightType(LightType type)
+    {
+        lightType = type;
+        switch ( type )
+        {
+            case LightType::DIRECTIONAL:
+                light->setDirectional();
+                light->setAmbientColor(ofFloatColor(0.0f));
+                break;
+            case LightType::SPOT:
+                light->setSpotlight();
+                light->setAmbientColor(ofFloatColor(0.0f));
+                break;
+            case LightType::POINT:
+                light->setPointLight();
+                light->setAmbientColor(ofFloatColor(0.0f));
+                break;
+            case LightType::AMBIENT:
+                light->setPointLight();
+                light->setAmbientColor(ofFloatColor(1.0f));
+                light->setDiffuseColor(ofFloatColor(0.0f));
+                light->setSpecularColor(ofFloatColor(0.0f));
+                break;
+        }
+    }
+
+    void SetDiffuseColor(const ofFloatColor& color)
     {
         light->setDiffuseColor(color);
     }
 
-    void setSpecularColor(const ofFloatColor& color)
+    ofFloatColor GetDiffuseColor() const { return light->getDiffuseColor(); }
+
+    void SetSpecularColor(const ofFloatColor& color)
     {
         light->setSpecularColor(color);
     }
 
-    void setAmbientColor(const ofFloatColor& color)
+    ofFloatColor GetSpecularColor() const { return light->getSpecularColor(); }
+
+    void SetAmbientColor(const ofFloatColor& color)
     {
         light->setAmbientColor(color);
+    }
+
+    ofFloatColor GetAmbientColor() const { return light->getAmbientColor(); }
+
+    LightType GetLightType() const { return lightType; }
+
+    float GetAttenuationConstant() const { return light->getAttenuationConstant(); }
+
+    void SetAttenuationConstant(float constant)
+    {
+        this->attenuationConstant = constant;
+        this->SetAttenuation();
+    }
+    float GetAttenuationLinear() const { return light->getAttenuationLinear(); }
+
+    void SetAttenuationLinear(float linear)
+    {
+        this->attenuationLinear = linear;
+        this->SetAttenuation();
+    }
+    float GetAttenuationQuadratic() const { return light->getAttenuationQuadratic(); }
+
+    void SetAttenuationQuadratic(float quadratic)
+    {
+        this->attenuationQuadratic = quadratic;
+        this->SetAttenuation();
+    }
+
+    float GetSpotlightCutOff() const { return light->getSpotlightCutOff(); }
+
+    void SetSpotlightCutOff(float cutoff)
+    {
+        light->setSpotlightCutOff(cutoff);
+    }
+
+    float GetSpotConcentration() const { return light->getSpotConcentration(); }
+
+    void SetSpotConcentration(float concentration)
+    {
+        light->setSpotConcentration(concentration);
     }
 
     void lookAt(const ofVec3f& target)
     {
         light->lookAt(target);
     }
+
+    void setOrientation(const glm::quat& q) { light->setOrientation(q); }
 
     void customDraw() override
     {
@@ -57,5 +147,11 @@ public:
     };
 
 private:
+    void SetAttenuation() { light->setAttenuation(attenuationConstant, attenuationLinear, attenuationQuadratic); }
+
     std::shared_ptr<ofLight> light;
+    LightType                lightType = LightType::POINT;
+    float                    attenuationConstant;
+    float                    attenuationLinear;
+    float                    attenuationQuadratic;
 };

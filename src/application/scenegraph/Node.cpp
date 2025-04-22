@@ -2,7 +2,10 @@
 #include "of3dPrimitives.h"
 #include <memory>
 
-Node::Node(std::string name, std::shared_ptr<ofNode> node) : inner(std::move(node)), name(std::move(name)), id(nextId++) {}
+Node::Node(std::string name, std::shared_ptr<ofNode> node) : inner(std::move(node))
+                                                           , name(std::move(name))
+                                                           , id(nextId++)
+{}
 
 bool Node::AddChild(std::shared_ptr<Node> child)
 {
@@ -57,23 +60,37 @@ bool Node::Delete()
 }
 
 // NOLINTNEXTLINE(misc-no-recursion)
-void Node::Draw() const
+void Node::Draw(std::shared_ptr<Shader> lightingModel) const
 {
     if (inner)
     {
-        if (material)
+        if ( material && lightingModel == nullptr )
         {
             material->begin();
         }
+        if ( lightingModel )
+        {
+            lightingModel->begin();
+
+            auto ambientColor = material->getAmbientColor();
+            auto diffuseColor = material->getDiffuseColor();
+            auto specularColor = material->getSpecularColor();
+            lightingModel->setUniform3f("color_ambient", ambientColor.r, ambientColor.g, ambientColor.b);
+            lightingModel->setUniform3f("color_diffuse", diffuseColor.r, diffuseColor.g, diffuseColor.b);
+            lightingModel->setUniform3f("color_specular", specularColor.r, specularColor.g, specularColor.b);
+            lightingModel->setUniform1f("brightness", 0.5f);
+            lightingModel->setUniform3f("light_position", 0.0f, 0.0f, 0.0f);
+        }
         inner->draw();
-        if (material)
+        if ( lightingModel ) { lightingModel->end(); }
+        if ( material && lightingModel == nullptr )
         {
             material->end();
         }
     }
     for (const auto& child: children)
     {
-        child->Draw();
+        child->Draw(lightingModel);
     }
 }
 

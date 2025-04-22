@@ -22,12 +22,22 @@ public:
 
     bool Execute() override
     {
+        if ( auto light = std::dynamic_pointer_cast<Light>(this->node->GetInner()); light )
+        {
+            light->setOrientation(this->newRotation);
+            return true;
+        }
         this->node->GetInner()->setOrientation(this->newRotation);
         return true;
     }
 
     void Undo() override
     {
+        if ( auto light = std::dynamic_pointer_cast<Light>(this->node->GetInner()); light )
+        {
+            light->setOrientation(this->oldRotation);
+            return;
+        }
         this->node->GetInner()->setOrientation(this->oldRotation);
     }
 

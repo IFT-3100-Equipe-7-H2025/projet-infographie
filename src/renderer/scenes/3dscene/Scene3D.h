@@ -1,8 +1,10 @@
 #pragma once
 
+#include "Light.h"
 #include "3dscene/commands/CommandHistory.h"
 #include "Scene.h"
 #include "SceneObject.h"
+#include "Shader.h"
 #include "createShapes/CreateShapeUI.h"
 #include "createShapes/SharedShapeCreationParams.h"
 #include "ofMain.h"
@@ -29,8 +31,9 @@ public:
     void DrawSceneGraphWindow();
     void DrawSelectedNodeWindow();
     void DrawModifyMaterialWindow();
+    void DrawSelectLightingModelWindow();
 
-    void DrawModifyLightSliders(const std::shared_ptr<ofLight>& light);
+    void DrawModifyLightSliders(const std::shared_ptr<Light>& light);
     void DrawModifyCameraNodeSliders(const std::shared_ptr<Node>& node, shared_ptr<ofCamera> camera);
 
     void DrawModifyNodeSliders(const std::shared_ptr<Node>& node);
@@ -181,4 +184,6 @@ private:
     }
 
     std::vector<std::shared_ptr<Material>> registeredMaterials;
+    std::vector<std::shared_ptr<Shader>>   lightingModels;
+    std::shared_ptr<Shader>                selectedLightingModel;
 };

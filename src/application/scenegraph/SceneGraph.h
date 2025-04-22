@@ -11,7 +11,7 @@ class SceneGraph
 public:
     SceneGraph();
 
-    void Draw() const;
+    void Draw(std::shared_ptr<Shader> lightingModel = nullptr) const;
 
     void AddNode(std::shared_ptr<Node> node);
     [[nodiscard]] std::shared_ptr<Node> GetRoot() const;

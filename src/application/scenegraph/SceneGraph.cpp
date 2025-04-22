@@ -9,9 +9,9 @@ void SceneGraph::AddNode(std::shared_ptr<Node> node)
     root->AddChild(std::move(node));
 }
 
-void SceneGraph::Draw() const
+void SceneGraph::Draw(std::shared_ptr<Shader> lightingModel) const
 {
-    root->Draw();
+    root->Draw(lightingModel);
 }
 
 [[nodiscard]] std::shared_ptr<Node> SceneGraph::GetRoot() const
