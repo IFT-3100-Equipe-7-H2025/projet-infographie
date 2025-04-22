@@ -104,12 +104,16 @@ void Scene3D::setup()
     auto blinn_phong = ofShader();
     blinn_phong.load("shaders/blinn_phong.vert", "shaders/blinn_phong.frag");
 
+    auto toon = ofShader();
+    toon.load("shaders/toon.vert", "shaders/toon.frag");
+
 
     this->lightingModels.push_back(std::make_shared<Shader>(DEFAULT_SHADER));
     this->lightingModels.push_back(std::make_shared<Shader>(lambert, "Lambert"));
     this->lightingModels.push_back(std::make_shared<Shader>(gouraud, "Gouraud"));
     this->lightingModels.push_back(std::make_shared<Shader>(phong, "Phong"));
     this->lightingModels.push_back(std::make_shared<Shader>(blinn_phong, "Blinn-Phong"));
+    this->lightingModels.push_back(std::make_shared<Shader>(toon, "Toon"));
 
     this->selectedLightingModel = this->lightingModels[0];
 }
