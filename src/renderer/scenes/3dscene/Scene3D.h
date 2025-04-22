@@ -10,6 +10,7 @@
 #include "scenegraph/SceneGraph.h"
 #include <ofxAssimpModelLoader.h>
 #include "renderer/rayTracer/ray.h"
+#include "renderer/sceneObjects/Camera.h"
 
 class Scene3D : public Scene
 {
@@ -31,7 +32,7 @@ public:
     void DrawSelectedNodeWindow();
 
     void DrawModifyLightSliders(const std::shared_ptr<ofLight>& light);
-    void DrawModifyCameraNodeSliders(const std::shared_ptr<Node>& node, shared_ptr<ofCamera> camera);
+    void DrawModifyCameraNodeSliders(const std::shared_ptr<Node>& node, shared_ptr<Camera> camera);
 
     void DrawModifyNodeSliders(const std::shared_ptr<Node>& node);
 
@@ -80,9 +81,9 @@ private:
     using Toggled = bool;
     using DrawFrustum = bool;
 
-    map<NodeId, std::pair<weak_ptr<ofCamera>, pair<Toggled, DrawFrustum>>> cameraMap;
+    map<NodeId, weak_ptr<Camera>> cameraMap;
 
-    std::shared_ptr<ofCamera> camera;
+    std::shared_ptr<Camera> camera;
     NodeId current_camera_id;
     ofRectangle current_viewPort;
 
@@ -141,7 +142,8 @@ private:
     ofImage rayImage;
     bool hitAnyPixel;
 
-    std::vector<std::pair<shared_ptr<ofCamera>, pair<ViewPort, DrawFrustum>>> cameras;
+    std::vector<shared_ptr<Camera>> cameras;
+    //std::vector<std::pair<shared_ptr<ofCamera>, pair<ViewPort, DrawFrustum>>> cameras;
 
     ofRectangle viewport1;
     ofRectangle viewport2;
@@ -180,7 +182,7 @@ private:
     }
 
 
-    void divideCamera(int first, int last, int x1, int y1, int width, int height, vector<pair<NodeId, pair<shared_ptr<ofCamera>, bool>>> activatedCameras);
+    void divideCamera(int first, int last, int x1, int y1, int width, int height, vector<pair<NodeId, shared_ptr<Camera>>> activatedCameras);
     void exportRayTrace();
 
     int charToLower(int key);
