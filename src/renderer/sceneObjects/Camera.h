@@ -3,7 +3,12 @@
 #pragma once
 
 #include "SceneObject.h"
+#include "SceneGraph.h"
 #include "ofMain.h"
+#include "Vec3.h"
+
+
+
 
 using ViewPort = ofRectangle;
 
@@ -12,6 +17,8 @@ class Camera : public ofCamera
 public:
     double aspect_ratio = 1.0;
     int image_width = 100;
+    int samples_per_pixel = 10;
+    int max_depth = 10;
 
 
 
@@ -32,17 +39,35 @@ public:
             std::clog << "\r Scanlines remaining: " << (image_height - j) << ' ' << std::flush;
             for (int i = 0; i < image_width; i++)
             {
+                ofColor pixel_color(0, 0, 0);
+                for (int sample = 0; sample < samples_per_pixel; sample++) {
+                    Ray r = getRay(i, j);
+                    pixel_color += rayColor(r, max_depth, sceneGraph);
+                }
                 ofVec3f pixel_center = pixel00_location + (i * pixel_delta_u) + (j * pixel_delta_v);
                 ofVec3f ray_direction = (pixel_center - center).getNormalized();
                 Ray ray(center, ray_direction);
 
-                ofColor color = rayColor(ray, sceneGraph);
+
                 static const Interval intensity(0.000, 255.000);
+                //gamma corre
+                auto r = linear_to_gamma(pixel_color.r);
+                auto g = linear_to_gamma(pixel_color.g);
+                auto b = linear_to_gamma(pixel_color.b);
+
+              /*  r = int(intensity.clamp(r));
+                g = int(intensity.clamp(g));
+                b = int(intensity.clamp(b));*/
+
+                //pixel_color.set(r, g, b);
+
+
+
                 //color.r = int(intensity.clamp(color.r));
                 //color.g = int(intensity.clamp(color.g));
                 //color.b = int(intensity.clamp(color.b));
 
-                pixels.setColor(i, j, color);
+                pixels.setColor(i, j, pixel_samples_scale * pixel_color);
             }
         }
         rayImage.update();
@@ -92,6 +117,7 @@ public:
 
 private:
     int image_height;
+    double pixel_samples_scale;
     ofVec3f center;
     ofVec3f pixel00_location;
     ofVec3f pixel_delta_u;
@@ -106,6 +132,10 @@ private:
 
         image_height = int(image_width / aspect_ratio);
         image_height = (image_height < 1) ? 1 : image_height;
+
+        samples_per_pixel = 2;
+
+        pixel_samples_scale = 1.0 / samples_per_pixel;
 
         center = getGlobalPosition();
 
@@ -140,18 +170,42 @@ private:
 
     }
 
-    ofColor rayColor(const Ray& r, const SceneGraph& sceneGraph) const
+
+    Ray getRay(int i, int j) const {
+        auto offset = sampleSquare();
+        auto pixel_sample = pixel00_location + ((i + offset.x) * pixel_delta_u) + ((j + offset.y) * pixel_delta_v);
+
+        auto ray_origin = center;
+        auto ray_direction = pixel_sample - ray_origin;
+
+        return Ray(ray_origin, ray_direction);
+
+    }
+
+    ofVec3f sampleSquare() const {
+        return ofVec3f(random_double() - 0.5, random_double() - 0.5, 0);
+    }
+
+    ofColor rayColor(const Ray& r, int depth, const SceneGraph& sceneGraph) const
     {
+
+        if (depth <= 0) {
+            return ofColor(0, 0, 0);
+        }
+
         // If the ray hits the background, return a color based on the ray direction.
         hit_record rec;
 
-        if (hitAnything(r, Interval(0, INFINITY), rec, sceneGraph))
+        if (hitAnything(r, Interval(0.0001, INFINITY), rec, sceneGraph))
         {
-            ofColor normal_color = ofColor(
+            //Vec3 direction = random_on_hemisphere(rec.normal);
+            Vec3 direction = rec.normal + random_unit_vector();
+            /*ofColor normal_color = ofColor(
                     (rec.normal.x + 1) * 127.5f,
                     (rec.normal.y + 1) * 127.5f,
                     (rec.normal.z + 1) * 127.5f);
-            return normal_color;
+            return normal_color;*/
+            return 0.5 * rayColor(Ray(rec.p, direction), depth - 1, sceneGraph);
         }
 
         auto unit_direction = r.getDirection().getNormalized();
@@ -186,3 +240,6 @@ private:
     }
 
 };
+
+
+

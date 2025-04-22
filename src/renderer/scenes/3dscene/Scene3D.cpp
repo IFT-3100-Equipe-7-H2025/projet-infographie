@@ -84,15 +84,14 @@ void Scene3D::setup()
     auto aspect_ratio = 16.0 / 9.0;
     int image_width = 400;
     int image_height = int(image_width / aspect_ratio);
-
-
+    clearColor.set(0, 77, 98);
     rayImage.allocate(image_width, image_height, OF_IMAGE_COLOR);
 }
 
 
 void Scene3D::draw()
 {
-    ofClear(0, 77, 98);
+    ofClear(clearColor);
     ofSetColor(0, 255, 0);
     this->DrawSceneGraphWindow();
     this->DrawSelectedNodeWindow();
@@ -103,7 +102,7 @@ void Scene3D::draw()
         camera->begin(camera->getViewPort());
         for (auto& camera: cameras)
         {
-            ofSetColor(0, 77, 98);
+            ofSetColor(255, 255, 255);
             rayImage.draw(0, 0);
             ofSetColor(0, 255, 0);
 
@@ -1244,23 +1243,6 @@ void Scene3D::updateViewPorts()
     divideCamera(0, camNumber - 1, 0, 0, ofGetWidth(), ofGetHeight(), activatedCameras);
 }
 
-const double pi = 3.14159265358979323846;
-
-inline double degrees_to_radians(double degrees)
-{
-    return degrees * pi / 180.0;
-}
-
-
-inline double random_double()
-{
-    return std::rand() / (RAND_MAX + 1.0);
-}
-
-inline double random_double(double min, double max)
-{
-    return min + (max - min) * random_double();
-}
 
 //inline double random_double()
 //{
@@ -1320,15 +1302,3 @@ double Scene3D::hitAnything(const Ray& r, Interval ray_t, hit_record& rec) {
     }
     return hit_anything;
 }
-
-//Ray getRay(int i, int j) const
-//{
-//    auto offset = sampleSquare();
-//    auto pixel_sample = pixel100_loc
-//}
-//
-//
-//ofVec3f sampleSquare() const
-//{
-//    return ofVec3f(random_double() - 0.5, random_double() - 0.5, 0);
-//}

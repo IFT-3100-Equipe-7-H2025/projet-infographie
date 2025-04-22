@@ -99,6 +99,7 @@ private:
     glm::quat initialCameraRotation;
     float initialCameraFov;
 
+    ofColor clearColor;
 
     ofRectangle onScreenCorners;
     bool is_selected;
