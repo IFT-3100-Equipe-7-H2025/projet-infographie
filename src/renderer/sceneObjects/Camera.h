@@ -6,6 +6,7 @@
 #include "SceneGraph.h"
 #include "ofMain.h"
 #include "Vec3.h"
+#include "Material.h"
 
 
 
@@ -16,23 +17,38 @@ class Camera : public ofCamera
 {
 public:
     double aspect_ratio = 1.0;
-    int image_width = 100;
+    int image_width = 400;
     int samples_per_pixel = 10;
     int max_depth = 10;
+    ofImage rayImage;
+    ofPixels* pixels = nullptr;
+    bool rayTrace = true;
 
 
 
+    Camera(): activated(false), drawFrustrum(false), rendering(false) {
+        initialize();
+    }
 
-    Camera(): activated(false), drawFrustrum(false) {}
+    bool isRayTracing() {
+        return rayTrace;
+    }
 
+    bool doneRendering() {
+        return !rendering;
+    }
+
+    ofImage getRayImage()
+    {
+        return rayImage;
+    }
 
     ofImage render(const SceneGraph& sceneGraph) {
         initialize();
 
-        //hitAnyPixel = false;
-        ofImage rayImage;
+        ofImage rayImage2;
 
-        rayImage.allocate(image_width, image_height, OF_IMAGE_COLOR);
+        
         ofPixels& pixels = rayImage.getPixels();
         for (int j = 0; j < image_height; j++)
         {
@@ -40,10 +56,13 @@ public:
             for (int i = 0; i < image_width; i++)
             {
                 ofColor pixel_color(0, 0, 0);
-                for (int sample = 0; sample < samples_per_pixel; sample++) {
+                for (int sample = 0; sample < samples_per_pixel; sample++)
+                {
                     Ray r = getRay(i, j);
-                    pixel_color += rayColor(r, max_depth, sceneGraph);
+                    ofColor color = rayColor(r, max_depth, sceneGraph);
+                    pixel_color += color;
                 }
+                pixel_color /= samples_per_pixel;
                 ofVec3f pixel_center = pixel00_location + (i * pixel_delta_u) + (j * pixel_delta_v);
                 ofVec3f ray_direction = (pixel_center - center).getNormalized();
                 Ray ray(center, ray_direction);
@@ -55,41 +74,124 @@ public:
                 auto g = linear_to_gamma(pixel_color.g);
                 auto b = linear_to_gamma(pixel_color.b);
 
-              /*  r = int(intensity.clamp(r));
+                /*  r = int(intensity.clamp(r));
                 g = int(intensity.clamp(g));
                 b = int(intensity.clamp(b));*/
 
                 //pixel_color.set(r, g, b);
 
 
-
                 //color.r = int(intensity.clamp(color.r));
                 //color.g = int(intensity.clamp(color.g));
                 //color.b = int(intensity.clamp(color.b));
-
-                pixels.setColor(i, j, pixel_samples_scale * pixel_color);
+                //pixel_samples_scale* 
+                pixels.setColor(i, j, pixel_color);
             }
         }
         rayImage.update();
-        //if (hitAnyPixel)
-        //{
-        //    ofLog() << "Hit something!";
-        //}
-        //else
-        //{
-        //    ofLog() << "Hit nothing!";
-        //}
-        //hitAnyPixel = false;
+
         return rayImage;
+    }
+
+    ofImage renderPixels(const SceneGraph& sceneGraph)
+    {
+        initialize();
+
+        //ofImage rayImage2;
+
+
+        //ofPixels& pixels = rayImage.getPixels();
+        for (int j = 0; j < image_height; j++)
+        {
+            std::clog << "\r Scanlines remaining: " << (image_height - j) << ' ' << std::flush;
+            for (int i = 0; i < image_width; i++)
+            {
+                writePixel(i, j, sceneGraph);
+            }
+        }
+        rayImage.update();
+
+        return rayImage;
+    }
+
+    void renderPixel(const SceneGraph& sceneGraph) {
+        if (!rendering) {
+            ofLog() << "Initializing" << endl;
+            rendering = true;
+            initialize();
+            snapshot = sceneGraph;
+        }
+
+        writePixel(last_i, last_j, snapshot);
+        last_i++;
+        if (last_i == image_width && last_j == image_height - 1)
+        {
+            rendering = false;
+            rayImage.update();
+            last_i = 0;
+            last_j = 0;
+        }
+        else if (last_i == image_width) {
+            last_j++;
+            last_i = 0;
+            //ofLog() << "width  : " << image_width << " height : " << image_height << "i  : " << last_i << " j : " << last_j;
+        }
+    }
+
+    void writePixel(int i, int j, const SceneGraph& sceneGraph)
+    {
+        ofColor pixel_color(0, 0, 0);
+        float red = 0;
+        float green = 0;
+        float blue = 0;
+        for (int sample = 0; sample < samples_per_pixel; sample++)
+        {
+            Ray r = getRay(i, j);
+            ofColor color = rayColor(r, max_depth, sceneGraph);
+            red += color.r;
+            green += color.g;
+            blue += color.b;
+        }
+        pixel_color = ofColor(red / samples_per_pixel, green / samples_per_pixel, blue / samples_per_pixel);
+        ofVec3f pixel_center = pixel00_location + (i * pixel_delta_u) + (j * pixel_delta_v);
+        ofVec3f ray_direction = (pixel_center - center).getNormalized();
+        Ray ray(center, ray_direction);
+
+
+        static const Interval intensity(0.000, 255.000);
+        //gamma corre
+        auto r = linear_to_gamma(pixel_color.r);
+        auto g = linear_to_gamma(pixel_color.g);
+        auto b = linear_to_gamma(pixel_color.b);
+
+        /*  r = int(intensity.clamp(r));
+                g = int(intensity.clamp(g));
+                b = int(intensity.clamp(b));*/
+
+        //pixel_color.set(r, g, b);
+
+
+        //color.r = int(intensity.clamp(color.r));
+        //color.g = int(intensity.clamp(color.g));
+        //color.b = int(intensity.clamp(color.b));
+        //pixel_samples_scale * 
+        pixels->setColor(i, j, pixel_color);
+
     }
 
 
     void setViewPort(ofRectangle p_viewport) {
         viewPort = p_viewport;
+        setAspect(viewPort.getWidth() / viewPort.getHeight());
     }
+
 
     ViewPort getViewPort() {
         return viewPort;
+    }
+
+    void setAspect(float aspect) {
+        aspect_ratio = aspect;
     }
     bool& isActivated() {
         return activated;
@@ -125,15 +227,24 @@ private:
     bool activated;
     bool drawFrustrum;
     ViewPort viewPort;
+    SceneGraph snapshot;
+
+    bool rendering = false;
+    int last_j = 0;
+    int last_i = 0;
 
     void initialize() {
-        aspect_ratio = 16.0 / 9.0;
-        image_width = 400;
+        //aspect_ratio = 1;
+        //aspect_ratio = 16.0 / 9.0;
 
         image_height = int(image_width / aspect_ratio);
         image_height = (image_height < 1) ? 1 : image_height;
+        ofLog() << "Allocating" << endl;
+        rayImage.allocate(image_width, image_height, OF_IMAGE_COLOR);
+        ofLog() << "After Allocating" << endl;
+        pixels = &rayImage.getPixels();
 
-        samples_per_pixel = 2;
+
 
         pixel_samples_scale = 1.0 / samples_per_pixel;
 
@@ -198,14 +309,22 @@ private:
 
         if (hitAnything(r, Interval(0.0001, INFINITY), rec, sceneGraph))
         {
-            //Vec3 direction = random_on_hemisphere(rec.normal);
-            Vec3 direction = rec.normal + random_unit_vector();
-            /*ofColor normal_color = ofColor(
-                    (rec.normal.x + 1) * 127.5f,
-                    (rec.normal.y + 1) * 127.5f,
-                    (rec.normal.z + 1) * 127.5f);
-            return normal_color;*/
-            return 0.5 * rayColor(Ray(rec.p, direction), depth - 1, sceneGraph);
+            Ray scattered;
+            ofColor attenuation;
+
+            if (rec.mat->scatter(r, rec, attenuation, scattered))
+            {
+                return attenuation * rayColor(scattered, depth - 1, sceneGraph);
+            }
+            return ofColor(0, 0, 0);
+            ////Vec3 direction = random_on_hemisphere(rec.normal);
+            //Vec3 direction = rec.normal + random_unit_vector();
+            ///*ofColor normal_color = ofColor(
+            //        (rec.normal.x + 1) * 127.5f,
+            //        (rec.normal.y + 1) * 127.5f,
+            //        (rec.normal.z + 1) * 127.5f);
+            //return normal_color;*/
+            //return 0.5 * rayColor(Ray(rec.p, direction), depth - 1, sceneGraph);
         }
 
         auto unit_direction = r.getDirection().getNormalized();

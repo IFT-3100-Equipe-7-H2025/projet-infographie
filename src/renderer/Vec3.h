@@ -7,6 +7,7 @@
 class Vec3: public ofVec3f
 {
 public:
+    Vec3() {}
 
     Vec3(ofVec3f vec) : ofVec3f(vec.x, vec.y, vec.z) {}
 
@@ -23,6 +24,12 @@ public:
 
     static Vec3 random(double min, double max) {
         return Vec3((float) random_double(min, max), (float) random_double(min, max), (float) random_double(min, max));
+    }
+
+    bool near_zero() const
+    {
+        const auto s = 1e-8;
+        return (fabs(x) < s) && (fabs(y) < s) && (fabs(z) < s);
     }
 
     
@@ -47,4 +54,18 @@ inline Vec3 random_on_hemisphere(const Vec3& normal) {
     else {
         return -on_unit_sphere;
     }
+}
+
+inline Vec3 reflect(const Vec3& v, const Vec3& n) {
+    return v - 2 * v.dot(n) * n;
+}
+
+
+inline Vec3 refract(const Vec3& uv, const Vec3& n, double etai_over_etat)
+{
+    Vec3 neg_uv = -uv;
+    auto cos_theta = std::fmin(neg_uv.dot(n), 1.0);
+    Vec3 r_out_perp = etai_over_etat * (uv + cos_theta * n);
+    Vec3 r_out_parallel = -std::sqrt(std::fabs(1.0 - r_out_perp.length_squared())) * n;
+    return r_out_perp + r_out_parallel;
 }

@@ -109,6 +109,7 @@ private:
     float time_current;
     float time_elapsed;
     float time_last;
+    float time_left;
     float time_last_timer = 0.0f;
     float time_elapsed_timer = 0.0f;
 
@@ -184,7 +185,7 @@ private:
 
 
     void divideCamera(int first, int last, int x1, int y1, int width, int height, vector<pair<NodeId, shared_ptr<Camera>>> activatedCameras);
-    void exportRayTrace();
+    void exportRayTrace(float time_left);
 
     int charToLower(int key);
 

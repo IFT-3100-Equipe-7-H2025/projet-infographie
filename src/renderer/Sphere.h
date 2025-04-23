@@ -4,11 +4,9 @@
 class Sphere : public Primitive3D
 {
 public:
-    Sphere(of3dPrimitive primitive, float radius) : Primitive3D(primitive), radius(radius)
-    {
-        center = getGlobalPosition();
+    Sphere(of3dPrimitive primitive, float radius, shared_ptr<Material> material) : Primitive3D(primitive), center(getGlobalPosition()), radius(std::fmax(0,radius)) {
+        mat = material;
     }
-
     bool hit(const Ray& r, Interval ray_t, hit_record& rec) override
     {
         center = getGlobalPosition();
@@ -37,6 +35,7 @@ public:
         rec.p = r.at(rec.t);
         ofVec3f outward_normal = (rec.p - center) / new_radius;
         rec.set_face_normal(r, outward_normal);
+        rec.mat = mat;
 
         return true;
     }

@@ -86,6 +86,38 @@ void Scene3D::setup()
     int image_height = int(image_width / aspect_ratio);
     clearColor.set(0, 77, 98);
     rayImage.allocate(image_width, image_height, OF_IMAGE_COLOR);
+
+    auto material_ground = make_shared<Lambert>(ofColor(204, 204, 0.0));
+    auto material_center = make_shared<Lambert>(ofColor(26, 51, 125));
+    auto material_left = make_shared<Dielectric>(1.50);
+    auto material_bubble = make_shared<Dielectric>(1.00 / 1.50);
+    auto material_right = make_shared<Metal>(ofColor(204, 153, 51), 1.0);
+
+    auto primGround = PrimitiveCreator::createSphere(30, 30, 100);
+    auto primCenter = PrimitiveCreator::createSphere(30, 30, 20);
+    auto primLeft = PrimitiveCreator::createSphere(30, 30, 20);
+    auto primBubble = PrimitiveCreator::createSphere(30, 30, 18);
+    auto primRight = PrimitiveCreator::createSphere(30, 30, 20);
+
+    shared_ptr<Sphere> ground = make_shared<Sphere>(primGround, 100.0, material_ground);
+    shared_ptr<Sphere> center = make_shared<Sphere>(primCenter, 20, material_center);
+    shared_ptr<Sphere> left = make_shared<Sphere>(primLeft, 20, material_left);
+    shared_ptr<Sphere> bubble = make_shared<Sphere>(primBubble, 18, material_bubble);
+    shared_ptr<Sphere> right = make_shared<Sphere>(primRight, 20, material_right);
+    ground->setGlobalPosition(Vec3(0.0, -100.5, -1.0));
+    center->setGlobalPosition(Vec3(0.0, 0.0, -1.2));
+    left->setGlobalPosition(Vec3(-30, 0.0, -1.0));
+    bubble->setGlobalPosition(Vec3(-30, 0.0, -1.0));
+    right->setGlobalPosition(Vec3(30, 0.0, -1.0));
+
+    sceneGraph.AddNode(make_shared<Node>("Ground", ground));
+    sceneGraph.AddNode(make_shared<Node>("Center", center));
+    sceneGraph.AddNode(make_shared<Node>("Left", left));
+    sceneGraph.AddNode(make_shared<Node>("Bubble", bubble));
+    sceneGraph.AddNode(make_shared<Node>("Right", right));
+
+
+
 }
 
 
@@ -102,9 +134,7 @@ void Scene3D::draw()
         camera->begin(camera->getViewPort());
         for (auto& camera: cameras)
         {
-            ofSetColor(255, 255, 255);
-            rayImage.draw(0, 0);
-            ofSetColor(0, 255, 0);
+            
 
             if (camera->frustrumVisible())
             {
@@ -113,6 +143,11 @@ void Scene3D::draw()
         }
         drawScene();
         camera->end();
+        ofSetColor(255, 255, 255);
+        int new_width = camera->getViewPort().getWidth() * 0.25;
+        int new_height = camera->getViewPort().getHeight() * 0.25;
+        rayImage.draw(ofGetWidth() - new_width, 50, new_width, new_height);
+        ofSetColor(0, 255, 0);
         ofNoFill();
         ofDrawRectangle(camera->getViewPort());
     }
@@ -1018,15 +1053,20 @@ void Scene3D::update()
 {
     time_current = ofGetElapsedTimef();
     time_elapsed = time_current - time_last;
+    time_left = std::fmax(0, 1.0f / 20.0f - time_elapsed);
     time_elapsed_timer = time_current - time_last_timer;
     time_last = time_current;
-    if (time_elapsed_timer > 1)
+
+    if (time_elapsed_timer > 5)
     {
-        ofLog() << "Exporting ray trace";
+        //ofLog() << "Exporting ray trace";
         time_last_timer = time_current;
-        exportRayTrace();
+        //exportRayTrace(time_left);
+        ofLog() << "Time elapsed " << time_elapsed << " Time Left : " << time_left << endl;
+     
     }
 
+    exportRayTrace(time_left);
 
     speed_translation = translate_speed * time_elapsed;
     speed_rotation = rotate_speed * time_elapsed;
@@ -1251,10 +1291,26 @@ void Scene3D::updateViewPorts()
 //    return distribution(generator);
 //}
 
-void Scene3D::exportRayTrace()
+void Scene3D::exportRayTrace(float time_left)
 {
-    rayImage = camera->render(sceneGraph);
-    rayImage.save("raytrace.png");
+    //rayImage = camera->renderPixels(sceneGraph);
+    //return;
+    float now = ofGetElapsedTimef();
+    float time_last = now;
+    float time_elapsed = now - time_last;
+    camera->renderPixel(sceneGraph);
+    while (time_left > 0 && !camera->doneRendering()) {
+        camera->renderPixel(sceneGraph);
+        now = ofGetElapsedTimef();
+        time_elapsed = now - time_last;
+        time_last = now;
+        time_left -= time_elapsed;
+    }
+
+    if (camera->doneRendering()) {
+        ofLog() << "Updating Image " << endl;
+        rayImage = camera->getRayImage();
+    }
 }
 
 

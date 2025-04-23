@@ -3,13 +3,16 @@
 #include "ofMain.h"
 #include "renderer/rayTracer/ray.h"
 #include "renderer/Interval.h"
+//#include "renderer/Material.h"
 
+class Material;
 
 class hit_record
 {
 public:
     ofVec3f p;
     ofVec3f normal;
+    shared_ptr<Material> mat;
     float t;
     bool front_face;
 
@@ -101,5 +104,8 @@ public:
 
         return new_mesh;
     }
+
+protected:
+    shared_ptr<Material> mat;
 
 };

@@ -35,7 +35,22 @@ public:
                     mesh.addColor(color);
                 }
                 ofLog() << "Creating sphere" << endl;
-                auto sphere_scene = Sphere(sphere, radius);
+                int randint = rand() % 3 + 1;
+                
+                shared_ptr<Material> mat = std::make_shared<Dielectric>(1.50);
+                if (randint == 1)
+                {
+                    mat = std::make_shared<Metal>(color, 0.1);
+                    ofLog() << "Metal" << endl;
+                }
+                else if (randint == 2) {
+                    mat = std::make_shared<Lambert>(color);
+                    ofLog() << "Lambert" << endl;
+                }
+                else {
+                    ofLog() << "Glass" << endl;
+                }
+                auto sphere_scene = Sphere(sphere, radius, mat);
                 auto sphere_ptr = std::make_shared<Node>("Sphere", std::make_shared<Sphere>(sphere_scene));
                 history.executeCommand(std::make_shared<AddChildToNodeCommand>(*sharedParams->selectedNode, sphere_ptr));
             }

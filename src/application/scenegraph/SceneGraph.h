@@ -17,6 +17,7 @@ public:
     [[nodiscard]] std::shared_ptr<Node> GetRoot() const;
     [[nodiscard]] std::optional<std::shared_ptr<Node>> GetNode(NodeId id) const;
     std::vector<std::shared_ptr<Node>> GetNodes() const;
+    SceneGraph clone() const;
 
     bool IsNodeCurrentlyInGraph(NodeId id) const;
 
