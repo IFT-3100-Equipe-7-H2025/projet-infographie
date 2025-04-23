@@ -92,6 +92,9 @@ private:
     ofVec3f initialSelectedPosition;
     ofVec3f initialSelectedScale;
 
+    ofTrueTypeFont font;
+
+    int cameraRayCount = 0;
 
     int cameraTranslateCount = 0;
     int cameraRotateCount = 0;

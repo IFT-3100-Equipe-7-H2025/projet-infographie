@@ -3,7 +3,6 @@
 #include "ofMain.h"
 #include "renderer/rayTracer/ray.h"
 #include "renderer/Interval.h"
-//#include "renderer/Material.h"
 
 class Material;
 

@@ -117,6 +117,9 @@ void Scene3D::setup()
     sceneGraph.AddNode(make_shared<Node>("Right", right));
 
 
+    font.load("fonts/JetBrainsMono-Regular.ttf", 12, true, true);
+
+
 
 }
 
@@ -143,11 +146,41 @@ void Scene3D::draw()
         }
         drawScene();
         camera->end();
-        ofSetColor(255, 255, 255);
-        int new_width = camera->getViewPort().getWidth() * 0.25;
-        int new_height = camera->getViewPort().getHeight() * 0.25;
-        rayImage.draw(ofGetWidth() - new_width, 50, new_width, new_height);
-        ofSetColor(0, 255, 0);
+         
+        if (camera->isRayTracing()) {
+            //ofSetColor(clearColor);
+            ofSetColor(ofColor(255,255,255));
+            ViewPort viewPort = camera->getViewPort();
+            int new_width = viewPort.getWidth() * camera->getScreenCrop();
+            int new_height = viewPort.getHeight() * camera->getScreenCrop();
+            ofImage image = camera->getRayImage();
+            ofDisableDepthTest();
+            image.draw(viewPort.getX() + viewPort.getWidth() - new_width, viewPort.getY(), new_width, new_height);
+            float percent = camera->portionDone() * 100;
+            std::string perc = std::format("%: {:.4f}", percent);
+            ofPushStyle();
+            ofSetColor(0, 255, 0);
+            ofDisableDepthTest();
+
+            ofPushStyle();
+            ofRectangle rectangle(viewPort.getX() + viewPort.getWidth() - static_cast<float>(perc.size() - 1) * 12.0f, viewPort.getY() + new_height - 30.0f,
+                                  static_cast<float>(perc.size() - 1) * 12.0f, 30.0f);
+            ofFill();
+            ofSetColor(ofColor(0, 0, 0));
+            ofDrawRectangle(rectangle);
+            ofPopStyle();
+
+            font.drawString(perc, static_cast<float>(viewPort.getX() + viewPort.getWidth() - static_cast<float>(perc.size() - 1) * 12.0f), viewPort.getY() + new_height - 12.0f);
+            ofEnableDepthTest();
+            
+           
+
+            ofPopStyle();
+
+            ofEnableDepthTest();
+            ofSetColor(0, 255, 0);
+        }
+        
         ofNoFill();
         ofDrawRectangle(camera->getViewPort());
     }
@@ -232,6 +265,12 @@ void Scene3D::DrawSelectedNodeWindow()
                     updateViewPorts();
                 }
 
+                bool& rayTrace = cameraMap.at(id).lock()->isRayTracing();
+                if (ImGui::Checkbox("Show Ray Trace", &rayTrace))
+                {
+                    updateViewPorts();
+                }
+
                 bool tempOrtho = camera->getOrtho();
                 if (ImGui::Checkbox("Orthogonal Projection", &tempOrtho))
                 {
@@ -254,6 +293,7 @@ void Scene3D::DrawSelectedNodeWindow()
             if (ImGui::CollapsingHeader("Add child", ImGuiTreeNodeFlags_DefaultOpen))
             {
                 ImGui::ColorEdit4("Color", sharedParams->color);
+                ImGui::Checkbox("Glass", &sharedParams->isGlass);
 
                 for (auto& createShapeUI: this->createShapeUIs)
                 {
@@ -264,7 +304,6 @@ void Scene3D::DrawSelectedNodeWindow()
         ImGui::End();
     }
 }
-
 
 void Scene3D::DrawModifyLightSliders(const std::shared_ptr<ofLight>& light)
 {
@@ -366,6 +405,15 @@ void Scene3D::DrawModifyCameraNodeSliders(const std::shared_ptr<Node>& node, sha
     if (ImGui::IsItemActivated())
     {
         this->initialFov = current_fov;
+    }
+    if (camera->isRayTracing()) {
+        ImGui::SliderInt("Samples", &camera->getSamples(), 1, 200);
+        ImGui::SliderInt("Depth", &camera->getDepth(), 1, 50);
+        ImGui::SliderInt("Resolution", &camera->getWidth(), 10, 4000);
+        ImGui::SliderFloat("Portion of Screen", &camera->getScreenCrop(), 0.05, 1);
+        if (ImGui::Button("Reset Render")) {
+            camera->reset();
+        }
     }
     if (ImGui::IsItemDeactivatedAfterEdit()) { this->history.executeCommand(std::make_shared<SetCameraFovCommand>(camera, this->fov, this->initialFov)); }
 }
@@ -1053,16 +1101,25 @@ void Scene3D::update()
 {
     time_current = ofGetElapsedTimef();
     time_elapsed = time_current - time_last;
-    time_left = std::fmax(0, 1.0f / 20.0f - time_elapsed);
+    time_left = std::fmax(0, 1.0f / 60 - time_elapsed);
     time_elapsed_timer = time_current - time_last_timer;
     time_last = time_current;
 
     if (time_elapsed_timer > 5)
     {
+        ofLog() << "Target Fps" << ofGetTargetFrameRate() << endl;
+
         //ofLog() << "Exporting ray trace";
         time_last_timer = time_current;
         //exportRayTrace(time_left);
         ofLog() << "Time elapsed " << time_elapsed << " Time Left : " << time_left << endl;
+
+        for (auto& camera : cameras) {
+            cameraRayCount = 0;
+            if (camera->isRayTracing()) {
+                cameraRayCount++;
+            }
+        }
      
     }
 
@@ -1293,24 +1350,29 @@ void Scene3D::updateViewPorts()
 
 void Scene3D::exportRayTrace(float time_left)
 {
-    //rayImage = camera->renderPixels(sceneGraph);
-    //return;
-    float now = ofGetElapsedTimef();
-    float time_last = now;
-    float time_elapsed = now - time_last;
-    camera->renderPixel(sceneGraph);
-    while (time_left > 0 && !camera->doneRendering()) {
+    if (cameraRayCount == 0) {
+        return;
+    }
+    
+    for (auto& camera : cameras) {
+        if (!camera->isRayTracing()) {
+            continue;
+        }
+        float divided_time = time_left / (float) cameraRayCount;
+        float now = ofGetElapsedTimef();
+        float time_last = now;
+        float time_elapsed = now - divided_time;
         camera->renderPixel(sceneGraph);
-        now = ofGetElapsedTimef();
-        time_elapsed = now - time_last;
-        time_last = now;
-        time_left -= time_elapsed;
+        while (divided_time > 0 && !camera->doneRendering())
+        {
+            camera->renderPixel(sceneGraph);
+            now = ofGetElapsedTimef();
+            time_elapsed = now - time_last;
+            time_last = now;
+            divided_time -= time_elapsed;
+        }
     }
 
-    if (camera->doneRendering()) {
-        ofLog() << "Updating Image " << endl;
-        rayImage = camera->getRayImage();
-    }
 }
 
 

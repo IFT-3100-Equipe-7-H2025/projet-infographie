@@ -35,18 +35,17 @@ public:
                     mesh.addColor(color);
                 }
                 ofLog() << "Creating sphere" << endl;
-                int randint = rand() % 3 + 1;
-                
+                bool isGlass = sharedParams->isGlass;
                 shared_ptr<Material> mat = std::make_shared<Dielectric>(1.50);
-                if (randint == 1)
+                if (!isGlass)
                 {
                     mat = std::make_shared<Metal>(color, 0.1);
                     ofLog() << "Metal" << endl;
                 }
-                else if (randint == 2) {
-                    mat = std::make_shared<Lambert>(color);
-                    ofLog() << "Lambert" << endl;
-                }
+                //else if (randint == 2) {
+                //    mat = std::make_shared<Lambert>(color);
+                //    ofLog() << "Lambert" << endl;
+                //}
                 else {
                     ofLog() << "Glass" << endl;
                 }

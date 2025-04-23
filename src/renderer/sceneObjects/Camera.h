@@ -18,36 +18,46 @@ class Camera : public ofCamera
 public:
     double aspect_ratio = 1.0;
     int image_width = 400;
-    int samples_per_pixel = 10;
-    int max_depth = 10;
+    int new_width = 400;
+    int samples_per_pixel = 2;
+    int new_samples = 2;
+    int max_depth = 4;
+    int new_depth = 4;
+    float screenCrop = 0.2;
     ofImage rayImage;
+    ofImage prevImage;
+
     ofPixels* pixels = nullptr;
     bool rayTrace = true;
 
 
 
     Camera(): activated(false), drawFrustrum(false), rendering(false) {
+        prevImage.allocate(image_width, image_height, OF_IMAGE_COLOR);
         initialize();
     }
 
-    bool isRayTracing() {
-        return rayTrace;
+    float portionDone() {
+        
+        return ((float) (image_width * (last_j + 1) + (last_i + 1))) / (float) (image_width * image_height);
     }
 
     bool doneRendering() {
         return !rendering;
     }
 
-    ofImage getRayImage()
-    {
-        return rayImage;
+    void reset() {
+        initialize();
     }
+
+    ofImage& getRayImage()
+    {
+        return prevImage;
+    }
+
 
     ofImage render(const SceneGraph& sceneGraph) {
         initialize();
-
-        ofImage rayImage2;
-
         
         ofPixels& pixels = rayImage.getPixels();
         for (int j = 0; j < image_height; j++)
@@ -97,10 +107,6 @@ public:
     {
         initialize();
 
-        //ofImage rayImage2;
-
-
-        //ofPixels& pixels = rayImage.getPixels();
         for (int j = 0; j < image_height; j++)
         {
             std::clog << "\r Scanlines remaining: " << (image_height - j) << ' ' << std::flush;
@@ -120,14 +126,21 @@ public:
             rendering = true;
             initialize();
             snapshot = sceneGraph;
+            //snapshot = sceneGraph.clone();
         }
 
         writePixel(last_i, last_j, snapshot);
+        //ofLog() << "width  : " << image_width << " height : " << image_height << "i  : " << last_i << " j : " << last_j;
         last_i++;
         if (last_i == image_width && last_j == image_height - 1)
         {
             rendering = false;
             rayImage.update();
+            //ofLog() << "Allocating from rayImage" << endl;
+            prevImage.allocate(rayImage.getWidth(), rayImage.getHeight(), OF_IMAGE_COLOR);
+            prevImage.setFromPixels(rayImage);
+
+            //ofLog() << "After allocating from rayImage" << endl;
             last_i = 0;
             last_j = 0;
         }
@@ -217,8 +230,34 @@ public:
         return drawFrustrum;
     }
 
+    bool& isRayTracing()
+    {
+        return rayTrace;
+    }
+
+    
+    int& getWidth()
+    {
+        return new_width;
+    }
+
+    int& getDepth()
+    {
+        return new_depth;
+    }
+
+    int& getSamples()
+    {
+        return new_samples;
+    }
+
+    float& getScreenCrop()
+    {
+        return screenCrop;
+    }
+
 private:
-    int image_height;
+    int image_height = 100;
     double pixel_samples_scale;
     ofVec3f center;
     ofVec3f pixel00_location;
@@ -234,22 +273,23 @@ private:
     int last_i = 0;
 
     void initialize() {
-        //aspect_ratio = 1;
-        //aspect_ratio = 16.0 / 9.0;
+        last_i = 0;
+        last_j = 0;
+
+        image_width = new_width;
+        samples_per_pixel = new_samples;
+        max_depth = new_depth;
 
         image_height = int(image_width / aspect_ratio);
         image_height = (image_height < 1) ? 1 : image_height;
-        ofLog() << "Allocating" << endl;
+        //ofLog() << "Allocating" << endl;
         rayImage.allocate(image_width, image_height, OF_IMAGE_COLOR);
-        ofLog() << "After Allocating" << endl;
+        //ofLog() << "After Allocating" << endl;
         pixels = &rayImage.getPixels();
-
-
 
         pixel_samples_scale = 1.0 / samples_per_pixel;
 
         center = getGlobalPosition();
-
 
         ofVec3f forward = -getZAxis();
         forward = forward.getNormalized();
@@ -277,8 +317,6 @@ private:
         pixel_delta_v = viewport_v / image_height;
 
         pixel00_location = viewport_upper_left + 0.5f * (pixel_delta_u + pixel_delta_v);
-
-
     }
 
 
@@ -299,7 +337,6 @@ private:
 
     ofColor rayColor(const Ray& r, int depth, const SceneGraph& sceneGraph) const
     {
-
         if (depth <= 0) {
             return ofColor(0, 0, 0);
         }
@@ -351,10 +388,6 @@ private:
                 }
             }
         }
-  /*      if (hit_anything)
-        {
-            hitAnyPixel = true;
-        }*/
         return hit_anything;
     }
 
