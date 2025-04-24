@@ -9,6 +9,8 @@
 class Primitive3D : public SceneObject
 {
 public:
+    Primitive3D() {}
+
     Primitive3D(of3dPrimitive primitive)
     {
         model = primitive;
@@ -16,6 +18,9 @@ public:
 
     void customDraw() override
     {
+        if (model.getMesh().getNumVertices() == 0) {
+            return;
+        }
         if (wireFrame)
         {
             model.drawWireframe();

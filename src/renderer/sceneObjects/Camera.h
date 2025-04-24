@@ -122,7 +122,7 @@ public:
 
     void renderPixel(const SceneGraph& sceneGraph) {
         if (!rendering) {
-            ofLog() << "Initializing" << endl;
+            //ofLog() << "Initializing" << endl;
             rendering = true;
             initialize();
             snapshot = sceneGraph;

@@ -13,6 +13,8 @@ public:
     ofVec3f normal;
     shared_ptr<Material> mat;
     float t;
+    double u;
+    double v;
     bool front_face;
 
     void set_face_normal(const Ray& r, const ofVec3f& outward_normal)
@@ -43,6 +45,7 @@ public:
     
     virtual bool hit(const Ray& r, Interval ray_t, hit_record& rec)
     {
+        ofLog() << "Default no hit" << endl;
         return false;
     }
 

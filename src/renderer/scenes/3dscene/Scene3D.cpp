@@ -22,6 +22,7 @@
 #include <cmath>
 #include <numbers>
 #include "renderer/rayTracer/ray.h"
+#include "Quad.h"
 
 #include <ranges>
 
@@ -110,11 +111,17 @@ void Scene3D::setup()
     bubble->setGlobalPosition(Vec3(-30, 0.0, -1.0));
     right->setGlobalPosition(Vec3(30, 0.0, -1.0));
 
-    sceneGraph.AddNode(make_shared<Node>("Ground", ground));
+    /*sceneGraph.AddNode(make_shared<Node>("Ground", ground));
     sceneGraph.AddNode(make_shared<Node>("Center", center));
     sceneGraph.AddNode(make_shared<Node>("Left", left));
     sceneGraph.AddNode(make_shared<Node>("Bubble", bubble));
-    sceneGraph.AddNode(make_shared<Node>("Right", right));
+    sceneGraph.AddNode(make_shared<Node>("Right", right));*/
+
+    sceneGraph.AddNode(make_shared<Node>("Ground", make_shared<Quad>(Vec3(10.0f, 10.0f, 10.0f), Vec3(40.0f, 0.0f, 0.0f), Vec3(0.0f, -40.00f, 0.0f), material_ground)));
+    sceneGraph.AddNode(make_shared<Node>("Center", make_shared<Quad>(Vec3(-20, -20, 0), Vec3(40, 0, 0), Vec3(0, 40, 0), material_center)));
+    sceneGraph.AddNode(make_shared<Node>("Left", make_shared<Quad>(Vec3(30, -20, 10), Vec3(0, 0, 40), Vec3(0, 40, 0), material_left)));
+    sceneGraph.AddNode(make_shared<Node>("Bubble", make_shared<Quad>(Vec3(-20, 30, 10), Vec3(40, 0, 0), Vec3(0, 0, 40), material_bubble)));
+    sceneGraph.AddNode(make_shared<Node>("Right", make_shared<Quad>(Vec3(-20, -30, 50), Vec3(40, 0, 0), Vec3(0, 0, -40), material_right)));
 
 
     font.load("fonts/JetBrainsMono-Regular.ttf", 12, true, true);
