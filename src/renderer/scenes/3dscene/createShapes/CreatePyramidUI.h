@@ -5,6 +5,8 @@
 #include "imgui.h"
 #include "ofAppRunner.h"
 #include "renderer/PrimitiveCreator.h"
+#include "Pyramid.h"
+#include "RayMesh.h"
 
 constexpr int DEFAULT_PYRAMID_SIDES = 4;
 constexpr float DEFAULT_PYRAMID_WIDTH = 100.0f;
@@ -40,8 +42,18 @@ public:
                     mesh.addColor(color);
                 }
 
+                ofLog() << "Creating sphere" << endl;
+                bool isGlass = sharedParams->isGlass;
+                shared_ptr<Material> mat = std::make_shared<Dielectric>(1.50);
+                if (!isGlass)
+                {
+                    mat = std::make_shared<Metal>(color, 0.1);
+                    ofLog() << "Metal" << endl;
+                }
+
                 auto pyramid_3d = Primitive3D(pyramid);
-                auto pyramid_ptr = std::make_shared<Node>("Pyramid", std::make_shared<Primitive3D>(pyramid_3d));
+                //auto pyramid_ptr = std::make_shared<Node>("Pyramid", std::make_shared<Pyramid>(sides, Vec3(width, height, depth), mat, pyramid));
+                auto pyramid_ptr = std::make_shared<Node>("Pyramid", std::make_shared<RayMesh>(mat, pyramid));
 
                 history.executeCommand(std::make_shared<AddChildToNodeCommand>(*sharedParams->selectedNode, pyramid_ptr));
             }

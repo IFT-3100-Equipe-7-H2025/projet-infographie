@@ -1,4 +1,7 @@
 
+#ifndef QUAD_H
+#define QUAD_H
+
 #include "Primitive3D.h"
 #include "Vec3.h"
 #include <cmath>
@@ -7,50 +10,52 @@
 class Quad : public Primitive3D
 {
 public:
-    Quad(const Vec3& Q, const Vec3& u, const Vec3& v, shared_ptr<Material> material) : mat(material), u(u), v(v) {
+    Quad(shared_ptr<ofVec3f> reference, shared_ptr<ofVec3f> scale, shared_ptr<ofQuaternion> orientation, const Vec3& Q, const Vec3& u, const Vec3& v, shared_ptr<Material> material) : 
+        ve(v), ue(u), scale(scale), orient(orientation), mat(material), u(u), v(v), reference(reference), Q(Q), corner(Q)
+    {
+        update();
+    }
+
+    void update()
+    {
+        Q = *orient * *scale * corner + *reference;
+        u = *orient * ue * *scale;
+        v = *orient * ve * *scale;
         auto n = u.getCrossed(v);
         normal = unit_vector(n);
         D = normal.dot(Q);
         w = n / n.dot(n);
     }
+
+
     bool hit(const Ray& r, Interval ray_t, hit_record& rec) override
     {
-        //ofLog() << "Testing quad hit" << endl;
+        update();
         auto denom = normal.dot(r.getDirection());
 
-        // No hit if parallel
         if (std::fabs(denom) < 1e-8) {
-            //ofLog() << "Parallel";
             return false;
         }
 
         // Hit outside interval
         auto t = (D - normal.dot(r.getOrigin())) / denom;
         if (!ray_t.contains(t)) {
-            //ofLog() << "Hit outside interval" << endl;
             return false;
         }
 
         auto intersection = r.at(t);
         Vec3 planar_hitpt_vec = intersection - Q;
-        //ofLog() << "planar_hitpt_vec : " << planar_hitpt_vec << "intersection : " << intersection << "Q : " << Q;
 
-        //ofLog() << "u : " << u << "v : " << v;
         Vec3 aCross = planar_hitpt_vec.getCrossed(v);
         Vec3 bCross = u.getCrossed(planar_hitpt_vec);
-        //ofLog() << "aCross : " << aCross << "bCross : " << bCross;
 
         auto alpha = w.dot(planar_hitpt_vec.getCrossed(v));
         auto beta = w.dot(u.getCrossed(planar_hitpt_vec));
 
         if (!is_interior(alpha, beta, rec)) {
-            //ofLog() << "Not interior" << endl;
             return false;
         }
-            
-
-        //ofLog() << "Hit " << endl;
-
+           
         rec.t = t;
         rec.p = intersection;
         rec.mat = mat;
@@ -61,9 +66,6 @@ public:
     virtual bool is_interior(double a, double b, hit_record& rec) const {
         Interval unit_interval = Interval(0, 1);
 
-        //ofLog() << "Alpha : " << a << "Beta : " << b;
-
-        
         if (!unit_interval.contains(a) || !unit_interval.contains(b))
             return false;
         
@@ -74,11 +76,17 @@ public:
     }
 
 private:
-    Vec3 Q;
+    ofVec3f Q;
+    ofVec3f corner;
     Vec3 u, v, w;
+    Vec3 ue, ve;
     shared_ptr<Material> mat;
     Vec3 normal;
     double D;
+    shared_ptr<ofVec3f> reference;
+    shared_ptr<ofVec3f> scale;
+    shared_ptr<ofQuaternion> orient;
 
 };
 
+#endif

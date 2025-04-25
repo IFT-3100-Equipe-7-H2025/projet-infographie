@@ -23,7 +23,7 @@
 #include <numbers>
 #include "renderer/rayTracer/ray.h"
 #include "Quad.h"
-
+#include "Cube.h"
 #include <ranges>
 
 Scene3D::Scene3D() : history(CommandHistory()),
@@ -99,29 +99,33 @@ void Scene3D::setup()
     auto primLeft = PrimitiveCreator::createSphere(30, 30, 20);
     auto primBubble = PrimitiveCreator::createSphere(30, 30, 18);
     auto primRight = PrimitiveCreator::createSphere(30, 30, 20);
+    auto primCube = PrimitiveCreator::createCube(50, 50, 50);
 
     shared_ptr<Sphere> ground = make_shared<Sphere>(primGround, 100.0, material_ground);
     shared_ptr<Sphere> center = make_shared<Sphere>(primCenter, 20, material_center);
     shared_ptr<Sphere> left = make_shared<Sphere>(primLeft, 20, material_left);
     shared_ptr<Sphere> bubble = make_shared<Sphere>(primBubble, 18, material_bubble);
     shared_ptr<Sphere> right = make_shared<Sphere>(primRight, 20, material_right);
-    ground->setGlobalPosition(Vec3(0.0, -100.5, -1.0));
+    ground->setGlobalPosition(Vec3(0.0, 0.0, 0.0));
     center->setGlobalPosition(Vec3(0.0, 0.0, -1.2));
     left->setGlobalPosition(Vec3(-30, 0.0, -1.0));
     bubble->setGlobalPosition(Vec3(-30, 0.0, -1.0));
     right->setGlobalPosition(Vec3(30, 0.0, -1.0));
 
-    /*sceneGraph.AddNode(make_shared<Node>("Ground", ground));
-    sceneGraph.AddNode(make_shared<Node>("Center", center));
-    sceneGraph.AddNode(make_shared<Node>("Left", left));
-    sceneGraph.AddNode(make_shared<Node>("Bubble", bubble));
-    sceneGraph.AddNode(make_shared<Node>("Right", right));*/
+    sceneGraph.AddNode(make_shared<Node>("Ground", ground));
+    //sceneGraph.AddNode(make_shared<Node>("Center", center));
+    //sceneGraph.AddNode(make_shared<Node>("Left", left));
+    //sceneGraph.AddNode(make_shared<Node>("Bubble", bubble));
+    //sceneGraph.AddNode(make_shared<Node>("Right", right));
 
-    sceneGraph.AddNode(make_shared<Node>("Ground", make_shared<Quad>(Vec3(10.0f, 10.0f, 10.0f), Vec3(40.0f, 0.0f, 0.0f), Vec3(0.0f, -40.00f, 0.0f), material_ground)));
-    sceneGraph.AddNode(make_shared<Node>("Center", make_shared<Quad>(Vec3(-20, -20, 0), Vec3(40, 0, 0), Vec3(0, 40, 0), material_center)));
-    sceneGraph.AddNode(make_shared<Node>("Left", make_shared<Quad>(Vec3(30, -20, 10), Vec3(0, 0, 40), Vec3(0, 40, 0), material_left)));
-    sceneGraph.AddNode(make_shared<Node>("Bubble", make_shared<Quad>(Vec3(-20, 30, 10), Vec3(40, 0, 0), Vec3(0, 0, 40), material_bubble)));
-    sceneGraph.AddNode(make_shared<Node>("Right", make_shared<Quad>(Vec3(-20, -30, 50), Vec3(40, 0, 0), Vec3(0, 0, -40), material_right)));
+    shared_ptr<ofVec3f> reference = make_shared<ofVec3f>(0, 0, 0);
+
+    //sceneGraph.AddNode(make_shared<Node>("Ground", make_shared<Quad>(reference, Vec3(0.0f, 0.0f, 0.0f), Vec3(400.0f, 0.0f, 0.0f), Vec3(0.0f, -400.00f, 0.0f), material_ground)));
+    //sceneGraph.AddNode(make_shared<Node>("Center", make_shared<Quad>(Vec3(-20, -20, 0), Vec3(40, 0, 0), Vec3(0, 40, 0), material_center)));
+    //sceneGraph.AddNode(make_shared<Node>("Left", make_shared<Quad>(Vec3(30, -20, 10), Vec3(0, 0, 40), Vec3(0, 40, 0), material_left)));
+    //sceneGraph.AddNode(make_shared<Node>("Bubble", make_shared<Quad>(Vec3(-20, 30, 10), Vec3(40, 0, 0), Vec3(0, 0, 40), material_bubble)));
+    //sceneGraph.AddNode(make_shared<Node>("Right", make_shared<Quad>(Vec3(-20, -30, 50), Vec3(40, 0, 0), Vec3(0, 0, -40), material_right)));
+    sceneGraph.AddNode(make_shared<Node>("Cube", make_shared<Cube>(Vec3(50,50,50), material_ground, primCube)));
 
 
     font.load("fonts/JetBrainsMono-Regular.ttf", 12, true, true);
@@ -133,6 +137,9 @@ void Scene3D::setup()
 
 void Scene3D::draw()
 {
+    time_start_draw = ofGetElapsedTimef();
+
+
     ofClear(clearColor);
     ofSetColor(0, 255, 0);
     this->DrawSceneGraphWindow();
@@ -144,8 +151,6 @@ void Scene3D::draw()
         camera->begin(camera->getViewPort());
         for (auto& camera: cameras)
         {
-            
-
             if (camera->frustrumVisible())
             {
                 camera->drawFrustum();
@@ -195,6 +200,8 @@ void Scene3D::draw()
     ofSetColor(255, 255, 255);
 
     this->ExecuteQueuedCommands();
+    time_current_draw = ofGetElapsedTimef();
+    time_elapsed_draw = time_current_draw - time_start_draw;
 }
 
 void Scene3D::drawScene()
@@ -1108,18 +1115,21 @@ void Scene3D::update()
 {
     time_current = ofGetElapsedTimef();
     time_elapsed = time_current - time_last;
-    time_left = std::fmax(0, 1.0f / 60 - time_elapsed);
+    //time_left = std::fmax(0, std::max(1.0f / ofGetFrameRate() - time_elapsed, 1.0f / ofGetTargetFrameRate() - time_elapsed));
+    time_left = 1.0f / 60.0f;
     time_elapsed_timer = time_current - time_last_timer;
     time_last = time_current;
 
     if (time_elapsed_timer > 5)
     {
         ofLog() << "Target Fps" << ofGetTargetFrameRate() << endl;
+        ofLog() << "Real Fps" << ofGetFrameRate() << endl;
 
         //ofLog() << "Exporting ray trace";
         time_last_timer = time_current;
         //exportRayTrace(time_left);
-        ofLog() << "Time elapsed " << time_elapsed << " Time Left : " << time_left << endl;
+        ofLog() << "Time elapsed" << time_elapsed << " Time Left : " << time_left << endl;
+        ofLog() << "Time elapsed draw" << time_elapsed_draw << " Time Left : " << time_left << endl;
 
         for (auto& camera : cameras) {
             cameraRayCount = 0;
@@ -1131,6 +1141,9 @@ void Scene3D::update()
     }
 
     exportRayTrace(time_left);
+
+    time_current = ofGetElapsedTimef();
+    time_last = time_current;
 
     speed_translation = translate_speed * time_elapsed;
     speed_rotation = rotate_speed * time_elapsed;

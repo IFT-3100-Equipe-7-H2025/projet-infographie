@@ -7,6 +7,8 @@
 #include "Primitive3D.h"
 #include "../Sphere.h"
 #include "renderer/PrimitiveCreator.h"
+#include "RayMesh.h"
+
 
 constexpr float DEFAULT_SPHERE_RADIUS = 100.0f;
 
@@ -49,8 +51,9 @@ public:
                 else {
                     ofLog() << "Glass" << endl;
                 }
-                auto sphere_scene = Sphere(sphere, radius, mat);
-                auto sphere_ptr = std::make_shared<Node>("Sphere", std::make_shared<Sphere>(sphere_scene));
+                auto sphere_scene = RayMesh(mat, sphere);
+                //auto sphere_scene = Sphere(sphere, radius, mat);
+                auto sphere_ptr = std::make_shared<Node>("Sphere", std::make_shared<RayMesh>(sphere_scene));
                 history.executeCommand(std::make_shared<AddChildToNodeCommand>(*sharedParams->selectedNode, sphere_ptr));
             }
 

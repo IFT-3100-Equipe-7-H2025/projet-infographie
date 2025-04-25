@@ -111,6 +111,10 @@ private:
 
     float time_current;
     float time_elapsed;
+    float time_elapsed_draw;
+    float time_current_draw;
+    float time_last_draw;
+    float time_start_draw;
     float time_last;
     float time_left;
     float time_last_timer = 0.0f;

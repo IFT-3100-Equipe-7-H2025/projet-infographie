@@ -5,6 +5,7 @@
 #include "imgui.h"
 #include "of3dPrimitives.h"
 #include "renderer/PrimitiveCreator.h"
+#include "Cube.h"
 
 constexpr float DEFAULT_CUBE_WIDTH = 100.0f;
 constexpr float DEFAULT_CUBE_HEIGHT = 100.0f;
@@ -39,8 +40,18 @@ public:
                     mesh.addColor(color);
                 }
 
+                ofLog() << "Creating sphere" << endl;
+                bool isGlass = sharedParams->isGlass;
+                shared_ptr<Material> mat = std::make_shared<Dielectric>(1.50);
+                if (!isGlass)
+                {
+                    mat = std::make_shared<Metal>(color, 0.1);
+                    ofLog() << "Metal" << endl;
+                }
+
+
                 auto cube_3d = Primitive3D(cube);
-                auto cube_ptr = std::make_shared<Node>("Cube", std::make_shared<Primitive3D>(cube_3d));
+                auto cube_ptr = std::make_shared<Node>("Cube", std::make_shared<Cube>(Vec3(width, height, depth), mat, cube));
 
                 history.executeCommand(std::make_shared<AddChildToNodeCommand>(*sharedParams->selectedNode, cube_ptr));
             }

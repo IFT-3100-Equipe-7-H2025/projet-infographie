@@ -2,8 +2,6 @@
 #include <cmath>
 #include <numbers>
 
-#include <cmath>
-#include <numbers>
 
 
 of3dPrimitive PrimitiveCreator::createTriangle()

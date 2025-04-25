@@ -5,6 +5,8 @@
 #include "imgui.h"
 #include "of3dPrimitives.h"
 #include "renderer/PrimitiveCreator.h"
+//#include "Metal.h"
+#include "RayMesh.h"
 
 constexpr float DEFAULT_LASAGNA_L_W_RATIO = 0.5;
 constexpr int DEFAULT_LASAGNA_PERIODS = 4;
@@ -44,9 +46,26 @@ public:
                 {
                     mesh.addColor(color);
                 }
+                ofLog() << "Creating sphere" << endl;
+                bool isGlass = sharedParams->isGlass;
+                shared_ptr<Material> mat = std::make_shared<Dielectric>(1.50);
+                if (!isGlass)
+                {
+                    mat = std::make_shared<Metal>(color, 0.1);
+                    ofLog() << "Metal" << endl;
+                }
+                //else if (randint == 2) {
+                //    mat = std::make_shared<Lambert>(color);
+                //    ofLog() << "Lambert" << endl;
+                //}
+                else
+                {
+                    ofLog() << "Glass" << endl;
+                }
+
 
                 auto lasagna_3d = Primitive3D(lasagna);
-                auto lasagna_ptr = std::make_shared<Node>("Lasagna", std::make_shared<Primitive3D>(lasagna_3d));
+                auto lasagna_ptr = std::make_shared<Node>("Lasagna", std::make_shared<RayMesh>(mat, lasagna));
                 history.executeCommand(std::make_shared<AddChildToNodeCommand>(*sharedParams->selectedNode, lasagna_ptr));
             }
 

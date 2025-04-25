@@ -48,6 +48,8 @@ public:
     }
 
 private:
-    of3dPrimitive model;
     bool wireFrame = false;
+
+protected:
+    of3dPrimitive model;
 };
