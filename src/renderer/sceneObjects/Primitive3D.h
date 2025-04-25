@@ -47,6 +47,14 @@ public:
         return &this->wireFrame;
     }
 
+    ofMesh getMesh() {
+        return model.getMesh();
+    }
+
+    of3dPrimitive getModel() {
+        return model;
+    }
+
 private:
     bool wireFrame = false;
 

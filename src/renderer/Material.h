@@ -1,8 +1,31 @@
 ﻿#pragma once
-
+#ifndef MATERIAL_H
+#define MATERIAL_H
 #include "SceneObject.h"
 #include "Vec3.h"
 
+
+enum matType
+{
+    MetalT,
+    GlassT,
+    LambertT
+};
+
+const char* materialLabels[] = {
+        "Metal",
+        "Glass",
+        "Lambert"};
+
+//inline Material getMaterial(matType type, ofColor albedo, double fuzz, double refracion_index)
+//{
+//    switch (type)
+//    {
+//        case Metal:
+//            return
+//    }
+//}
+//
 
 class Material
 {
@@ -10,14 +33,25 @@ public:
     virtual ~Material() = default;
 
     virtual bool scatter(const Ray& ray_in, const hit_record& rec, ofColor& attenuation, Ray& scattered) const {
+        ofLog() << "Scattering wrong" << endl;
         return false;
     }
+    ofColor getColor()
+    {
+        return color;
+    }
+
+protected:
+    ofColor color;
 };
 
 class Lambert : public Material
 {
     public:
-    Lambert(const ofColor& albedo) : albedo(albedo) {}
+    Lambert(const ofColor& albedo) : albedo(albedo)
+    {
+        color = albedo;
+    }
 
     bool scatter(const Ray& r_in, const hit_record& rec, ofColor& attenuation, Ray& scattered) const override
     {
@@ -31,6 +65,9 @@ class Lambert : public Material
         attenuation = albedo;
         return true;
     }
+
+
+
 private:
     ofColor albedo;
 };
@@ -39,11 +76,13 @@ private:
 class Metal : public Material
 {
 public:
-    Metal(const ofColor& albedo, double fuzz) : albedo(albedo) , fuzz(fuzz){}
+    Metal(const ofColor& albedo_p, double fuzz) : albedo(albedo_p), fuzz(fuzz)
+    {
+        color = albedo;
+    }
 
 
-    bool scatter(const Ray& r_in, const hit_record& rec, ofColor& attenuation, Ray& scattered)
-            const override
+    bool scatter(const Ray& r_in, const hit_record& rec, ofColor& attenuation, Ray& scattered) const override
     {
         Vec3 reflected = reflect(r_in.getDirection(), rec.normal);
         reflected = unit_vector(reflected) + (fuzz * random_unit_vector());
@@ -51,6 +90,8 @@ public:
         attenuation = albedo;
         return (scattered.getDirection().dot(rec.normal) > 0);
     }
+
+
 
 private:
     ofColor albedo;
@@ -100,3 +141,5 @@ private:
         return r0 + (1 - r0) * std::pow((1 - cosine), 5);
     }
 };
+
+#endif

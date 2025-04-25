@@ -38,6 +38,16 @@ public:
         return x;
     }
 
+    Interval expand(double delta) const {
+        auto padding = delta / 2;
+        return Interval(min - padding, max + padding);
+    }
+
+    Interval(const Interval& a, const Interval& b) {
+        min = a.min <= b.min ? a.min : b.min;
+        max = a.max >= b.max ? a.max : b.max;
+    }
+
     static const Interval empty, universe;
 };
 //const double infinity = 10000000000000000;

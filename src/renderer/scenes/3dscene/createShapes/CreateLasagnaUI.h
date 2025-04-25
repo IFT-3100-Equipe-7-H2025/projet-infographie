@@ -46,22 +46,7 @@ public:
                 {
                     mesh.addColor(color);
                 }
-                ofLog() << "Creating sphere" << endl;
-                bool isGlass = sharedParams->isGlass;
-                shared_ptr<Material> mat = std::make_shared<Dielectric>(1.50);
-                if (!isGlass)
-                {
-                    mat = std::make_shared<Metal>(color, 0.1);
-                    ofLog() << "Metal" << endl;
-                }
-                //else if (randint == 2) {
-                //    mat = std::make_shared<Lambert>(color);
-                //    ofLog() << "Lambert" << endl;
-                //}
-                else
-                {
-                    ofLog() << "Glass" << endl;
-                }
+                shared_ptr<Material> mat = sharedParams->material;
 
 
                 auto lasagna_3d = Primitive3D(lasagna);

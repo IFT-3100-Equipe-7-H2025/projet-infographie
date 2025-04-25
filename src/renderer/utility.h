@@ -31,3 +31,7 @@ inline double linear_to_gamma(double linear_component) {
 
     return 0;
 }
+
+inline int random_int(int min, int max) {
+    return int(random_double(min, max + 1));
+}

@@ -3,6 +3,7 @@
 #include "ofMain.h"
 #include "renderer/rayTracer/ray.h"
 #include "renderer/Interval.h"
+#include "AABB.h"
 
 class Material;
 
@@ -107,7 +108,12 @@ public:
         return new_mesh;
     }
 
+    virtual AABB bounding_box() const {
+        return bbox;
+    };
+
 protected:
     shared_ptr<Material> mat;
+    AABB bbox;
 
 };

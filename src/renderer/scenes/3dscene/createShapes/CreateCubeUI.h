@@ -40,14 +40,7 @@ public:
                     mesh.addColor(color);
                 }
 
-                ofLog() << "Creating sphere" << endl;
-                bool isGlass = sharedParams->isGlass;
-                shared_ptr<Material> mat = std::make_shared<Dielectric>(1.50);
-                if (!isGlass)
-                {
-                    mat = std::make_shared<Metal>(color, 0.1);
-                    ofLog() << "Metal" << endl;
-                }
+                shared_ptr<Material> mat = sharedParams->material;
 
 
                 auto cube_3d = Primitive3D(cube);

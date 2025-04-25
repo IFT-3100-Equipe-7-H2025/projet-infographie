@@ -1,5 +1,5 @@
-#ifndef QUADSHAPE_H
-#define QUADSHAPE_H
+#ifndef COMPOSEDSHAPE_H
+#define COMPOSEDSHAPE_H
 
 
 
@@ -13,11 +13,45 @@ class ComposedShape : public Primitive3D
 {
 public:
 
+    ComposedShape() {}
+
+    ComposedShape(shared_ptr<SceneObject> object, shared_ptr<Material> mat)
+    {
+        addShape(object); 
+        if (auto object3d = std::dynamic_pointer_cast<Primitive3D>(object); object3d)
+        {
+            model = object3d->getModel();
+            ofLog() << "IS Primitive3D";
+        }
+        else {
+            ofLog() << "Not Primitive3D";
+        }
+        initialize();
+        update();
+
+    }
+
     ComposedShape(const Vec3& size, shared_ptr<Material> mat, of3dPrimitive primitive) : mat(mat), size(size), Primitive3D(primitive) {
-        center = make_shared<ofVec3f>(0, 0, 0);
-        scale = make_shared<ofVec3f>(0, 0, 0);
-        orientation = make_shared<ofQuaternion>();
+        model = primitive;
+        initialize();
         setShapes();
+        update();
+
+    }
+
+    void initialize() {
+        center = make_shared<ofVec3f>(0, 0, 0);
+        scale = make_shared<ofVec3f>(1, 1, 1);
+        orientation = make_shared<ofQuaternion>();
+
+    }
+
+     void customDraw() override
+    {
+         Primitive3D::customDraw();
+         for (auto& object : objects) {
+             object->customDraw();
+         }
     }
 
     void update() {
@@ -26,9 +60,16 @@ public:
         *orientation = getOrientationQuat();
     }
 
+    void addShape(shared_ptr<SceneObject> object) {
+        objects.push_back(object);
+        //still need to update when movement happens
+        bbox = AABB(bbox, object->bounding_box());
+    }
+
 
     bool hit(const Ray& r, Interval ray_t, hit_record& rec) override
     {
+        //ofLog() << "Composed Shape hit";
         update();
         bool hit = false;
         float closest_so_far = ray_t.max;
@@ -44,18 +85,25 @@ public:
         return hit;
     }
 
-
+    //vector<shared_ptr<SceneObject>>& getObjects() {
+    //    return objects;
+    //};
 
     virtual void setShapes() {};
 
+    vector<shared_ptr<SceneObject>> objects;
+
+
 protected:
 
-    vector<shared_ptr<SceneObject>> objects;
     shared_ptr<ofVec3f> center;
     shared_ptr<ofVec3f> scale;
     shared_ptr<ofQuaternion> orientation;
     Vec3 size;
     shared_ptr<Material> mat;
+
+private:
+
 
 };
 

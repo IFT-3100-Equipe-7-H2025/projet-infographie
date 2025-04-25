@@ -23,7 +23,9 @@ public:
 
     std::pair<ofVec3f, ofVec3f> getBoundingVertices() override;
 
+    ofMesh getCombinedMesh();
+
+
 private:
     ofxAssimpModelLoader model;
-    ofMesh getCombinedMesh();
 };

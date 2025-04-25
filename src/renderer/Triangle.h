@@ -11,8 +11,9 @@ class Triangle : public Primitive3D
 {
 public:
     Triangle(shared_ptr<ofVec3f> reference, shared_ptr<ofVec3f> scale, shared_ptr<ofQuaternion> orientation, const Vec3& Q, const Vec3& u, const Vec3& v, shared_ptr<Material> material) : 
-        ve(v), ue(u), scale(scale), orient(orientation), mat(material), u(u), v(v), reference(reference), Q(Q), center(Q)
+        ve(v), ue(u), scale(scale), orient(orientation), mat(material), u(u), v(v), reference(reference), Q(Q), corner(Q)
     {
+        //ofLog() << "Corner = " << corner;
         update();
     }
 
@@ -21,20 +22,33 @@ public:
         Vec3 Q = A;
         Vec3 u = B - A;
         Vec3 v = C - A;
+        //ofLog() << "A " << A << "B " << B << "C " << C;
+        //ofLog() << "Q " << Q << "u " <<u << "v " << v;
 
         Triangle triangle(reference, scale, orientation, Q, u, v, material);
         return triangle;
     }
 
     void update() {
-        Q = *orient * *scale * center + *reference;
+
+        Q = *orient * *scale * corner + *reference;
         u = *orient * ue * *scale;
         v = *orient * ve * *scale;
         auto n = u.getCrossed(v);
         normal = unit_vector(n);
         D = normal.dot(Q);
         w = n / n.dot(n);
+
+        //ofLog() << "Q 2 " << Q << "u " << u << "v " << v;
+
+        
+        auto rvec = u + v;
+        //ofLog() << " Rvec " << rvec;
+        //ofLog() << "Making aabb triangle " << corner << "  " <<  corner + rvec;
+        bbox = AABB(Q, Q + rvec);
     }
+
+    AABB bounding_box() const override { return bbox; }
 
 
     bool hit(const Ray& r, Interval ray_t, hit_record& rec) override
@@ -90,7 +104,7 @@ public:
 
 private:
     ofVec3f Q;
-    ofVec3f center;
+    ofVec3f corner;
     Vec3 u, v, w;
     Vec3 ue, ve;
     shared_ptr<Material> mat;

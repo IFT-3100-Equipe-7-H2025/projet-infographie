@@ -26,7 +26,7 @@ public:
             for (int i = 0; i < 3; i++)
             {
                 shared_ptr<Quad> newQuad = make_shared<Quad>(center, scale, orientation, half_size, down, right, mat);
-                objects.push_back(newQuad);
+                addShape(newQuad);
                 temp = down;
                 down = right;
                 right = back;

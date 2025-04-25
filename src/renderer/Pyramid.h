@@ -32,7 +32,7 @@ public:
             Vec3 v0 = apex;
             Vec3 v1 = base_next;
             Vec3 v2 = base_i;
-            objects.push_back(make_shared<Triangle>(center, scale, orientation, v0, v1, v2, mat));
+            
         }
 
 
@@ -44,7 +44,8 @@ public:
             float theta_next = static_cast<float>(next) * delta_theta;
             Vec3 base_i(std::cos(theta_i) * size.x, 0, std::sin(theta_i) * size.z);
             Vec3 base_next(std::cos(theta_next) * size.x, 0, std::sin(theta_next) * size.z);
-            objects.push_back(make_shared<Triangle>(center, scale, orientation, baseCenter, base_i, base_next, mat));
+            shared_ptr<Triangle> triangle = make_shared<Triangle>(center, scale, orientation, baseCenter, base_i, base_next, mat);
+            addShape(triangle);
         }
 
 

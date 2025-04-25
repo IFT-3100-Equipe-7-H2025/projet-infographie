@@ -6,11 +6,23 @@ class Sphere : public Primitive3D
 public:
     Sphere(of3dPrimitive primitive, float radius, shared_ptr<Material> material) : Primitive3D(primitive), center(getGlobalPosition()), radius(std::fmax(0,radius)) {
         mat = material;
+        update();
+        
     }
+
+    void update() {
+        center = getGlobalPosition();
+        rcenter = Ray(center, Vec3(0, 0, 0));
+        new_radius = radius * getScale().x;
+        auto rvec = Vec3(new_radius, new_radius, new_radius);
+        bbox = AABB(center - rvec, center + rvec);
+    }
+
+    AABB bounding_box() const override {return bbox;}
+
     bool hit(const Ray& r, Interval ray_t, hit_record& rec) override
     {
-        center = getGlobalPosition();
-        float new_radius = radius * getScale().x;
+        update();
         auto oc = center - r.getOrigin();
         auto a = r.getDirection().lengthSquared();
         auto h = oc.dot(r.getDirection());
@@ -42,6 +54,8 @@ public:
 
 private:
     ofVec3f center;
+    Ray rcenter;
     float radius;
+    float new_radius;
 };
 

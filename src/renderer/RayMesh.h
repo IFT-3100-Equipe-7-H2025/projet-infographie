@@ -27,7 +27,8 @@ public:
             ofVec3f v1 = vertices[indices[i + 1]];
             ofVec3f v2 = vertices[indices[i + 2]];
             Triangle triangle = Triangle::triangleFromPoints(center, scale, orientation, v0, v1, v2, mat);
-            objects.push_back(shared_ptr<Triangle>(new Triangle(triangle)));
+            //ofLog() << "V1 " << v0 << " V2 " << v1 << " V3 " << v2;
+            addShape(make_shared<Triangle>(triangle));
         }
     }
 

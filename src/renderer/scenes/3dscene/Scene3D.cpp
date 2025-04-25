@@ -24,6 +24,7 @@
 #include "renderer/rayTracer/ray.h"
 #include "Quad.h"
 #include "Cube.h"
+#include "Material.h"
 #include <ranges>
 
 Scene3D::Scene3D() : history(CommandHistory()),
@@ -112,7 +113,7 @@ void Scene3D::setup()
     bubble->setGlobalPosition(Vec3(-30, 0.0, -1.0));
     right->setGlobalPosition(Vec3(30, 0.0, -1.0));
 
-    sceneGraph.AddNode(make_shared<Node>("Ground", ground));
+    //sceneGraph.AddNode(make_shared<Node>("Ground", ground));
     //sceneGraph.AddNode(make_shared<Node>("Center", center));
     //sceneGraph.AddNode(make_shared<Node>("Left", left));
     //sceneGraph.AddNode(make_shared<Node>("Bubble", bubble));
@@ -125,7 +126,7 @@ void Scene3D::setup()
     //sceneGraph.AddNode(make_shared<Node>("Left", make_shared<Quad>(Vec3(30, -20, 10), Vec3(0, 0, 40), Vec3(0, 40, 0), material_left)));
     //sceneGraph.AddNode(make_shared<Node>("Bubble", make_shared<Quad>(Vec3(-20, 30, 10), Vec3(40, 0, 0), Vec3(0, 0, 40), material_bubble)));
     //sceneGraph.AddNode(make_shared<Node>("Right", make_shared<Quad>(Vec3(-20, -30, 50), Vec3(40, 0, 0), Vec3(0, 0, -40), material_right)));
-    sceneGraph.AddNode(make_shared<Node>("Cube", make_shared<Cube>(Vec3(50,50,50), material_ground, primCube)));
+    //sceneGraph.AddNode(make_shared<Node>("Cube", make_shared<Cube>(Vec3(50,50,50), material_ground, primCube)));
 
 
     font.load("fonts/JetBrainsMono-Regular.ttf", 12, true, true);
@@ -307,7 +308,31 @@ void Scene3D::DrawSelectedNodeWindow()
             if (ImGui::CollapsingHeader("Add child", ImGuiTreeNodeFlags_DefaultOpen))
             {
                 ImGui::ColorEdit4("Color", sharedParams->color);
-                ImGui::Checkbox("Glass", &sharedParams->isGlass);
+                ofFloatColor color(sharedParams->color[0], sharedParams->color[1], sharedParams->color[2], sharedParams->color[3]);
+                int selected = static_cast<int>(sharedParams->mat);
+                //ofLog() << "Choosing material 2" << endl;
+                if (ImGui::Combo("Choose Material", &selected, materialLabels, 3))
+                {
+                    ofLog() << "Choosing material" << endl;
+                    sharedParams->mat = static_cast<matType>(selected);
+                    if (sharedParams->mat == matType::GlassT) {
+                        ofLog() << "Chose Glass" << endl;
+                        float index = 1.0f;
+                        ImGui::SliderFloat("Refract Index", &index, 0.1f, 10.0f);
+                        sharedParams->material = make_shared<Dielectric>(Dielectric(index));
+                    }
+                    else if (sharedParams->mat == matType::MetalT)
+                    {
+                        float fuzz = 1.0f;
+                        ofLog() << "Chose Metal" << endl;
+                        ImGui::SliderFloat("Metal Fuzz", &fuzz, 0.1f, 10.0f);
+                        sharedParams->material = make_shared<Metal>(Metal(color, fuzz));
+                    }
+                    else if (sharedParams->mat == matType:: LambertT) {
+                        ofLog() << "Chose Lambert" << endl;
+                        sharedParams->material = make_shared<Lambert>(Lambert(color));
+                    }
+                }
 
                 for (auto& createShapeUI: this->createShapeUIs)
                 {
@@ -856,7 +881,9 @@ void Scene3D::dragEvent(ofDragInfo dragInfo)
         if (model->loaded())
         {
             model->setPosition(0, 0, 0);
-            shared_ptr<Node> node = make_shared<Node>("Object ", model);
+            ofMesh mesh = model->getCombinedMesh();
+            shared_ptr<Material> lambert = make_shared<Lambert>(ofColor(255, 5, 50));
+            shared_ptr<Node> node = make_shared<Node>("Object ",  make_shared<RayMesh>(lambert ,mesh));
             shared_ptr<Node> parent = *selectedNode;
             history.executeCommand(std::make_shared<AddChildToNodeCommand>(parent, node));
         }
@@ -1115,8 +1142,8 @@ void Scene3D::update()
 {
     time_current = ofGetElapsedTimef();
     time_elapsed = time_current - time_last;
-    //time_left = std::fmax(0, std::max(1.0f / ofGetFrameRate() - time_elapsed, 1.0f / ofGetTargetFrameRate() - time_elapsed));
-    time_left = 1.0f / 60.0f;
+    time_left = std::fmax(0, std::max(1.0f / ofGetFrameRate() - time_elapsed, 1.0f / ofGetTargetFrameRate() - time_elapsed));
+    //time_left = 1.0f / 60.0f;
     time_elapsed_timer = time_current - time_last_timer;
     time_last = time_current;
 

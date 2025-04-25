@@ -1,19 +1,15 @@
 #pragma once
 
 #include "scenegraph/Node.h"
-
+#include "Material.h"
 #include <memory>
-enum matType
-{
-    Metal,
-    Glass,
-    Lambert
-};
+
 
 struct SharedShapeCreationParams
 {
     float color[4] = {1.0f, 1.0f, 1.0f, 1.0f};// Default color is white
-    matType material = matType::Lambert;
-    bool isGlass = false;
+    shared_ptr<Material> material = make_shared<Lambert>(Lambert(ofColor(0,200,0)));
+    matType mat = LambertT;
     std::shared_ptr<std::shared_ptr<Node>> selectedNode = std::make_shared<std::shared_ptr<Node>>(nullptr);
 };
+

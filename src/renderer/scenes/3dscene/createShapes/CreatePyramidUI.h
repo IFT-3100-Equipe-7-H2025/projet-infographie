@@ -42,14 +42,7 @@ public:
                     mesh.addColor(color);
                 }
 
-                ofLog() << "Creating sphere" << endl;
-                bool isGlass = sharedParams->isGlass;
-                shared_ptr<Material> mat = std::make_shared<Dielectric>(1.50);
-                if (!isGlass)
-                {
-                    mat = std::make_shared<Metal>(color, 0.1);
-                    ofLog() << "Metal" << endl;
-                }
+                shared_ptr<Material> mat = sharedParams->material;
 
                 auto pyramid_3d = Primitive3D(pyramid);
                 //auto pyramid_ptr = std::make_shared<Node>("Pyramid", std::make_shared<Pyramid>(sides, Vec3(width, height, depth), mat, pyramid));

@@ -1,7 +1,7 @@
 #include "PrimitiveCreator.h"
 #include <cmath>
 #include <numbers>
-
+#include "RayMesh.h"
 
 
 of3dPrimitive PrimitiveCreator::createTriangle()
@@ -181,6 +181,10 @@ of3dPrimitive PrimitiveCreator::createCube(float width, float height, float dept
     }
 
     return of3dPrimitive{cube};
+}
+
+RayMesh PrimitiveCreator::createSphere(int lat, int longi, float radius, shared_ptr<Material> mat){
+    return RayMesh(mat, createSphere(lat, longi, radius));
 }
 
 of3dPrimitive PrimitiveCreator::createSphere(int lat, int longi, float radius)
