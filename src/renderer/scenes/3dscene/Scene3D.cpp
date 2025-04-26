@@ -310,31 +310,30 @@ void Scene3D::DrawSelectedNodeWindow()
             {
                 ImGui::ColorEdit4("Color", sharedParams->color);
                 ofFloatColor color(sharedParams->color[0], sharedParams->color[1], sharedParams->color[2], sharedParams->color[3]);
+                sharedParams->material->setColor(color);
+
+                if (sharedParams->mat == matType::GlassT)
+                {
+                    ImGui::SliderFloat("Refract Index", &sharedParams->refract, 0.1f, 10.0f);
+                    sharedParams->material = make_shared<Dielectric>(Dielectric(sharedParams->refract));
+                }
+                else if (sharedParams->mat == matType::MetalT)
+                {
+                    ImGui::SliderFloat("Metal Fuzz", &sharedParams->fuzz, 0.1f, 10.0f);
+                    sharedParams->material = make_shared<Metal>(Metal(color, sharedParams->fuzz));
+                }
+                else if (sharedParams->mat == matType::LambertT)
+                {
+                    sharedParams->material = make_shared<Lambert>(Lambert(color));
+                }
+
+
                 int selected = static_cast<int>(sharedParams->mat);
                 if (ImGui::Combo("Choose Material", &selected, materialLabels, 3))
                 {
                     ofLog() << "Choosing material" << endl;
                     sharedParams->mat = static_cast<matType>(selected);
-                    if (sharedParams->mat == matType::GlassT) {
-                        ofLog() << "Chose Glass" << endl;
-                        float index = 1.0f;
-                        ImGui::SliderFloat("Refract Index", &index, 0.1f, 10.0f);
-                        sharedParams->material = make_shared<Dielectric>(Dielectric(index));
-                    }
-                    else if (sharedParams->mat == matType::MetalT)
-                    {
-                        float fuzz = 1.0f;
-                        ofLog() << "Chose Metal" << endl;
-                        ImGui::SliderFloat("Metal Fuzz", &fuzz, 0.1f, 10.0f);
-                        sharedParams->material = make_shared<Metal>(Metal(color, fuzz));
-                    }
-                    else if (sharedParams->mat == matType:: LambertT) {
-                        ofLog() << "Chose Lambert" << endl;
-                        sharedParams->material = make_shared<Lambert>(Lambert(color));
-                    }
-                }
-                else {
-                    sharedParams->material->setColor(color);
+
                 }
 
                 for (auto& createShapeUI: this->createShapeUIs)

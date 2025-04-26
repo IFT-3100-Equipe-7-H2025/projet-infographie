@@ -35,15 +35,11 @@ public:
 
         object_span = end - start;
    
-        ofLog() << "Size : " << objects.size();
+        //ofLog() << "Size : " << objects.size();
         if (object_span == 1) {
-            ofLog() << "1 : " ;
-
             groups.push_back(objects[start]);
         }
         else if (object_span == 2) {
-            ofLog() << "2 : ";
-
             groups.push_back(objects[start]);
             groups.push_back(objects[start + 1]);
         }
@@ -68,18 +64,18 @@ public:
             AABB box1 = object->bounding_box();
 
             bbox = AABB(bbox, box1);
-            if (depth <= 41 && start == 0)
-            {
+            //if (depth <= 41 && start == 0)
+            //{
 
-                ofLog() << "Depth : " << depth;
-                ofLog() << "BBox in loop " << groups.size();
+            //    ofLog() << "Depth : " << depth;
+            //    ofLog() << "BBox in loop " << groups.size();
 
-                ofLog() << " Gotten BBox" << box1.x.min << box1.y.min << box1.z.min;
-                ofLog() << " Gotten BBox" << box1.x.max << box1.y.max << box1.z.max;
+            //    ofLog() << " Gotten BBox" << box1.x.min << box1.y.min << box1.z.min;
+            //    ofLog() << " Gotten BBox" << box1.x.max << box1.y.max << box1.z.max;
 
-                ofLog() << "BBox" << bbox.x.min << bbox.y.min << bbox.z.min;
-                ofLog() << "BBox" << bbox.x.max << bbox.y.max << bbox.z.max;
-            }
+            //    ofLog() << "BBox" << bbox.x.min << bbox.y.min << bbox.z.min;
+            //    ofLog() << "BBox" << bbox.x.max << bbox.y.max << bbox.z.max;
+            //}
             
             
         }
@@ -104,9 +100,6 @@ public:
             //ofLog() << "Object in bvh custom draw (size = " << object_span << ")";
             object->customDraw(transform);
         }
-        //if (groups.size() > 2) { 
-        //    return;
-        //}
         ofPushMatrix();
         ofPushStyle();
         ofSetColor(ofColor(0, 255, 0));

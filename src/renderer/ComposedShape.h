@@ -58,7 +58,6 @@ public:
         for (auto& object : objects) {
             if (update_bbox)
             {
-                ofLog() << "Update bbox";
                 object->update();
             }
             if (object->hit(r, Interval(ray_t.min, closest_so_far), temp_rec))

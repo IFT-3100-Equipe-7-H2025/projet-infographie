@@ -61,19 +61,12 @@ public:
         Q = *orient * *scale * corner + *reference;
         u = *orient * ue * *scale;
         v = *orient * ve * *scale;
-        //ofLog() << "Scale " << *scale;
-        //ofLog() << "Corner " << corner;
-        //ofLog() << "Reference " << *reference;
 
-        //ofLog() << "Q " << Q;
-        //ofLog() << "U " << u;
-        //ofLog() << "V " << v;
         auto rvecMin = ofVec3f(min(min(Q.x, Q.x + u.x), Q.x + v.x), min(min(Q.y, Q.y + u.y), Q.y + v.y), min(min(Q.z, Q.z + u.z), Q.z + v.z));
         auto rvecMax = ofVec3f(max(max(Q.x, Q.x + u.x), Q.x + v.x), max(max(Q.y, Q.y + u.y), Q.y + v.y), max(max(Q.z, Q.z + u.z), Q.z + v.z));
 
         bbox = AABB(rvecMin, rvecMax);
-        //ofLog() << " Created BBox Min" << bbox.x.min << bbox.y.min << bbox.z.min;
-        //ofLog() << " Created BBox Max" << bbox.x.max << bbox.y.max << bbox.z.max;
+
     }
 
     AABB bounding_box() const override { return bbox; }

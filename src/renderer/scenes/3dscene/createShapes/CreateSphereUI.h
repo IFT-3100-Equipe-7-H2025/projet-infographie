@@ -54,6 +54,7 @@ public:
                 
                 ComposedShape shape = ComposedShape(make_shared<BvhNode>(sphere, 11), mat);
                 auto sphere_ptr = std::make_shared<Node>("Sphere", std::make_shared<ComposedShape>(shape));
+                //Sphere sphere_scene(prim, radius, )
                 //auto sphere_ptr = std::make_shared<Node>("Sphere", std::make_shared<Sphere>(sphere_scene));
                 history.executeCommand(std::make_shared<AddChildToNodeCommand>(*sharedParams->selectedNode, sphere_ptr));
             }
