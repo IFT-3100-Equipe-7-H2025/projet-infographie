@@ -40,7 +40,7 @@ public:
                     mesh.addColor(color);
                 }
 
-                shared_ptr<Material> mat = sharedParams->material;
+                shared_ptr<Material> mat = sharedParams->material->clone();
 
 
                 auto cube_3d = Primitive3D(cube);

@@ -310,7 +310,6 @@ void Scene3D::DrawSelectedNodeWindow()
                 ImGui::ColorEdit4("Color", sharedParams->color);
                 ofFloatColor color(sharedParams->color[0], sharedParams->color[1], sharedParams->color[2], sharedParams->color[3]);
                 int selected = static_cast<int>(sharedParams->mat);
-                //ofLog() << "Choosing material 2" << endl;
                 if (ImGui::Combo("Choose Material", &selected, materialLabels, 3))
                 {
                     ofLog() << "Choosing material" << endl;
@@ -332,6 +331,9 @@ void Scene3D::DrawSelectedNodeWindow()
                         ofLog() << "Chose Lambert" << endl;
                         sharedParams->material = make_shared<Lambert>(Lambert(color));
                     }
+                }
+                else {
+                    sharedParams->material->setColor(color);
                 }
 
                 for (auto& createShapeUI: this->createShapeUIs)
@@ -1142,8 +1144,8 @@ void Scene3D::update()
 {
     time_current = ofGetElapsedTimef();
     time_elapsed = time_current - time_last;
-    time_left = std::fmax(0, std::max(1.0f / ofGetFrameRate() - time_elapsed, 1.0f / ofGetTargetFrameRate() - time_elapsed));
-    //time_left = 1.0f / 60.0f;
+    //time_left = std::fmax(0, std::max(1.0f / ofGetFrameRate() - time_elapsed, 1.0f / ofGetTargetFrameRate() - time_elapsed));
+    time_left = 1.0f / 240.0f;
     time_elapsed_timer = time_current - time_last_timer;
     time_last = time_current;
 

@@ -36,21 +36,28 @@ public:
         ofLog() << "Scattering wrong" << endl;
         return false;
     }
-    ofColor getColor()
-    {
-        return color;
+
+    void setColor(ofColor color) {
+        albedo = color;
     }
 
+    ofColor getColor()
+    {
+        return albedo;
+    }
+
+    virtual std::shared_ptr<Material> clone() const = 0;
+
 protected:
-    ofColor color;
+    ofColor albedo;
 };
 
 class Lambert : public Material
 {
     public:
-    Lambert(const ofColor& albedo) : albedo(albedo)
+    Lambert(const ofColor& p_albedo)
     {
-        color = albedo;
+        albedo = p_albedo;
     }
 
     bool scatter(const Ray& r_in, const hit_record& rec, ofColor& attenuation, Ray& scattered) const override
@@ -66,19 +73,21 @@ class Lambert : public Material
         return true;
     }
 
+    std::shared_ptr<Material> clone() const override
+    {
+        return std::make_shared<Lambert>(*this);
+    }
 
 
-private:
-    ofColor albedo;
 };
 
 
 class Metal : public Material
 {
 public:
-    Metal(const ofColor& albedo_p, double fuzz) : albedo(albedo_p), fuzz(fuzz)
+    Metal(const ofColor& p_albedo, double fuzz) : fuzz(fuzz)
     {
-        color = albedo;
+        albedo = p_albedo;
     }
 
 
@@ -90,11 +99,13 @@ public:
         attenuation = albedo;
         return (scattered.getDirection().dot(rec.normal) > 0);
     }
-
+    std::shared_ptr<Material> clone() const override
+    {
+        return std::make_shared<Metal>(*this);
+    }
 
 
 private:
-    ofColor albedo;
     double fuzz;
 };
 
@@ -130,6 +141,11 @@ public:
 
         scattered = Ray(rec.p, direction);
         return true;
+    }
+
+    std::shared_ptr<Material> clone() const override
+    {
+        return std::make_shared<Dielectric>(*this);
     }
 
 private:

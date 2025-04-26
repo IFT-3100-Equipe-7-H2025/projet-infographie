@@ -46,7 +46,9 @@ public:
                 {
                     mesh.addColor(color);
                 }
-                shared_ptr<Material> mat = sharedParams->material;
+                shared_ptr<Material> mat = sharedParams->material->clone();
+
+
 
 
                 auto lasagna_3d = Primitive3D(lasagna);

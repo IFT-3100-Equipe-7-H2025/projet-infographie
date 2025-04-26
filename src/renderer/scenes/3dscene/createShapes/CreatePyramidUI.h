@@ -42,7 +42,8 @@ public:
                     mesh.addColor(color);
                 }
 
-                shared_ptr<Material> mat = sharedParams->material;
+                 shared_ptr<Material> mat = sharedParams->material->clone();
+
 
                 auto pyramid_3d = Primitive3D(pyramid);
                 //auto pyramid_ptr = std::make_shared<Node>("Pyramid", std::make_shared<Pyramid>(sides, Vec3(width, height, depth), mat, pyramid));

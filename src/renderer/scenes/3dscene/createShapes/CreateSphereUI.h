@@ -12,8 +12,8 @@
 
 
 constexpr float DEFAULT_SPHERE_RADIUS = 100.0f;
-constexpr int DEFAULT_SPHERE_RESOLUTION_LAT = 40;
-constexpr int DEFAULT_SPHERE_RESOLUTION_LON = 2;
+constexpr int DEFAULT_SPHERE_RESOLUTION_LAT = 20;
+constexpr int DEFAULT_SPHERE_RESOLUTION_LON = 20;
 
 class CreateSphereUI : public CreateShapeUI
 {
@@ -27,28 +27,30 @@ public:
         if (ImGui::TreeNode("Add sphere"))
         {
             ImGui::SliderFloat("Radius", &radius, 0.0f, static_cast<float>(ofGetWidth()));
-            ImGui::SliderInt("Resolution Lat", &resolution_lat, 2, 100);
-            ImGui::SliderInt("Resolution Lon", &resolution_lon, 2, 100);
+            ImGui::SliderInt("Resolution Lat", &resolution_lat, 3, 40);
+            ImGui::SliderInt("Resolution Lon", &resolution_lon, 3, 40);
 
             if (ImGui::Button("Add"))
             {
                 ofFloatColor color(sharedParams->color[0], sharedParams->color[1], sharedParams->color[2], sharedParams->color[3]);
+                ofLog() << "Material Color" << color;
+                shared_ptr<Material> mat = sharedParams->material->clone();
 
-                shared_ptr<Material> mat = sharedParams->material;
                 ofLog() << "Material Color" << mat->getColor();
 
 
 
-                RayMesh sphere = PrimitiveCreator::createSphere(resolution_lat, resolution_lon, radius, mat);
+                of3dPrimitive prim = PrimitiveCreator::createSphere(resolution_lat, resolution_lon, radius);
                 //RayMesh sphere = PrimitiveCreator::createSphere(30, 30, radius, mat);
                 //of3dPrimitive sphere = PrimitiveCreator::createSphere(30, 30, radius);
-                ofMesh mesh = sphere.getMesh();
-                //auto& mesh = sphere.getMesh();
+                //ofMesh mesh = sphere.getMesh();
+                auto& mesh = prim.getMesh();
 
                 for (size_t i = 0; i < mesh.getNumVertices(); ++i)
                 {
                     mesh.addColor(color);
                 }
+                RayMesh sphere(mat, prim);
                 
                 //auto sphere_scene = RayMesh(mat, sphere);
                 //auto sphere_scene = Sphere(sphere, radius, mat);

@@ -21,10 +21,6 @@ public:
         if (auto object3d = std::dynamic_pointer_cast<Primitive3D>(object); object3d)
         {
             model = object3d->getModel();
-            ofLog() << "IS Primitive3D";
-        }
-        else {
-            ofLog() << "Not Primitive3D";
         }
         initialize();
         update();

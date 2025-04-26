@@ -34,56 +34,34 @@ public:
                                         : box_z_compare;
 
         size_t object_span = end - start;
-        //if (depth <= 41) {
-        //    ofLog() << "Here";
-        //}
-
+   
+        ofLog() << "Size : " << objects.size();
         if (object_span == 1) {
+            ofLog() << "1 : " ;
+
             groups.push_back(objects[start]);
         }
         else if (object_span == 2) {
+            ofLog() << "2 : ";
+
             groups.push_back(objects[start]);
             groups.push_back(objects[start + 1]);
-            //indices.push_back(start);
-            //indices.push_back(start + 1);
-
-
-            //left = objects[start];
-            //right = objects[start + 1];
         }
-        else if (depth == 0) {
-            int s = 0;
-            int sizef = end - start;
-            ofLog() << " Size " << sizef << endl;
-            // might need to be i < end
+        else if (depth <= 0) {
+            ofLog() << "Depth == 0";
             for (int i = start; i < end; i++)
             {
-                s++;
-                ofLog() << " Object " << s;
                 groups.push_back(objects[i]);
-                //indices.push_back(i);
-
-
             }
         }
         else {
             sort(begin(objects) + start, begin(objects) + end, comparator);
 
             auto mid = start + object_span / 2;
-            //left = make_shared<BvhNode>(objects, start, mid, depth - 1);
-            //right = make_shared<BvhNode>(objects, mid, end, depth - 1);
             shared_ptr<BvhNode> node1 = make_shared<BvhNode>(objects, start, mid, depth - 1);
             shared_ptr<BvhNode> node2 = make_shared<BvhNode>(objects, mid, end, depth - 1);
             groups.push_back(node1);
             groups.push_back(node2);
-            //for (int i = start; i < end; i++)
-            //{
-            //    indices.push_back(i);
-            //}
-
-
-            //ofLog() << "Left size " << mid - start;
-            //ofLog() << "Right size " << end - mid;
         }
         for (auto& object: groups)
         {
@@ -119,17 +97,13 @@ public:
     void customDraw() override
     {
         return;
-        //Primitive3D::customDraw();
         for (auto& object: groups)
         {
             object->customDraw();
         }
-        // && groups.size() != 2
         if (groups.size() > 2) { 
-            //ofLog() << "Depth : " << depth;
             return;
         }
-         //ofLog() << "Depth : " << depth;
 
         ofPushStyle();
         ofSetColor(ofColor(0, 255, 0));
@@ -176,10 +150,6 @@ public:
 
         boxMesh.draw();
         ofPopStyle();
-        //left->customDraw();
-        //right->customDraw();
-
-
     }
 
     bool hit(const Ray& r, Interval ray_t, hit_record& rec) override {
@@ -198,11 +168,6 @@ public:
                 rec = temp_rec;
             }
         }
-
-        //bool hit_left = left->hit(r, ray_t, rec);
-
-        //bool hit_right = right->hit(r, Interval(ray_t.min, hit_left ? rec.t : ray_t.max), rec);
-        //return hit_left || hit_right;
         return hit_anything;
     }
 
