@@ -303,6 +303,7 @@ void Scene3D::DrawSelectedNodeWindow()
                 this->DrawModifyCameraNodeSliders(*this->selectedNode, camera);
             }
 
+            if (const std::shared_ptr<Primitive3D> prim = std::dynamic_pointer_cast<Primitive3D>(this->selectedNode->get()->GetInner()); prim) { ImGui::Checkbox("Visible", prim->getVisible()); }
             if (const std::shared_ptr<Primitive3D> prim = std::dynamic_pointer_cast<Primitive3D>(this->selectedNode->get()->GetInner()); prim) { ImGui::Checkbox("Wireframe", prim->getWireframe()); }
 
             if (ImGui::CollapsingHeader("Add child", ImGuiTreeNodeFlags_DefaultOpen))

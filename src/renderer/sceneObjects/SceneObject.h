@@ -108,12 +108,9 @@ public:
         return new_mesh;
     }
 
-    virtual AABB bounding_box() const {
-        return bbox;
-    };
+
 
 protected:
     shared_ptr<Material> mat;
-    AABB bbox;
 
 };

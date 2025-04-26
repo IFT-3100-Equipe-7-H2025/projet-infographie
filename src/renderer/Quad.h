@@ -16,7 +16,7 @@ public:
         update();
     }
 
-    void update()
+    void update() override
     {
         Q = *orient * *scale * corner + *reference;
         u = *orient * ue * *scale;

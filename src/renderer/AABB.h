@@ -33,6 +33,29 @@ public:
         pad_to_minimums();
     }
 
+    void transform(const ofMatrix4x4& transform)
+    {
+        Vec3 min = transform.preMult(Vec3(x.min, y.min, z.min));
+        Vec3 max = transform.preMult(Vec3(x.max, y.max, z.max));
+        x = Interval(min[0], max[0]);
+        y = Interval(min[1], max[1]);
+        z = Interval(min[2], max[2]);
+    }
+
+    void translate(const Vec3& translation)
+    {
+        x = Interval(x.min + translation[0], x.max + translation[0]);
+        y = Interval(y.min + translation[1], y.max + translation[1]);
+        z = Interval(z.min + translation[2], z.max + translation[2]);
+    }
+
+    void scale(const Vec3& scale)
+    {
+        x = Interval(x.min * scale[0], x.max * scale[0]);
+        y = Interval(y.min * scale[1], y.max * scale[1]);
+        z = Interval(z.min * scale[2], z.max * scale[2]);
+    }
+
     const Interval& axis_interval(int n) const {
         if (n == 1) return y;
         if (n == 2) return z;

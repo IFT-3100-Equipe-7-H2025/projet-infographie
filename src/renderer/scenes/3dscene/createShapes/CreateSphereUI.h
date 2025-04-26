@@ -52,8 +52,6 @@ public:
                 }
                 RayMesh sphere(mat, prim);
                 
-                //auto sphere_scene = RayMesh(mat, sphere);
-                //auto sphere_scene = Sphere(sphere, radius, mat);
                 ComposedShape shape = ComposedShape(make_shared<BvhNode>(sphere, 11), mat);
                 auto sphere_ptr = std::make_shared<Node>("Sphere", std::make_shared<ComposedShape>(shape));
                 //auto sphere_ptr = std::make_shared<Node>("Sphere", std::make_shared<Sphere>(sphere_scene));

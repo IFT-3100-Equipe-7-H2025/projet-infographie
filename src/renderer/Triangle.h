@@ -10,27 +10,42 @@
 class Triangle : public Primitive3D
 {
 public:
-    Triangle(shared_ptr<ofVec3f> reference, shared_ptr<ofVec3f> scale, shared_ptr<ofQuaternion> orientation, const Vec3& Q, const Vec3& u, const Vec3& v, shared_ptr<Material> material) : 
+    Triangle(shared_ptr<ofVec3f>& reference, shared_ptr<ofVec3f>& scale, shared_ptr<ofQuaternion>& orientation, const Vec3& Q, const Vec3& u, const Vec3& v, shared_ptr<Material> material) : 
         ve(v), ue(u), scale(scale), orient(orientation), mat(material), u(u), v(v), reference(reference), Q(Q), corner(Q)
     {
-        //ofLog() << "Corner = " << corner;
         update();
     }
 
-    static Triangle triangleFromPoints(shared_ptr<ofVec3f> reference, shared_ptr<ofVec3f> scale, shared_ptr<ofQuaternion> orientation, const Vec3& A, const Vec3& B, const Vec3& C, shared_ptr<Material> material)
+    static Triangle triangleFromPoints(shared_ptr<ofVec3f>& reference, shared_ptr<ofVec3f>& scale, shared_ptr<ofQuaternion>& orientation, const Vec3& A, const Vec3& B, const Vec3& C, shared_ptr<Material> material)
     {
         Vec3 Q = A;
         Vec3 u = B - A;
         Vec3 v = C - A;
-        //ofLog() << "A " << A << "B " << B << "C " << C;
-        //ofLog() << "Q " << Q << "u " <<u << "v " << v;
 
         Triangle triangle(reference, scale, orientation, Q, u, v, material);
         return triangle;
     }
 
-    void update() {
+    Triangle(const Triangle& other)
+         : reference(other.reference),
+          scale(other.scale),
+          orient(other.orient),
+          ue(other.ue),
+          ve(other.ve),
+          u(other.u),
+          v(other.v),
+          Q(other.Q),
+          corner(other.corner),
+          mat(other.mat)
+    {
+        bbox = other.bbox;
+        model = other.model;
+        update();
+    }
 
+
+
+    void update() override{
         Q = *orient * *scale * corner + *reference;
         u = *orient * ue * *scale;
         v = *orient * ve * *scale;
@@ -38,14 +53,27 @@ public:
         normal = unit_vector(n);
         D = normal.dot(Q);
         w = n / n.dot(n);
+        calculateBbox();
+    }
 
-        //ofLog() << "Q 2 " << Q << "u " << u << "v " << v;
+    void calculateBbox()
+    {
+        Q = *orient * *scale * corner + *reference;
+        u = *orient * ue * *scale;
+        v = *orient * ve * *scale;
+        //ofLog() << "Scale " << *scale;
+        //ofLog() << "Corner " << corner;
+        //ofLog() << "Reference " << *reference;
 
-        
-        auto rvec = u + v;
-        //ofLog() << " Rvec " << rvec;
-        //ofLog() << "Making aabb triangle " << corner << "  " <<  corner + rvec;
-        bbox = AABB(Q, Q + rvec);
+        //ofLog() << "Q " << Q;
+        //ofLog() << "U " << u;
+        //ofLog() << "V " << v;
+        auto rvecMin = ofVec3f(min(min(Q.x, Q.x + u.x), Q.x + v.x), min(min(Q.y, Q.y + u.y), Q.y + v.y), min(min(Q.z, Q.z + u.z), Q.z + v.z));
+        auto rvecMax = ofVec3f(max(max(Q.x, Q.x + u.x), Q.x + v.x), max(max(Q.y, Q.y + u.y), Q.y + v.y), max(max(Q.z, Q.z + u.z), Q.z + v.z));
+
+        bbox = AABB(rvecMin, rvecMax);
+        //ofLog() << " Created BBox Min" << bbox.x.min << bbox.y.min << bbox.z.min;
+        //ofLog() << " Created BBox Max" << bbox.x.max << bbox.y.max << bbox.z.max;
     }
 
     AABB bounding_box() const override { return bbox; }
@@ -53,7 +81,7 @@ public:
 
     bool hit(const Ray& r, Interval ray_t, hit_record& rec) override
     {
-        update();
+        //update();
         auto denom = normal.dot(r.getDirection());
 
         // No hit if parallel
