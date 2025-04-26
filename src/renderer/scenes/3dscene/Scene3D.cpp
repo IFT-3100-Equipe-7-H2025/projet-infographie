@@ -166,9 +166,9 @@ void Scene3D::draw()
             ViewPort viewPort = camera->getViewPort();
             int new_width = viewPort.getWidth() * camera->getScreenCrop();
             int new_height = viewPort.getHeight() * camera->getScreenCrop();
-            ofImage image = camera->getRayImage();
+            rayImage = camera->getRayImage();
             ofDisableDepthTest();
-            image.draw(viewPort.getX() + viewPort.getWidth() - new_width, viewPort.getY(), new_width, new_height);
+            rayImage.draw(viewPort.getX() + viewPort.getWidth() - new_width, viewPort.getY(), new_width, new_height);
             float percent = camera->portionDone() * 100;
             std::string perc = std::format("%: {:.4f}", percent);
             ofPushStyle();
@@ -452,6 +452,10 @@ void Scene3D::DrawModifyCameraNodeSliders(const std::shared_ptr<Node>& node, sha
         ImGui::SliderInt("Depth", &camera->getDepth(), 1, 50);
         ImGui::SliderInt("Resolution", &camera->getWidth(), 10, 4000);
         ImGui::SliderFloat("Portion of Screen", &camera->getScreenCrop(), 0.05, 1);
+        if (ImGui::Button("Save Render"))
+        {
+            saveImage(rayImage);
+        }
         if (ImGui::Button("Reset Render")) {
             camera->reset();
         }
@@ -1396,6 +1400,19 @@ void Scene3D::updateViewPorts()
 //    static std::mt19937 generator;
 //    return distribution(generator);
 //}
+
+
+void Scene3D::saveImage(ofImage rayTrace)
+{
+    int width = rayTrace.getWidth();
+    int height = rayTrace.getHeight();
+    string filename = "rayImage_" + ofToString(width) + "x " + ofToString(height) + ".png";
+    ofFileDialogResult saveDialog = ofSystemSaveDialog("default.png", "Save your image");
+    if (saveDialog.bSuccess)
+    {
+        rayTrace.save(saveDialog.getPath() + ".png");
+    }
+}
 
 void Scene3D::exportRayTrace(float time_left)
 {

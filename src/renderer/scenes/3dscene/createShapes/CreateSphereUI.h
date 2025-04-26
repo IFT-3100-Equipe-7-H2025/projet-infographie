@@ -27,8 +27,8 @@ public:
         if (ImGui::TreeNode("Add sphere"))
         {
             ImGui::SliderFloat("Radius", &radius, 0.0f, static_cast<float>(ofGetWidth()));
-            ImGui::SliderInt("Resolution Lat", &resolution_lat, 3, 40);
-            ImGui::SliderInt("Resolution Lon", &resolution_lon, 3, 40);
+            ImGui::SliderInt("Resolution Lat", &resolution_lat, 3, 100);
+            ImGui::SliderInt("Resolution Lon", &resolution_lon, 3, 100);
 
             if (ImGui::Button("Add"))
             {

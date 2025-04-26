@@ -44,7 +44,7 @@ public:
             groups.push_back(objects[start + 1]);
         }
         else if (depth <= 0) {
-            ofLog() << "Depth == 0";
+            //ofLog() << "Depth == 0";
             for (int i = start; i < end; i++)
             {
                 groups.push_back(objects[i]);

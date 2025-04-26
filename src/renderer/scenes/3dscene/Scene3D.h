@@ -193,6 +193,7 @@ private:
 
     void divideCamera(int first, int last, int x1, int y1, int width, int height, vector<pair<NodeId, shared_ptr<Camera>>> activatedCameras);
     void exportRayTrace(float time_left);
+    void saveImage(ofImage rayTrace);
 
     int charToLower(int key);
 
