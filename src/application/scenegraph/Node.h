@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Light.h"
 #include "Material.h"
 #include "Shader.h"
 #include "ofNode.h"
@@ -20,7 +21,7 @@ public:
 
     bool Delete();
 
-    void Draw(std::shared_ptr<Shader> lightingModel = nullptr) const;
+    void Draw(const std::shared_ptr<Shader>& lightingModel = nullptr) const;
 
     void SetMaterial(std::shared_ptr<Material> material);
     [[nodiscard]] const std::shared_ptr<Material>& GetMaterial() const;

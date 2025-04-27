@@ -1,4 +1,6 @@
 #include "Node.h"
+
+#include "Light.h"
 #include "of3dPrimitives.h"
 #include <memory>
 
@@ -60,7 +62,7 @@ bool Node::Delete()
 }
 
 // NOLINTNEXTLINE(misc-no-recursion)
-void Node::Draw(std::shared_ptr<Shader> lightingModel) const
+void Node::Draw(const std::shared_ptr<Shader>& lightingModel) const
 {
     if (inner)
     {
@@ -78,15 +80,15 @@ void Node::Draw(std::shared_ptr<Shader> lightingModel) const
             lightingModel->setUniform3f("color_ambient", ambientColor.r, ambientColor.g, ambientColor.b);
             lightingModel->setUniform3f("color_diffuse", diffuseColor.r, diffuseColor.g, diffuseColor.b);
             lightingModel->setUniform3f("color_specular", specularColor.r, specularColor.g, specularColor.b);
-            lightingModel->setUniform1f("brightness", 0.5f);
-            lightingModel->setUniform3f("light_position", 0.0f, 0.0f, 0.0f);
+            lightingModel->setUniform1f("brightness", 0.2f);
+            lightingModel->setUniform3f("light_position", glm::vec3(0.0f, 0.0f, 0.0f));
 
-            auto      model = glm::mat4(1.0f);// identity
-            glm::mat3 normalMat = inverseTranspose(glm::mat3(model));
+            glm::mat4 model = inner->getGlobalTransformMatrix();// full object ? world
+            glm::mat3 normalMat = glm::inverseTranspose(glm::mat3(model));
 
             lightingModel->setUniformMatrix4f("modelMatrix", model);
             lightingModel->setUniformMatrix3f("normalMatrix", normalMat);
-            lightingModel->setUniform3f("uLightPos", glm::vec3(600, 500, 400));
+            lightingModel->setUniform3f("uLightPos", glm::vec3(0.0f, 0.0f, 0.0f));
             lightingModel->setUniform3f("uSurfaceColor", 1.0, 0.5, 1.0);
             lightingModel->setUniform3f("uWarmColor", 1.0, 0.6, 0.0);
             lightingModel->setUniform3f("uCoolColor", 0.0, 0.0, 1.0);

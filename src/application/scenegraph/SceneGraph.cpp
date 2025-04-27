@@ -1,4 +1,6 @@
 #include "SceneGraph.h"
+
+#include "Light.h"
 #include "of3dPrimitives.h"
 #include <stack>
 
@@ -9,7 +11,7 @@ void SceneGraph::AddNode(std::shared_ptr<Node> node)
     root->AddChild(std::move(node));
 }
 
-void SceneGraph::Draw(std::shared_ptr<Shader> lightingModel) const
+void SceneGraph::Draw(const std::shared_ptr<Shader>& lightingModel) const
 {
     root->Draw(lightingModel);
 }
@@ -19,9 +21,9 @@ void SceneGraph::Draw(std::shared_ptr<Shader> lightingModel) const
     return root;
 }
 
-[[nodiscard]] std::optional<std::shared_ptr<Node>> SceneGraph::GetNode(NodeId id) const
+[[nodiscard]] std::optional<std::shared_ptr<Node>> SceneGraph::GetNode(const NodeId id) const
 {
-    if (this->nodes.count(id))
+    if ( this->nodes.contains(id) )
     {
         if (std::shared_ptr<Node> node = this->nodes.at(id).lock(); node)
         {

@@ -51,26 +51,27 @@ void Scene3D::setup()
 
     this->registeredMaterials.push_back(std::make_shared<Material>(DEFAULT_MATERIAL, "Default"));
 
-    ofMaterial material;
-    material.setAmbientColor(ofFloatColor(0.1, 0.1, 0.1));
-    material.setDiffuseColor(ofFloatColor(1.0, 0.5, 0.5));
-    material.setSpecularColor(ofFloatColor(0.5, 0.5, 0.3));
-    material.setShininess(64);
-    this->registeredMaterials.push_back(std::make_shared<Material>(material, "Old default"));
+    ofMaterial specularMaterial;
+    specularMaterial.setAmbientColor(ofFloatColor(0.1f, 0.1f, 0.1f));
+    specularMaterial.setDiffuseColor(ofFloatColor(0.6f, 0.5f, 0.5f));
+    specularMaterial.setSpecularColor(ofFloatColor(0.5f, 0.5f, 0.3f));
+    specularMaterial.setShininess(64);
+    this->registeredMaterials.push_back(std::make_shared<Material>(specularMaterial, "Specular"));
 
-    ofMaterial matteMaterial;
-    matteMaterial.setShininess(1);
-    matteMaterial.setAmbientColor(ofFloatColor(0.2, 0.2, 0.2, 1.0));
-    matteMaterial.setDiffuseColor(ofFloatColor(0.8, 0.5, 0.2, 1.0));
-    matteMaterial.setSpecularColor(ofFloatColor(0.0, 0.0, 0.0, 1.0));
-    matteMaterial.setEmissiveColor(ofFloatColor(0.6, 0.0, 0.0, 1.0));
-    this->registeredMaterials.push_back(std::make_shared<Material>(matteMaterial, "What"));
+    ofMaterial emissiveMaterial;
+    emissiveMaterial.setShininess(1);
+    emissiveMaterial.setAmbientColor(ofFloatColor(0.2f, 0.2f, 0.2f, 1.0f));
+    emissiveMaterial.setDiffuseColor(ofFloatColor(0.8f, 0.5f, 0.2f, 1.0f));
+    emissiveMaterial.setSpecularColor(ofFloatColor(0.0f, 0.0f, 0.0f, 1.0f));
+    emissiveMaterial.setEmissiveColor(ofFloatColor(0.6f, 0.0f, 0.0f, 1.0f));
+    this->registeredMaterials.push_back(std::make_shared<Material>(emissiveMaterial, "Emissive"));
 
     // Add base light
     auto light = ofLight();
     light.enable();
     light.setDiffuseColor(ofFloatColor(1.0, 1.0, 1.0));
     light.setSpecularColor(ofFloatColor(1.0, 1.0, 1.0));
+    light.setPosition(ofVec3f(0.0f, 0.0f, 0.0f));
     light.lookAt(ofVec3f(static_cast<float>(ofGetWidth()) / 2.0f, static_cast<float>(ofGetHeight()) / 2.0f, 0));
 
     auto light_ptr = std::make_shared<Node>("Light", std::make_shared<Light>(light, LightType::POINT));
@@ -104,8 +105,8 @@ void Scene3D::setup()
     auto blinn_phong = ofShader();
     blinn_phong.load("shaders/blinn_phong.vert", "shaders/blinn_phong.frag");
 
-    auto toon = ofShader();
-    toon.load("shaders/toon.vert", "shaders/toon.frag");
+    auto gooch = ofShader();
+    gooch.load("shaders/gooch.vert", "shaders/gooch.frag");
 
 
     this->lightingModels.push_back(std::make_shared<Shader>(DEFAULT_SHADER));
@@ -113,7 +114,7 @@ void Scene3D::setup()
     this->lightingModels.push_back(std::make_shared<Shader>(gouraud, "Gouraud"));
     this->lightingModels.push_back(std::make_shared<Shader>(phong, "Phong"));
     this->lightingModels.push_back(std::make_shared<Shader>(blinn_phong, "Blinn-Phong"));
-    this->lightingModels.push_back(std::make_shared<Shader>(toon, "Toon"));
+    this->lightingModels.push_back(std::make_shared<Shader>(gooch, "Gooch"));
 
     this->selectedLightingModel = this->lightingModels[0];
 }
