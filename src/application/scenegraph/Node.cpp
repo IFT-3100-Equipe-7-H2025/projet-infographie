@@ -4,7 +4,9 @@
 #include "of3dPrimitives.h"
 #include <memory>
 
-Node::Node(std::string name, std::shared_ptr<ofNode> node) : inner(std::move(node)), name(std::move(name)), id(nextId++)
+Node::Node(std::string name, std::shared_ptr<ofNode> node) : inner(std::move(node))
+                                                           , name(std::move(name))
+                                                           , id(nextId++)
 {}
 
 bool Node::AddChild(std::shared_ptr<Node> child)
@@ -64,13 +66,12 @@ void Node::Draw(const std::shared_ptr<Shader>& lightingModel, const glm::vec3& l
 {
     if (inner)
     {
-        if (material && lightingModel == nullptr)
+        if ( material && lightingModel == nullptr )
         {
             material->begin();
         }
-        if (lightingModel)
+        if ( lightingModel )
         {
-            ofLog() << "Lighting Model and Light are not null";
             lightingModel->begin();
 
             // For Lambert, Gouraud, Phong and Blinn-Phong
@@ -100,8 +101,8 @@ void Node::Draw(const std::shared_ptr<Shader>& lightingModel, const glm::vec3& l
             lightingModel->setUniform1f("uBeta", 0.25f);
         }
         inner->draw();
-        if (lightingModel) { lightingModel->end(); }
-        if (material && lightingModel == nullptr)
+        if ( lightingModel ) { lightingModel->end(); }
+        if ( material && lightingModel == nullptr )
         {
             material->end();
         }
