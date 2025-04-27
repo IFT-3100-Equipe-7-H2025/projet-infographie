@@ -12,12 +12,12 @@ class SceneGraph
 public:
     SceneGraph();
 
-    void Draw(const std::shared_ptr<Shader>& lightingModel = nullptr) const;
+    void Draw(const std::shared_ptr<Shader>& lightingModel = nullptr, const glm::vec3& lightPosition = glm::vec3(0.0f)) const;
 
-    void                                               AddNode(std::shared_ptr<Node> node);
-    [[nodiscard]] std::shared_ptr<Node>                GetRoot() const;
+    void AddNode(std::shared_ptr<Node> node);
+    [[nodiscard]] std::shared_ptr<Node> GetRoot() const;
     [[nodiscard]] std::optional<std::shared_ptr<Node>> GetNode(NodeId id) const;
-    std::vector<std::shared_ptr<Node>>                 GetNodes() const;
+    std::vector<std::shared_ptr<Node>> GetNodes() const;
 
     bool IsNodeCurrentlyInGraph(NodeId id) const;
 

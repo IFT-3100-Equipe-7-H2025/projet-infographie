@@ -4,9 +4,7 @@
 #include "of3dPrimitives.h"
 #include <memory>
 
-Node::Node(std::string name, std::shared_ptr<ofNode> node) : inner(std::move(node))
-                                                           , name(std::move(name))
-                                                           , id(nextId++)
+Node::Node(std::string name, std::shared_ptr<ofNode> node) : inner(std::move(node)), name(std::move(name)), id(nextId++)
 {}
 
 bool Node::AddChild(std::shared_ptr<Node> child)
@@ -62,33 +60,39 @@ bool Node::Delete()
 }
 
 // NOLINTNEXTLINE(misc-no-recursion)
-void Node::Draw(const std::shared_ptr<Shader>& lightingModel) const
+void Node::Draw(const std::shared_ptr<Shader>& lightingModel, const glm::vec3& lightPosition) const
 {
     if (inner)
     {
-        if ( material && lightingModel == nullptr )
+        if (material && lightingModel == nullptr)
         {
             material->begin();
         }
-        if ( lightingModel )
+        if (lightingModel)
         {
+            ofLog() << "Lighting Model and Light are not null";
             lightingModel->begin();
 
+            // For Lambert, Gouraud, Phong and Blinn-Phong
             auto ambientColor = material->getAmbientColor();
             auto diffuseColor = material->getDiffuseColor();
             auto specularColor = material->getSpecularColor();
+            auto shininess = material->getShininess();
+
+            glm::mat4 viewMatrix = ofGetCurrentMatrix(OF_MATRIX_MODELVIEW);
+            glm::vec4 lightPosInViewSpace = viewMatrix * glm::vec4(lightPosition, 1.0);
             lightingModel->setUniform3f("color_ambient", ambientColor.r, ambientColor.g, ambientColor.b);
             lightingModel->setUniform3f("color_diffuse", diffuseColor.r, diffuseColor.g, diffuseColor.b);
             lightingModel->setUniform3f("color_specular", specularColor.r, specularColor.g, specularColor.b);
-            lightingModel->setUniform1f("brightness", 0.2f);
-            lightingModel->setUniform3f("light_position", glm::vec3(0.0f, 0.0f, 0.0f));
+            lightingModel->setUniform1f("brightness", shininess);
+            lightingModel->setUniform3f("light_position", lightPosInViewSpace);
 
-            glm::mat4 model = inner->getGlobalTransformMatrix();// full object ? world
+            // For Gooch
+            glm::mat4 model = inner->getGlobalTransformMatrix();
             glm::mat3 normalMat = glm::inverseTranspose(glm::mat3(model));
-
             lightingModel->setUniformMatrix4f("modelMatrix", model);
             lightingModel->setUniformMatrix3f("normalMatrix", normalMat);
-            lightingModel->setUniform3f("uLightPos", glm::vec3(0.0f, 0.0f, 0.0f));
+            lightingModel->setUniform3f("uLightPos", lightPosition);
             lightingModel->setUniform3f("uSurfaceColor", 1.0, 0.5, 1.0);
             lightingModel->setUniform3f("uWarmColor", 1.0, 0.6, 0.0);
             lightingModel->setUniform3f("uCoolColor", 0.0, 0.0, 1.0);
@@ -96,8 +100,8 @@ void Node::Draw(const std::shared_ptr<Shader>& lightingModel) const
             lightingModel->setUniform1f("uBeta", 0.25f);
         }
         inner->draw();
-        if ( lightingModel ) { lightingModel->end(); }
-        if ( material && lightingModel == nullptr )
+        if (lightingModel) { lightingModel->end(); }
+        if (material && lightingModel == nullptr)
         {
             material->end();
         }

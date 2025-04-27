@@ -11,9 +11,9 @@ void SceneGraph::AddNode(std::shared_ptr<Node> node)
     root->AddChild(std::move(node));
 }
 
-void SceneGraph::Draw(const std::shared_ptr<Shader>& lightingModel) const
+void SceneGraph::Draw(const std::shared_ptr<Shader>& lightingModel, const glm::vec3& lightPosition) const
 {
-    root->Draw(lightingModel);
+    root->Draw(lightingModel, lightPosition);
 }
 
 [[nodiscard]] std::shared_ptr<Node> SceneGraph::GetRoot() const
@@ -23,7 +23,7 @@ void SceneGraph::Draw(const std::shared_ptr<Shader>& lightingModel) const
 
 [[nodiscard]] std::optional<std::shared_ptr<Node>> SceneGraph::GetNode(const NodeId id) const
 {
-    if ( this->nodes.contains(id) )
+    if (this->nodes.contains(id))
     {
         if (std::shared_ptr<Node> node = this->nodes.at(id).lock(); node)
         {
@@ -78,7 +78,7 @@ bool SceneGraph::IsNodeCurrentlyInGraph(NodeId id) const
         }
     }
     return false;
- }
+}
 
 
 std::vector<std::shared_ptr<Node>> SceneGraph::GetNodes() const

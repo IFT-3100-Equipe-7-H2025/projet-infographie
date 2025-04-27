@@ -21,7 +21,7 @@ public:
 
     bool Delete();
 
-    void Draw(const std::shared_ptr<Shader>& lightingModel = nullptr) const;
+    void Draw(const std::shared_ptr<Shader>& lightingModel = nullptr, const glm::vec3& lightPosition = glm::vec3(0.0f)) const;
 
     void SetMaterial(std::shared_ptr<Material> material);
     [[nodiscard]] const std::shared_ptr<Material>& GetMaterial() const;
@@ -39,14 +39,14 @@ public:
 private:
     friend class SceneGraph;
 
-    std::shared_ptr<ofNode>            inner;
-    std::weak_ptr<Node>                parent;
+    std::shared_ptr<ofNode> inner;
+    std::weak_ptr<Node> parent;
     std::vector<std::shared_ptr<Node>> children;
 
     std::shared_ptr<Material> material = std::make_shared<Material>(DEFAULT_MATERIAL);
 
     std::string name;
-    int id;
+    NodeId id;
     bool isOpen = false;
 
     static NodeId nextId;

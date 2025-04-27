@@ -152,10 +152,14 @@ void Scene3D::draw()
 
 void Scene3D::drawScene()
 {
-    if ( this->selectedLightingModel->GetName() == "Default" ) { sceneGraph.Draw(); }
+    if (this->selectedLightingModel->GetName() == "Default") { sceneGraph.Draw(); }
     else
     {
-        sceneGraph.Draw(this->selectedLightingModel);
+        auto light = this->FindLight();
+        if (light)
+        {
+            sceneGraph.Draw(this->selectedLightingModel, light->getPosition());
+        }
     }
 
     if (is_selected)
@@ -202,7 +206,7 @@ void Scene3D::DrawSelectedNodeWindow()
             this->DrawModifyNodeSliders(*this->selectedNode);
 
 
-            if ( auto light = std::dynamic_pointer_cast<Light>(this->selectedNode->get()->GetInner()); light )
+            if (auto light = std::dynamic_pointer_cast<Light>(this->selectedNode->get()->GetInner()); light)
             {
                 this->DrawModifyLightSliders(light);
             }
@@ -296,7 +300,7 @@ void Scene3D::DrawModifyLightSliders(const std::shared_ptr<Light>& light)
         light->SetLightType(LightType::POINT);
     }
     ImGui::SameLine();
-    if ( ImGui::Checkbox("Ambient light", &isAmbientLight) ) { light->SetLightType(LightType::AMBIENT); }
+    if (ImGui::Checkbox("Ambient light", &isAmbientLight)) { light->SetLightType(LightType::AMBIENT); }
 
 
     lightType = light->GetLightType();
@@ -306,24 +310,24 @@ void Scene3D::DrawModifyLightSliders(const std::shared_ptr<Light>& light)
     isPointLight = lightType == LightType::POINT;
     isAmbientLight = lightType == LightType::AMBIENT;
 
-    if ( !isAmbientLight )
+    if (!isAmbientLight)
     {
         ofFloatColor diffuseColor = light->GetDiffuseColor();
-        float        diffuseColorArr[3] = {diffuseColor.r, diffuseColor.g, diffuseColor.b};
-        if ( ImGui::ColorEdit3("Diffuse color", diffuseColorArr) ) { light->SetDiffuseColor(ofFloatColor(diffuseColorArr[0], diffuseColorArr[1], diffuseColorArr[2])); }
+        float diffuseColorArr[3] = {diffuseColor.r, diffuseColor.g, diffuseColor.b};
+        if (ImGui::ColorEdit3("Diffuse color", diffuseColorArr)) { light->SetDiffuseColor(ofFloatColor(diffuseColorArr[0], diffuseColorArr[1], diffuseColorArr[2])); }
 
         ofFloatColor specularColor = light->GetSpecularColor();
-        float        specularColorArr[3] = {specularColor.r, specularColor.g, specularColor.b};
-        if ( ImGui::ColorEdit3("Specular color", specularColorArr) ) { light->SetSpecularColor(ofFloatColor(specularColorArr[0], specularColorArr[1], specularColorArr[2])); }
+        float specularColorArr[3] = {specularColor.r, specularColor.g, specularColor.b};
+        if (ImGui::ColorEdit3("Specular color", specularColorArr)) { light->SetSpecularColor(ofFloatColor(specularColorArr[0], specularColorArr[1], specularColorArr[2])); }
     }
     else
     {
         ofFloatColor ambientColor = light->GetAmbientColor();
-        float        ambientColorArr[3] = {ambientColor.r, ambientColor.g, ambientColor.b};
-        if ( ImGui::ColorEdit3("Ambient color", ambientColorArr) ) { light->SetAmbientColor(ofFloatColor(ambientColorArr[0], ambientColorArr[1], ambientColorArr[2])); }
+        float ambientColorArr[3] = {ambientColor.r, ambientColor.g, ambientColor.b};
+        if (ImGui::ColorEdit3("Ambient color", ambientColorArr)) { light->SetAmbientColor(ofFloatColor(ambientColorArr[0], ambientColorArr[1], ambientColorArr[2])); }
     }
 
-    if ( isSpotlight )
+    if (isSpotlight)
     {
         float spotCutOff = light->GetSpotlightCutOff();
         if (ImGui::SliderFloat("Spotlight cut off", &spotCutOff, 0, 90))
@@ -339,14 +343,13 @@ void Scene3D::DrawModifyLightSliders(const std::shared_ptr<Light>& light)
     }
 
     float attenuationConstant = light->GetAttenuationConstant();
-    if ( ImGui::SliderFloat("Attenuation constant", &attenuationConstant, 0, 1) ) { light->SetAttenuationConstant(attenuationConstant); }
+    if (ImGui::SliderFloat("Attenuation constant", &attenuationConstant, 0, 1)) { light->SetAttenuationConstant(attenuationConstant); }
 
     float attenuationLinear = light->GetAttenuationLinear();
-    if ( ImGui::SliderFloat("Attenuation linear", &attenuationLinear, 0, 0.01, "%.5f") ) { light->SetAttenuationLinear(attenuationLinear); }
+    if (ImGui::SliderFloat("Attenuation linear", &attenuationLinear, 0, 0.01, "%.5f")) { light->SetAttenuationLinear(attenuationLinear); }
 
     float attenuationQuadratic = light->GetAttenuationQuadratic();
-    if ( ImGui::SliderFloat("Attenuation quadratic", &attenuationQuadratic, 0, 0.001, "%.6f") ) { light->SetAttenuationQuadratic(attenuationQuadratic); }
-    
+    if (ImGui::SliderFloat("Attenuation quadratic", &attenuationQuadratic, 0, 0.001, "%.6f")) { light->SetAttenuationQuadratic(attenuationQuadratic); }
 }
 
 void Scene3D::DrawModifyCameraNodeSliders(const std::shared_ptr<Node>& node, shared_ptr<ofCamera> camera)
@@ -390,7 +393,7 @@ void Scene3D::DrawModifyNodeSliders(const std::shared_ptr<Node>& node)
     if (ImGui::SliderFloat3("Rotate", this->rotate, -360.0f, 360.0f))
     {
         glm::quat newRotation = glm::quat(glm::radians(glm::vec3(this->rotate[0], this->rotate[1], this->rotate[2])));
-        if ( auto light = std::dynamic_pointer_cast<Light>(inner); light ) { light->setOrientation(newRotation); }
+        if (auto light = std::dynamic_pointer_cast<Light>(inner); light) { light->setOrientation(newRotation); }
         else { inner->setOrientation(newRotation); }
     }
     if (ImGui::IsItemActivated())
@@ -422,7 +425,7 @@ void Scene3D::DrawModifyNodeSliders(const std::shared_ptr<Node>& node)
     if (const auto primitive = std::dynamic_pointer_cast<Primitive3D>(node->GetInner()); primitive)
     {
         const ofFloatColor currentColor = primitive->GetColor();
-        if ( ImGui::ColorEdit4("Color##ChangeColor", this->color) )
+        if (ImGui::ColorEdit4("Color##ChangeColor", this->color))
         {
             primitive->SetColor(ofFloatColor(this->color[0], this->color[1], this->color[2], this->color[3]));
         }
@@ -465,7 +468,10 @@ void Scene3D::DrawSelectLightingModelWindow()
     ImGui::SetNextWindowSize(ImVec2(300, 400), ImGuiCond_FirstUseEver);
     ImGui::Begin("Select scene lighting model");
     ImGui::Text("Lighting model: %s", this->selectedLightingModel->GetName().c_str());
-    for ( const std::shared_ptr<Shader>& shader: this->lightingModels ) { if ( ImGui::Button(shader->GetName().c_str()) ) { this->selectedLightingModel = shader; } }
+    for (const std::shared_ptr<Shader>& shader: this->lightingModels)
+    {
+        if (ImGui::Button(shader->GetName().c_str())) { this->selectedLightingModel = shader; }
+    }
     ImGui::End();
 }
 
@@ -1000,7 +1006,7 @@ void Scene3D::keyPressed(ofKeyEventArgs& key)
     ofLog() << "Key pressed: " << key.keycode << " with modifiers: " << key.modifiers;
     if (key.hasModifier(OF_KEY_CONTROL))
     {
-        switch ( charToLower(key.keycode) )
+        switch (charToLower(key.keycode))
         {
             case 'z'://z
                 ofLog() << "Undo";

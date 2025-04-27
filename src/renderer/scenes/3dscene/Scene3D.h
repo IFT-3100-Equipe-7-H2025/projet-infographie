@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Light.h"
 #include "3dscene/commands/CommandHistory.h"
+#include "Light.h"
 #include "Scene.h"
 #include "SceneObject.h"
 #include "Shader.h"
@@ -55,6 +55,21 @@ public:
     void windowResized(int w, int h) override;
     /*void nextCam();
     void previousCam();*/
+
+    // Finds the first light in the scene graph
+    std::shared_ptr<Light> FindLight()
+    {
+        std::shared_ptr<Light> light = nullptr;
+        for (const auto& node: sceneGraph.GetNodes())
+        {
+            if (auto lightNode = std::dynamic_pointer_cast<Light>(node->GetInner()); lightNode)
+            {
+                light = lightNode;
+                return light;
+            }
+        }
+        return light;
+    }
 
 private:
     CommandHistory history;
@@ -184,6 +199,6 @@ private:
     }
 
     std::vector<std::shared_ptr<Material>> registeredMaterials;
-    std::vector<std::shared_ptr<Shader>>   lightingModels;
-    std::shared_ptr<Shader>                selectedLightingModel;
+    std::vector<std::shared_ptr<Shader>> lightingModels;
+    std::shared_ptr<Shader> selectedLightingModel;
 };
