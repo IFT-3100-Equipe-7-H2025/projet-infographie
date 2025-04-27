@@ -57,6 +57,7 @@ public:
     void previousCam();*/
 
     // Finds the first light in the scene graph
+    // Returns a shared pointer to the first light found in the scene graph, or nullptr if no light is found.
     std::shared_ptr<Light> FindLight()
     {
         std::shared_ptr<Light> light = nullptr;
