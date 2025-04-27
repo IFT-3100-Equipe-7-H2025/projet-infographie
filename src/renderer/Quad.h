@@ -28,7 +28,7 @@ public:
     }
 
 
-    bool hit(const Ray& r, Interval ray_t, hit_record& rec) override
+    bool hit(const Ray& r, Interval ray_t, HitRecord& rec) override
     {
         update();
         auto denom = normal.dot(r.getDirection());
@@ -63,7 +63,7 @@ public:
         return true;
     }
 
-    virtual bool is_interior(double a, double b, hit_record& rec) const {
+    virtual bool is_interior(double a, double b, HitRecord& rec) const {
         Interval unit_interval = Interval(0, 1);
 
         if (!unit_interval.contains(a) || !unit_interval.contains(b))

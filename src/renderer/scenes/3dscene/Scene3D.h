@@ -183,7 +183,7 @@ private:
 
     ofColor rayColor(const Ray& r);
     
-    double hitAnything(const Ray& r, Interval ray_t, hit_record& rec);
+    double hitAnything(const Ray& r, Interval ray_t, HitRecord& rec);
 
     ofVec3f unitVector(const ofVec3f& v)
     {

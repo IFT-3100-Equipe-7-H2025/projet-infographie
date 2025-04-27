@@ -12,7 +12,7 @@
 class BvhNode : public Primitive3D
 {
 public:
-    int depth = 50;
+    int depth;
     BvhNode() {}
 
         
@@ -23,12 +23,12 @@ public:
         model = composed.getModel();
     }
 
-    BvhNode(ComposedShape& composed) : BvhNode(composed, depth) {}
+    BvhNode(ComposedShape& composed) : BvhNode(composed, 50) {}
 
     BvhNode(vector<shared_ptr<Primitive3D>>& objects, size_t start, size_t end, int depth_p) : depth(depth_p)
     {
         int axis = random_int(0, 2);
-        ofLog() << "depth : " << depth_p;
+        //ofLog() << "depth : " << depth_p;
         auto comparator = (axis == 0)   ? box_x_compare 
                           : (axis == 1) ? box_y_compare
                                         : box_z_compare;
@@ -152,13 +152,13 @@ public:
         ofPopMatrix();
     }
 
-    bool hit(const Ray& r, Interval ray_t, hit_record& rec) override {
+    bool hit(const Ray& r, Interval ray_t, HitRecord& rec) override {
         if (!bbox.hit(r, ray_t))
             return false;
 
         bool hit_anything = false;
         float closest_so_far = ray_t.max;
-        hit_record temp_rec;
+        HitRecord temp_rec;
         for (auto& object: groups)
         {
             if (object->hit(r, Interval(ray_t.min, closest_so_far), temp_rec))

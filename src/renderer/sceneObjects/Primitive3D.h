@@ -3,6 +3,7 @@
 #include "SceneObject.h"
 #include "ofMain.h"
 #include "renderer/rayTracer/ray.h"
+#include "Material.h"
 
 
 
@@ -18,17 +19,31 @@ public:
 
     Primitive3D(of3dPrimitive primitive)
     {
+        mat = make_shared<Lambert>(ofColor(5, 50, 255));
+        ofLog() << "Material created!";
         model = primitive;
         initialize();
     }
 
+    Primitive3D(of3dPrimitive primitive, shared_ptr<Material> material)
+    {
+        mat = material;
+        ofLog() << "Material created!";
+        model = primitive;
+        initialize();
+    }
+
+
     Primitive3D(Primitive3D& other)
     {
+        ofLog() << "Here for some reason";
+        mat = other.mat;
         initialize();
         model = other.model;
         center = other.center;
         scale = other.scale;
         orientation = other.orientation;
+
     }
 
     void copy(Primitive3D& other)
@@ -37,6 +52,7 @@ public:
         center = other.center;
         scale = other.scale;
         orientation = other.orientation;
+        mat = other.mat;
     }
 
     void initialize()

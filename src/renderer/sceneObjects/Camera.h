@@ -42,6 +42,43 @@ public:
         return ((float) (image_width * (last_j + 1) + (last_i + 1))) / (float) (image_width * image_height);
     }
 
+    string timeLeft() {
+        //return time_leftS;
+        current_time = ofGetElapsedTimef();
+        elapsed_time = current_time - time_last;
+        time_since_start = current_time - time_start;
+        if (elapsed_time < 0.5) {
+            return time_leftS;
+        }
+        float perc_dif = portionDone() - elapsed_percent;
+        float perc_left = 1.0f - portionDone();
+
+        float second_per_perc_recent = elapsed_time / perc_dif;
+        float second_per_perc_average = time_since_start / portionDone();
+
+        //float second_per_perc = (second_per_perc_recent + second_per_perc_average) / 2.0f;
+        float second_per_perc = second_per_perc_average;
+
+        time_last = current_time;
+        elapsed_percent = portionDone();
+        float time_left = perc_left * second_per_perc;
+        float hours = int(time_left / 3600);
+        float minutes = int(time_left / 60) - (hours * 60);
+        float seconds = int(time_left) - (minutes * 60) - (hours * 3600);
+        time_leftS = "";
+        if (hours != 0)
+        {
+            time_leftS += ofToString(hours) + "h ";
+            
+        }
+
+        time_leftS += ofToString(minutes) + "m ";
+        time_leftS += ofToString(seconds) + "s";
+       
+        return time_leftS;
+
+    }
+
     bool doneRendering() {
         return !rendering;
     }
@@ -122,11 +159,9 @@ public:
 
     void renderPixel(const SceneGraph& sceneGraph) {
         if (!rendering) {
-            //ofLog() << "Initializing" << endl;
-            rendering = true;
             initialize();
+            rendering = true;
             snapshot = sceneGraph;
-            //snapshot = sceneGraph.clone();
         }
 
         writePixel(last_i, last_j, snapshot);
@@ -256,7 +291,27 @@ public:
         return screenCrop;
     }
 
+    void saveImage()
+    {
+        ofImage rayTrace = getRayImage();
+        int width = rayTrace.getWidth();
+        int height = rayTrace.getHeight();
+        string filename = "rayImage_" + ofToString(width) + "x " + ofToString(height) + ".png";
+        ofFileDialogResult saveDialog = ofSystemSaveDialog("default.png", "Save your image");
+        if (saveDialog.bSuccess)
+        {
+            rayTrace.save(saveDialog.getPath() + ".png");
+        }
+    }
+
 private:
+    float time_since_start;
+    float time_start;
+    float time_last;
+    float current_time;
+    float elapsed_time;
+    float elapsed_percent;
+    string time_leftS;
     int image_height = 100;
     double pixel_samples_scale;
     ofVec3f center;
@@ -273,6 +328,8 @@ private:
     int last_i = 0;
 
     void initialize() {
+        time_start = time_last = ofGetElapsedTimef();
+        rendering = false;
         last_i = 0;
         last_j = 0;
 
@@ -320,6 +377,8 @@ private:
     }
 
 
+
+
     Ray getRay(int i, int j) const {
         auto offset = sampleSquare();
         auto pixel_sample = pixel00_location + ((i + offset.x) * pixel_delta_u) + ((j + offset.y) * pixel_delta_v);
@@ -342,14 +401,14 @@ private:
         }
 
         // If the ray hits the background, return a color based on the ray direction.
-        hit_record rec;
+        HitRecord rec;
 
         if (hitAnything(r, Interval(0.0001, INFINITY), rec, sceneGraph))
         {
             Ray scattered;
             ofColor attenuation;
 
-            if (rec.mat->scatter(r, rec, attenuation, scattered))
+             if (rec.mat->scatter(r, rec, attenuation, scattered))
             {
                 return attenuation * rayColor(scattered, depth - 1, sceneGraph);
             }
@@ -369,9 +428,9 @@ private:
         return (1.0 - a) * ofColor(255, 255, 255) + a * ofColor(127, 200, 255);
     }
 
-    bool hitAnything(const Ray& r, Interval ray_t, hit_record& rec, const SceneGraph& sceneGraph) const
+    bool hitAnything(const Ray& r, Interval ray_t, HitRecord& rec, const SceneGraph& sceneGraph) const
     {
-        hit_record temp_rec;
+        HitRecord temp_rec;
         double closest_so_far = ray_t.max;
         bool hit_anything = false;
 

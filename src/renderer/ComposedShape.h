@@ -16,14 +16,17 @@ public:
     ComposedShape() {}
 
         
-    ComposedShape(shared_ptr<Primitive3D> object, shared_ptr<Material> mat): Primitive3D(*object)
+    ComposedShape(shared_ptr<Primitive3D> object, shared_ptr<Material> material): Primitive3D(*object)
     {
+        mat = material;
         copy(*object);
         addShape(object); 
         update();
     }
 
-    ComposedShape(const Vec3& size, shared_ptr<Material> mat, of3dPrimitive primitive) : mat(mat), size(size), Primitive3D(primitive) {
+    ComposedShape(const Vec3& size, shared_ptr<Material> material, of3dPrimitive primitive) : mat(material), size(size), Primitive3D(primitive, material)
+    {
+        mat = material;
         model = primitive;
         initialize();
         setShapes();
@@ -48,13 +51,13 @@ public:
     }
 
 
-    bool hit(const Ray& r, Interval ray_t, hit_record& rec) override
+    bool hit(const Ray& r, Interval ray_t, HitRecord& rec) override
     {
         //ofLog() << "Composed Shape hit";
         bool update_bbox = updateSettings();
         bool hit = false;
         float closest_so_far = ray_t.max;
-        hit_record temp_rec;
+        HitRecord temp_rec;
         for (auto& object : objects) {
             if (update_bbox)
             {

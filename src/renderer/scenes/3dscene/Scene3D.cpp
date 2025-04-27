@@ -170,7 +170,8 @@ void Scene3D::draw()
             ofDisableDepthTest();
             rayImage.draw(viewPort.getX() + viewPort.getWidth() - new_width, viewPort.getY(), new_width, new_height);
             float percent = camera->portionDone() * 100;
-            std::string perc = std::format("%: {:.4f}", percent);
+            string time_left = camera->timeLeft();
+            string perc = std::format("Time Left: {} , %: {:.4f}", time_left, percent);
             ofPushStyle();
             ofSetColor(0, 255, 0);
             ofDisableDepthTest();
@@ -308,8 +309,10 @@ void Scene3D::DrawSelectedNodeWindow()
 
             if (ImGui::CollapsingHeader("Add child", ImGuiTreeNodeFlags_DefaultOpen))
             {
+                ImGui::Checkbox("Use BVH", &sharedParams->useBVH);
                 ImGui::ColorEdit4("Color", sharedParams->color);
                 ofFloatColor color(sharedParams->color[0], sharedParams->color[1], sharedParams->color[2], sharedParams->color[3]);
+                
                 sharedParams->material->setColor(color);
 
                 if (sharedParams->mat == matType::GlassT)
@@ -448,13 +451,13 @@ void Scene3D::DrawModifyCameraNodeSliders(const std::shared_ptr<Node>& node, sha
         this->initialFov = current_fov;
     }
     if (camera->isRayTracing()) {
-        ImGui::SliderInt("Samples", &camera->getSamples(), 1, 200);
-        ImGui::SliderInt("Depth", &camera->getDepth(), 1, 50);
+        ImGui::SliderInt("Samples", &camera->getSamples(), 1, 4000);
+        ImGui::SliderInt("Depth", &camera->getDepth(), 1, 100);
         ImGui::SliderInt("Resolution", &camera->getWidth(), 10, 4000);
         ImGui::SliderFloat("Portion of Screen", &camera->getScreenCrop(), 0.05, 1);
         if (ImGui::Button("Save Render"))
         {
-            saveImage(rayImage);
+            camera->saveImage();
         }
         if (ImGui::Button("Reset Render")) {
             camera->reset();
@@ -513,6 +516,41 @@ void Scene3D::DrawModifyNodeSliders(const std::shared_ptr<Node>& node)
     {
         this->history.executeCommand(std::make_shared<SetScaleCommand>(node, glm::vec3(this->scale[0], this->scale[1], this->scale[2]), this->initialScale));
     }
+
+
+    if (shared_ptr<Primitive3D> rayObject = std::dynamic_pointer_cast<Primitive3D>(node->GetInner()); rayObject)
+    {
+        //ImGui::ColorEdit4("Color", sharedParams->color);
+        //ofFloatColor color(sharedParams->color[0], sharedParams->color[1], sharedParams->color[2], sharedParams->color[3]);
+        //int selected = static_cast<int>(getMaterialType(rayObject->getMaterial()));
+        matType type = getMaterialType(rayObject->getMaterial());
+        //if (ImGui::Combo("Change Material", &selected, materialLabels, 3))
+        //{
+        //    ofLog() << "Choosing material" << endl;
+        //    type = static_cast<matType>(selected);
+        //}
+        ofColor color = rayObject->getMaterial()->getColor();
+        float colorf[4] = {color.r / 255.0f, color.g / 255.0f, color.b / 255.0f, color.a / 255.0f};
+        ImGui::ColorEdit4("Change Color", colorf);
+        color = ofColor(colorf[0] * 255.0f, colorf[1] * 255.0f, colorf[2] * 255.0f, colorf[3] * 255.0f);
+        if (type == matType::GlassT)
+        {
+            float refraction = rayObject->getMaterial()->getRefractionIndex();
+            ImGui::SliderFloat("Change Refract", &refraction, 0.1f, 10.0f);
+            rayObject->setMaterial(make_shared<Dielectric>(refraction));
+        }
+        else if (type == matType::MetalT)
+        {
+            float fuzz = rayObject->getMaterial()->getFuzz();
+            ImGui::SliderFloat("Change Fuzz", &fuzz, 0.1f, 10.0f);
+            rayObject->setMaterial(make_shared<Metal>(color, fuzz));
+        }
+        else if (type == matType::LambertT)
+        {
+            rayObject->setMaterial(make_shared<Lambert>(color));
+        }
+    }
+
 }
 
 void Scene3D::DrawCommandHistoryWindow()
@@ -1443,7 +1481,7 @@ void Scene3D::exportRayTrace(float time_left)
 
 
 ofColor Scene3D::rayColor(const Ray& r) {
-    hit_record rec;
+    HitRecord rec;
 
     if (hitAnything(r, Interval(0, INFINITY), rec)) {
         ofColor normal_color = ofColor(
@@ -1461,8 +1499,8 @@ ofColor Scene3D::rayColor(const Ray& r) {
 }
 
 
-double Scene3D::hitAnything(const Ray& r, Interval ray_t, hit_record& rec) {
-    hit_record temp_rec;
+double Scene3D::hitAnything(const Ray& r, Interval ray_t, HitRecord& rec) {
+    HitRecord temp_rec;
     double closest_so_far = ray_t.max;
     bool hit_anything = false;
 

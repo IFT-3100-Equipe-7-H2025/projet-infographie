@@ -1,29 +1,15 @@
 #pragma once
 
+#ifndef SCENEOBJECT_H
+#define SCENEOBJECT_H
+
 #include "ofMain.h"
 #include "renderer/rayTracer/ray.h"
 #include "renderer/Interval.h"
+#include "HitRecord.h"
+#include "Material.h"
 #include "AABB.h"
-
-class Material;
-
-class hit_record
-{
-public:
-    ofVec3f p;
-    ofVec3f normal;
-    shared_ptr<Material> mat;
-    float t;
-    double u;
-    double v;
-    bool front_face;
-
-    void set_face_normal(const Ray& r, const ofVec3f& outward_normal)
-    {
-        front_face = r.getDirection().dot(outward_normal) < 0;
-        normal = front_face ? outward_normal : -outward_normal;
-    }
-};
+//#include "Material.h"
 
 class SceneObject : public ofNode
 {
@@ -44,7 +30,7 @@ public:
     }
 
     
-    virtual bool hit(const Ray& r, Interval ray_t, hit_record& rec)
+    virtual bool hit(const Ray& r, Interval ray_t, HitRecord& rec)
     {
         ofLog() << "Default no hit" << endl;
         return false;
@@ -108,9 +94,22 @@ public:
         return new_mesh;
     }
 
+    shared_ptr<Material> getMaterial()
+    {
+        return mat;
+    }
+
+    void setMaterial(shared_ptr<Material> material)
+    {
+        mat->setColor(material->getColor());
+        mat->setFuzz(material->getFuzz());
+        mat->setRefractionIndex(material->getRefractionIndex());
+    }
+
 
 
 protected:
     shared_ptr<Material> mat;
 
 };
+#endif

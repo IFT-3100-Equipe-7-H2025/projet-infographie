@@ -72,7 +72,7 @@ public:
     AABB bounding_box() const override { return bbox; }
 
 
-    bool hit(const Ray& r, Interval ray_t, hit_record& rec) override
+    bool hit(const Ray& r, Interval ray_t, HitRecord& rec) override
     {
         //update();
         auto denom = normal.dot(r.getDirection());

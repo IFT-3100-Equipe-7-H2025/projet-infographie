@@ -1,8 +1,9 @@
 ﻿#pragma once
 #ifndef MATERIAL_H
 #define MATERIAL_H
-#include "SceneObject.h"
+#include "HitRecord.h"
 #include "Vec3.h"
+#include "Ray.h"
 
 
 enum matType
@@ -17,6 +18,11 @@ const char* materialLabels[] = {
         "Glass",
         "Lambert"};
 
+
+
+
+
+
 //inline Material getMaterial(matType type, ofColor albedo, double fuzz, double refracion_index)
 //{
 //    switch (type)
@@ -30,9 +36,14 @@ const char* materialLabels[] = {
 class Material
 {
 public:
+
+    Material(ofColor color, float fuzz, float refraction) : albedo(color), fuzz(fuzz), refraction_index(refraction)
+    {
+    }
+
     virtual ~Material() = default;
 
-    virtual bool scatter(const Ray& ray_in, const hit_record& rec, ofColor& attenuation, Ray& scattered) const {
+    virtual bool scatter(const Ray& ray_in, const HitRecord& rec, ofColor& attenuation, Ray& scattered) const {
         ofLog() << "Scattering wrong" << endl;
         return false;
     }
@@ -46,21 +57,42 @@ public:
         return albedo;
     }
 
+    double getFuzz()
+    {
+        return fuzz;
+    }
+
+    double getRefractionIndex()
+    {
+        return refraction_index;
+    }
+
+    void setFuzz(double p_fuzz)
+    {
+        fuzz = p_fuzz;
+    }
+
+    void setRefractionIndex(double p_refraction_index)
+    {
+        refraction_index = p_refraction_index;
+    }
+
     virtual std::shared_ptr<Material> clone() const = 0;
 
 protected:
-    ofColor albedo;
+    ofColor albedo = ofColor(255, 255, 255);
+    double fuzz = 0.0;
+    double refraction_index = 1.0;
 };
 
 class Lambert : public Material
 {
     public:
-    Lambert(const ofColor& p_albedo)
+    Lambert(const ofColor& p_albedo) : Material(p_albedo, 0.0, 1.0)
     {
-        albedo = p_albedo;
     }
 
-    bool scatter(const Ray& r_in, const hit_record& rec, ofColor& attenuation, Ray& scattered) const override
+    bool scatter(const Ray& r_in, const HitRecord& rec, ofColor& attenuation, Ray& scattered) const override
     {
         Vec3 scatter_direction = rec.normal + random_unit_vector();
         if (scatter_direction.near_zero())
@@ -85,13 +117,10 @@ class Lambert : public Material
 class Metal : public Material
 {
 public:
-    Metal(const ofColor& p_albedo, double fuzz) : fuzz(fuzz)
-    {
-        albedo = p_albedo;
-    }
+    Metal(const ofColor& p_albedo, double p_fuzz) : Material(p_albedo, p_fuzz, 1.0) {}
 
 
-    bool scatter(const Ray& r_in, const hit_record& rec, ofColor& attenuation, Ray& scattered) const override
+    bool scatter(const Ray& r_in, const HitRecord& rec, ofColor& attenuation, Ray& scattered) const override
     {
         Vec3 reflected = reflect(r_in.getDirection(), rec.normal);
         reflected = unit_vector(reflected) + (fuzz * random_unit_vector());
@@ -105,17 +134,16 @@ public:
     }
 
 
-private:
-    double fuzz;
+
 };
 
 
 class Dielectric : public Material
 {
 public:
-    Dielectric(double refraction_index) : refraction_index(refraction_index) {}
+    Dielectric(double p_refraction_index) : Material(ofColor(255, 255, 255), 0.0, p_refraction_index) {}
 
-    bool scatter(const Ray& r_in, const hit_record& rec, ofColor& attenuation, Ray& scattered)
+    bool scatter(const Ray& r_in, const HitRecord& rec, ofColor& attenuation, Ray& scattered)
             const override
     {
         Vec3 unit_direction = unit_vector(r_in.getDirection());
@@ -149,7 +177,6 @@ public:
     }
 
 private:
-    double refraction_index;
 
     static double reflectance(double cosine, double refraction_index) {
         auto r0 = (1 - refraction_index) / (1 + refraction_index);
@@ -157,5 +184,24 @@ private:
         return r0 + (1 - r0) * std::pow((1 - cosine), 5);
     }
 };
+
+
+
+inline matType getMaterialType(shared_ptr<Material> material)
+{
+    if (shared_ptr<Lambert> lambert = std::dynamic_pointer_cast<Lambert>(material); lambert)
+    {
+        return LambertT;
+    }
+    if (shared_ptr<Metal> metal = std::dynamic_pointer_cast<Metal>(material); metal)
+    {
+        return MetalT;
+    }
+    if (shared_ptr<Dielectric> glass = std::dynamic_pointer_cast<Dielectric>(material); glass)
+    {
+        return GlassT;
+    }
+    return LambertT;
+}
 
 #endif

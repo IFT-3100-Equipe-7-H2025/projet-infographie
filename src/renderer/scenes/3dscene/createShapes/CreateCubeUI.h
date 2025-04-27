@@ -6,7 +6,8 @@
 #include "of3dPrimitives.h"
 #include "renderer/PrimitiveCreator.h"
 #include "Cube.h"
-
+#include "BvhNode.h"
+#include "RayMesh.h"
 constexpr float DEFAULT_CUBE_WIDTH = 100.0f;
 constexpr float DEFAULT_CUBE_HEIGHT = 100.0f;
 constexpr float DEFAULT_CUBE_DEPTH = 100.0f;
@@ -31,8 +32,8 @@ public:
                 //auto cube = ofBoxPrimitive(width, height, depth);
                 //for (int i = 0; i < 6; i++) { cube.setSideColor(i, ofFloatColor(sharedParams->color[0], sharedParams->color[1], sharedParams->color[2], sharedParams->color[3])); }
 
-                auto cube = PrimitiveCreator::createCube(width, height, depth);
-                ofMesh& mesh = cube.getMesh();
+                auto prim = PrimitiveCreator::createCube(width, height, depth);
+                ofMesh& mesh = prim.getMesh();
 
                 ofFloatColor color(sharedParams->color[0], sharedParams->color[1], sharedParams->color[2], sharedParams->color[3]);
                 for (size_t i = 0; i < mesh.getNumVertices(); ++i)
@@ -43,8 +44,23 @@ public:
                 shared_ptr<Material> mat = sharedParams->material->clone();
 
 
-                auto cube_3d = Primitive3D(cube);
-                auto cube_ptr = std::make_shared<Node>("Cube", std::make_shared<Cube>(Vec3(width, height, depth), mat, cube));
+                RayMesh cube(mat, prim);
+                auto cube_ptr = std::make_shared<Node>("Cube", std::make_shared<RayMesh>(cube));
+
+                if (sharedParams->useBVH)
+                {
+                    ComposedShape shape = ComposedShape(make_shared<BvhNode>(cube), mat);
+                    cube_ptr = std::make_shared<Node>("Cube", std::make_shared<ComposedShape>(shape));
+                    ofLog() << "Using BVH";
+                }
+                else
+                {
+                    ofLog() << "Not uing BVH";
+                }
+
+
+                //auto cube_3d = Primitive3D(cube);
+                //cube_ptr = std::make_shared<Node>("Cube", std::make_shared<Cube>(Vec3(width, height, depth), mat, cube));
 
                 history.executeCommand(std::make_shared<AddChildToNodeCommand>(*sharedParams->selectedNode, cube_ptr));
             }

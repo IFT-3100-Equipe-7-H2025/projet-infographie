@@ -51,11 +51,22 @@ public:
                     mesh.addColor(color);
                 }
                 RayMesh sphere(mat, prim);
+                auto sphere_ptr = std::make_shared<Node>("Sphere", std::make_shared<RayMesh>(sphere));
+
+                if (sharedParams->useBVH) {
+                    ComposedShape shape = ComposedShape(make_shared<BvhNode>(sphere), mat);
+                    sphere_ptr = std::make_shared<Node>("Sphere", std::make_shared<ComposedShape>(shape));
+                    ofLog() << "Using BVH";
+
+                }
+                else {
+                    ofLog() << "Not uing BVH";
+
+                }
                 
-                ComposedShape shape = ComposedShape(make_shared<BvhNode>(sphere, 11), mat);
-                auto sphere_ptr = std::make_shared<Node>("Sphere", std::make_shared<ComposedShape>(shape));
-                //Sphere sphere_scene(prim, radius, )
-                //auto sphere_ptr = std::make_shared<Node>("Sphere", std::make_shared<Sphere>(sphere_scene));
+                
+                //Sphere sphere_scene();
+                sphere_ptr = std::make_shared<Node>("Sphere", std::make_shared<Sphere>(prim, radius, mat));
                 history.executeCommand(std::make_shared<AddChildToNodeCommand>(*sharedParams->selectedNode, sphere_ptr));
             }
 
