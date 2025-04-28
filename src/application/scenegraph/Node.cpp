@@ -102,7 +102,9 @@ void Node::Draw(const std::shared_ptr<Shader>& lightingModel, const glm::vec3& l
         else if (auto material_ptr = std::dynamic_pointer_cast<PBRMaterial>(this->material); material_ptr)
         {
             material_ptr->begin();
-            material_ptr->SetUniforms(lightPosition);
+            glm::mat4 viewMatrix = ofGetCurrentMatrix(OF_MATRIX_MODELVIEW);
+            glm::vec4 lightPosInViewSpace = viewMatrix * glm::vec4(lightPosition, 1.0);
+            material_ptr->SetUniforms(lightPosInViewSpace);
         }
         inner->draw();
         if (lightingModel) { lightingModel->end(); }
