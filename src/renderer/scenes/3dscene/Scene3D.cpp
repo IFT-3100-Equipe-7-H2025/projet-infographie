@@ -160,7 +160,7 @@ void Scene3D::drawScene()
         auto light = this->FindLight();
         if (light)
         {
-            sceneGraph.Draw(this->selectedLightingModel, light->getPosition());
+            sceneGraph.Draw(this->selectedLightingModel, light->getGlobalPosition());
         }
     }
 

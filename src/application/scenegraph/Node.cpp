@@ -81,6 +81,9 @@ void Node::Draw(const std::shared_ptr<Shader>& lightingModel, const glm::vec3& l
 
             glm::mat4 viewMatrix = ofGetCurrentMatrix(OF_MATRIX_MODELVIEW);
             glm::vec4 lightPosInViewSpace = viewMatrix * glm::vec4(lightPosition, 1.0);
+            ofLog() << "Rendering node with material:" << this->name;
+            ofLog() << "Light position in world space: " << lightPosition;
+            ofLog() << "Light position in view space: " << lightPosInViewSpace;
             lightingModel->setUniform3f("color_ambient", ambientColor.r, ambientColor.g, ambientColor.b);
             lightingModel->setUniform3f("color_diffuse", diffuseColor.r, diffuseColor.g, diffuseColor.b);
             lightingModel->setUniform3f("color_specular", specularColor.r, specularColor.g, specularColor.b);
