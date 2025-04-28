@@ -15,6 +15,7 @@ void Renderer::Setup()
 
     ofEnableDepthTest();
     ofEnableLighting();
+    ofEnableAlphaBlending();
 
     //ofSetLogLevel(ofLogLevel::OF_LOG_VERBOSE);
 

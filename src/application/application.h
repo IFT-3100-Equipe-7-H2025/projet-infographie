@@ -1,14 +1,11 @@
 #pragma once
 
-#include "GeometryScene.h"
-#include "ImageHistogramScene.h"
-#include "ImportImageScene.h"
-#include "PrimitiveScene.h"
-#include "RotatingCubeScene.h"
 #include "ofMain.h"
 #include "renderer/cursor/CursorManager.h"
 #include "renderer/renderer.h"
 #include "renderer/scenes/3dscene/Scene3D.h"
+#include "renderer/scenes/GeometryScene.h"
+#include "renderer/scenes/ImageHistogramScene.h"
 #include "renderer/scenes/ImportImageScene.h"
 #include "renderer/scenes/PrimitiveScene.h"
 #include "renderer/scenes/RotatingCubeScene.h"
@@ -22,7 +19,7 @@ public:
     void update() override;
     void draw() override;
     void keyPressed(ofKeyEventArgs& key) override;
-    void keyReleased(int key) override;
+    void keyReleased(ofKeyEventArgs& key) override;
     void dragEvent(ofDragInfo dragInfo) override;
 
     void mouseReleased(int x, int y, int button) override;

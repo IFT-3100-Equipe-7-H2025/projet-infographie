@@ -22,10 +22,9 @@ public:
                 light.enable();
                 light.setDiffuseColor(ofFloatColor(1.0, 1.0, 1.0));
                 light.setSpecularColor(ofFloatColor(1.0, 1.0, 1.0));
-                light.setAmbientColor(ofFloatColor(0.2, 0.2, 0.2));
-                light.lookAt(ofVec3f((float) ofGetWidth() / 2.0f, (float) ofGetHeight() / 2.0f, 0));
+                light.lookAt(ofVec3f(static_cast<float>(ofGetWidth()) / 2.0f, static_cast<float>(ofGetHeight()) / 2.0f, 0));
 
-                auto light_ptr = std::make_shared<Node>("Light", std::make_shared<ofLight>(light));
+                auto light_ptr = std::make_shared<Node>("Light", std::make_shared<Light>(light, LightType::POINT));
 
                 history.executeCommand(std::make_shared<AddChildToNodeCommand>(*sharedParams->selectedNode, light_ptr));
             }

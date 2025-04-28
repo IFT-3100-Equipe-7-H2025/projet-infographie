@@ -2,6 +2,7 @@
 
 #include "3dscene/commands/AddShapeChildToNodeCommand.h"
 #include "CreateShapeUI.h"
+#include "Primitive3D.h"
 #include "imgui.h"
 #include "ofAppRunner.h"
 #include "renderer/PrimitiveCreator.h"
@@ -31,18 +32,10 @@ public:
             if (ImGui::Button("Add"))
             {
                 auto pyramid = PrimitiveCreator::createPyramid(sides, width, height, depth);
-
-                auto& mesh = pyramid.getMesh();
-
-                ofFloatColor color(sharedParams->color[0], sharedParams->color[1], sharedParams->color[2], sharedParams->color[3]);
-                for (size_t i = 0; i < mesh.getNumVertices(); ++i)
-                {
-                    mesh.addColor(color);
-                }
-
                 auto pyramid_3d = Primitive3D(pyramid);
-                auto pyramid_ptr = std::make_shared<Node>("Pyramid", std::make_shared<Primitive3D>(pyramid_3d));
+                pyramid_3d.SetColor(ofFloatColor(sharedParams->color[0], sharedParams->color[1], sharedParams->color[2], sharedParams->color[3]));
 
+                auto pyramid_ptr = std::make_shared<Node>("Pyramid", std::make_shared<Primitive3D>(pyramid_3d));
                 history.executeCommand(std::make_shared<AddChildToNodeCommand>(*sharedParams->selectedNode, pyramid_ptr));
             }
 

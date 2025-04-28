@@ -1,8 +1,10 @@
 #pragma once
 
 #include "3dscene/commands/CommandHistory.h"
+#include "Light.h"
 #include "Scene.h"
 #include "SceneObject.h"
+#include "Shader.h"
 #include "createShapes/CreateShapeUI.h"
 #include "createShapes/SharedShapeCreationParams.h"
 #include "ofMain.h"
@@ -28,8 +30,10 @@ public:
 
     void DrawSceneGraphWindow();
     void DrawSelectedNodeWindow();
+    void DrawModifyMaterialWindow();
+    void DrawSelectLightingModelWindow();
 
-    void DrawModifyLightSliders(const std::shared_ptr<ofLight>& light);
+    void DrawModifyLightSliders(const std::shared_ptr<Light>& light);
     void DrawModifyCameraNodeSliders(const std::shared_ptr<Node>& node, shared_ptr<ofCamera> camera);
 
     void DrawModifyNodeSliders(const std::shared_ptr<Node>& node);
@@ -47,10 +51,26 @@ public:
     void dragEvent(ofDragInfo dragInfo) override;
     void keyPressed(int key) override;
     void keyPressed(ofKeyEventArgs& key) override;
-    void keyReleased(int key) override;
+    void keyReleased(ofKeyEventArgs& key) override;
     void windowResized(int w, int h) override;
     /*void nextCam();
     void previousCam();*/
+
+    // Finds the first light in the scene graph
+    // Returns a shared pointer to the first light found in the scene graph, or nullptr if no light is found.
+    std::shared_ptr<Light> FindLight()
+    {
+        std::shared_ptr<Light> light = nullptr;
+        for (const auto& node: sceneGraph.GetNodes())
+        {
+            if (auto lightNode = std::dynamic_pointer_cast<Light>(node->GetInner()); lightNode)
+            {
+                light = lightNode;
+                return light;
+            }
+        }
+        return light;
+    }
 
 private:
     CommandHistory history;
@@ -67,14 +87,15 @@ private:
     float rotate[3] = {0.0f, 0.0f, 0.0f};
     glm::quat initialRotation;// Used to store the initial rotation of the selected node when using the sliders, so that we can undo the change in a single command
 
+    float color[4] = {1.0f, 1.0f, 1.0f, 1.0f};
+    ofFloatColor initialColor;// Used to store the initial color of the selected node when using the sliders, so that we can undo the change in a single command
+
     float fov = 0;
     float initialFov = 0;
 
     std::shared_ptr<SharedShapeCreationParams> sharedParams;
 
     std::vector<std::unique_ptr<CreateShapeUI>> createShapeUIs;
-
-    ofMaterial material;
 
     using Toggled = bool;
     using DrawFrustum = bool;
@@ -177,4 +198,8 @@ private:
             this->history.executeCommand(command);
         }
     }
+
+    std::vector<std::shared_ptr<Material>> registeredMaterials;
+    std::vector<std::shared_ptr<Shader>> lightingModels;
+    std::shared_ptr<Shader> selectedLightingModel;
 };
