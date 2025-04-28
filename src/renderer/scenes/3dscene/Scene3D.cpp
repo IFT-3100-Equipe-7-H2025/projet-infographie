@@ -11,7 +11,6 @@
 #include "3dscene/createShapes/CreatePyramidUI.h"
 #include "3dscene/createShapes/CreateSphereUI.h"
 #include "Light.h"
-#include "Material.h"
 #include "MoveChildCommand.h"
 #include "SceneObject.h"
 #include "SetCameraFovCommand.h"
@@ -19,6 +18,7 @@
 #include "SetMaterialCommand.h"
 #include "Shader.h"
 #include "imgui.h"
+#include "material/ShaderMaterial.h"
 #include "of3dPrimitives.h"
 #include "ofAppRunner.h"
 #include "ofGraphics.h"
@@ -49,14 +49,14 @@ void Scene3D::setup()
     this->createShapeUIs.push_back(std::make_unique<CreatePyramidUI>(CreatePyramidUI(this->sharedParams, this->history)));
     this->createShapeUIs.emplace_back(std::make_unique<CreateCameraUI>(CreateCameraUI(this->sharedParams, this->history)));
 
-    this->registeredMaterials.push_back(std::make_shared<Material>(DEFAULT_MATERIAL, "Default"));
+    this->registeredMaterials.push_back(DEFAULT_MATERIAL);
 
     ofMaterial specularMaterial;
     specularMaterial.setAmbientColor(ofFloatColor(0.1f, 0.1f, 0.1f));
     specularMaterial.setDiffuseColor(ofFloatColor(0.6f, 0.5f, 0.5f));
     specularMaterial.setSpecularColor(ofFloatColor(0.5f, 0.5f, 0.3f));
     specularMaterial.setShininess(64);
-    this->registeredMaterials.push_back(std::make_shared<Material>(specularMaterial, "Specular"));
+    this->registeredMaterials.push_back(std::make_shared<DefaultMaterial>(std::make_shared<ofMaterial>(specularMaterial), "Specular"));
 
     ofMaterial emissiveMaterial;
     emissiveMaterial.setShininess(1);
@@ -64,7 +64,9 @@ void Scene3D::setup()
     emissiveMaterial.setDiffuseColor(ofFloatColor(0.8f, 0.5f, 0.2f, 1.0f));
     emissiveMaterial.setSpecularColor(ofFloatColor(0.0f, 0.0f, 0.0f, 1.0f));
     emissiveMaterial.setEmissiveColor(ofFloatColor(0.6f, 0.0f, 0.0f, 1.0f));
-    this->registeredMaterials.push_back(std::make_shared<Material>(emissiveMaterial, "Emissive"));
+    this->registeredMaterials.push_back(std::make_shared<DefaultMaterial>(std::make_shared<ofMaterial>(emissiveMaterial), "Emissive"));
+
+    this->registeredMaterials.push_back(std::make_shared<PBRMaterial>("PBR"));
 
     // Add base light
     auto light = ofLight();

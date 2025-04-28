@@ -1,20 +1,18 @@
 #pragma once
+
+#include <ofShader.h>
 #include <string>
 
 class Shader : public ofShader
 {
 public:
-    Shader() : ofShader()
-             , name("Shader") {};
+    Shader() : ofShader(), name("Shader") {};
 
-    explicit Shader(std::string name) : ofShader()
-                                      , name(std::move(name)) {};
+    explicit Shader(std::string name) : ofShader(), name(std::move(name)) {};
 
-    explicit Shader(const ofShader& Shader) : ofShader(Shader)
-                                            , name("Shader") {};
+    explicit Shader(const ofShader& Shader) : ofShader(Shader), name("Shader") {};
 
-    Shader(const ofShader& Shader, std::string name) : ofShader(Shader)
-                                                     , name(std::move(name)) {};
+    Shader(const ofShader& Shader, std::string name) : ofShader(Shader), name(std::move(name)) {};
 
     [[nodiscard]] std::string GetName() const { return this->name; }
 

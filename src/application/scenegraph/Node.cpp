@@ -1,12 +1,11 @@
 #include "Node.h"
 
 #include "Light.h"
+#include "material/ShaderMaterial.h"
 #include "of3dPrimitives.h"
 #include <memory>
 
-Node::Node(std::string name, std::shared_ptr<ofNode> node) : inner(std::move(node))
-                                                           , name(std::move(name))
-                                                           , id(nextId++)
+Node::Node(std::string name, std::shared_ptr<ofNode> node) : inner(std::move(node)), name(std::move(name)), id(nextId++)
 {}
 
 bool Node::AddChild(std::shared_ptr<Node> child)
@@ -66,19 +65,19 @@ void Node::Draw(const std::shared_ptr<Shader>& lightingModel, const glm::vec3& l
 {
     if (inner)
     {
-        if ( material && lightingModel == nullptr )
+        if (material && lightingModel == nullptr)
         {
             material->begin();
         }
-        if ( lightingModel )
+        if (auto material_ptr = std::dynamic_pointer_cast<DefaultMaterial>(this->material); lightingModel && material_ptr)
         {
             lightingModel->begin();
 
             // For Lambert, Gouraud, Phong and Blinn-Phong
-            auto ambientColor = material->getAmbientColor();
-            auto diffuseColor = material->getDiffuseColor();
-            auto specularColor = material->getSpecularColor();
-            auto shininess = material->getShininess();
+            auto ambientColor = material_ptr->GetMaterial()->getAmbientColor();
+            auto diffuseColor = material_ptr->GetMaterial()->getDiffuseColor();
+            auto specularColor = material_ptr->GetMaterial()->getSpecularColor();
+            auto shininess = material_ptr->GetMaterial()->getShininess();
 
             glm::mat4 viewMatrix = ofGetCurrentMatrix(OF_MATRIX_MODELVIEW);
             glm::vec4 lightPosInViewSpace = viewMatrix * glm::vec4(lightPosition, 1.0);
@@ -100,9 +99,14 @@ void Node::Draw(const std::shared_ptr<Shader>& lightingModel, const glm::vec3& l
             lightingModel->setUniform1f("uAlpha", 0.25f);
             lightingModel->setUniform1f("uBeta", 0.25f);
         }
+        else if (auto material_ptr = std::dynamic_pointer_cast<PBRMaterial>(this->material); material_ptr)
+        {
+            material_ptr->begin();
+            material_ptr->SetUniforms(lightPosition);
+        }
         inner->draw();
-        if ( lightingModel ) { lightingModel->end(); }
-        if ( material && lightingModel == nullptr )
+        if (lightingModel) { lightingModel->end(); }
+        if (material && lightingModel == nullptr)
         {
             material->end();
         }

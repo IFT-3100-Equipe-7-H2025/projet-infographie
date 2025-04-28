@@ -1,8 +1,9 @@
 #pragma once
 
 #include "Light.h"
-#include "Material.h"
 #include "Shader.h"
+#include "material/DefaultMaterial.h"
+#include "material/Material.h"
 #include "ofNode.h"
 
 typedef unsigned int NodeId;
@@ -43,7 +44,7 @@ private:
     std::weak_ptr<Node> parent;
     std::vector<std::shared_ptr<Node>> children;
 
-    std::shared_ptr<Material> material = std::make_shared<Material>(DEFAULT_MATERIAL);
+    std::shared_ptr<Material> material = DEFAULT_MATERIAL;
 
     std::string name;
     NodeId id;
