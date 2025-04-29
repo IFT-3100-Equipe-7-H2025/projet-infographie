@@ -469,7 +469,14 @@ void Scene3D::DrawModifyMaterialWindow()
         {
             if (ImGui::Button(material->GetName().c_str()))
             {
-                this->history.executeCommand(std::make_shared<SetMaterialCommand>(*this->selectedNode, material));
+                if (material->GetName() == "PBR")
+                {
+                    this->history.executeCommand(std::make_shared<SetMaterialCommand>(*this->selectedNode, std::make_shared<PBRMaterial>("PBR")));
+                }
+                else
+                {
+                    this->history.executeCommand(std::make_shared<SetMaterialCommand>(*this->selectedNode, material));
+                }
             }
         }
 
@@ -479,19 +486,19 @@ void Scene3D::DrawModifyMaterialWindow()
 
             ImGui::Text("PBR Material");
             float color_ambient[3] = {pbr_material->material_color_ambient.r / 255.0f, pbr_material->material_color_ambient.g / 255.0f, pbr_material->material_color_ambient.b / 255.0f};
-            if (ImGui::ColorEdit3("Color ambient", color_ambient))
+            if (ImGui::ColorEdit3("Ambient color", color_ambient))
             {
                 pbr_material->material_color_ambient = glm::vec3(color_ambient[0] * 255.0f, color_ambient[1] * 255.0f, color_ambient[2] * 255.0f);
             }
 
             float color_diffuse[3] = {pbr_material->material_color_diffuse.r / 255.0f, pbr_material->material_color_diffuse.g / 255.0f, pbr_material->material_color_diffuse.b / 255.0f};
-            if (ImGui::ColorEdit3("Color diffuse", color_diffuse))
+            if (ImGui::ColorEdit3("Diffuse color", color_diffuse))
             {
                 pbr_material->material_color_diffuse = glm::vec3(color_diffuse[0] * 255.0f, color_diffuse[1] * 255.0f, color_diffuse[2] * 255.0f);
             }
 
             float color_specular[3] = {pbr_material->material_color_specular.r / 255.0f, pbr_material->material_color_specular.g / 255.0f, pbr_material->material_color_specular.b / 255.0f};
-            if (ImGui::ColorEdit3("Color specular", color_specular))
+            if (ImGui::ColorEdit3("Specular color", color_specular))
             {
                 pbr_material->material_color_specular = glm::vec3(color_specular[0] * 255.0f, color_specular[1] * 255.0f, color_specular[2] * 255.0f);
             }
