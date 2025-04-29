@@ -14,12 +14,17 @@
 #include "MoveChildCommand.h"
 #include "SceneObject.h"
 #include "SetCameraFovCommand.h"
+#include "SetColorCommand.h"
+#include "SetMaterialCommand.h"
+#include "Shader.h"
 #include "imgui.h"
+#include "material/ShaderMaterial.h"
 #include "of3dPrimitives.h"
 #include "ofAppRunner.h"
 #include "ofGraphics.h"
 #include "renderer/sceneObjects/ImportModel.h"
 #include <cmath>
+#include <memory>
 #include <numbers>
 #include "renderer/rayTracer/ray.h"
 #include "Quad.h"
@@ -47,20 +52,34 @@ void Scene3D::setup()
     this->createShapeUIs.push_back(std::make_unique<CreatePyramidUI>(CreatePyramidUI(this->sharedParams, this->history)));
     this->createShapeUIs.emplace_back(std::make_unique<CreateCameraUI>(CreateCameraUI(this->sharedParams, this->history)));
 
-    material.setAmbientColor(ofFloatColor(0.1, 0.1, 0.1));
-    material.setDiffuseColor(ofFloatColor(1.0, 0.5, 0.5));
-    material.setSpecularColor(ofFloatColor(1.0, 1.0, 1.0));
-    material.setShininess(64);
+    this->registeredMaterials.push_back(DEFAULT_MATERIAL);
+
+    ofMaterial specularMaterial;
+    specularMaterial.setAmbientColor(ofFloatColor(0.1f, 0.1f, 0.1f));
+    specularMaterial.setDiffuseColor(ofFloatColor(0.6f, 0.5f, 0.5f));
+    specularMaterial.setSpecularColor(ofFloatColor(0.5f, 0.5f, 0.3f));
+    specularMaterial.setShininess(64);
+    this->registeredMaterials.push_back(std::make_shared<DefaultMaterial>(std::make_shared<ofMaterial>(specularMaterial), "Specular"));
+
+    ofMaterial emissiveMaterial;
+    emissiveMaterial.setShininess(1);
+    emissiveMaterial.setAmbientColor(ofFloatColor(0.2f, 0.2f, 0.2f, 1.0f));
+    emissiveMaterial.setDiffuseColor(ofFloatColor(0.8f, 0.5f, 0.2f, 1.0f));
+    emissiveMaterial.setSpecularColor(ofFloatColor(0.0f, 0.0f, 0.0f, 1.0f));
+    emissiveMaterial.setEmissiveColor(ofFloatColor(0.6f, 0.0f, 0.0f, 1.0f));
+    this->registeredMaterials.push_back(std::make_shared<DefaultMaterial>(std::make_shared<ofMaterial>(emissiveMaterial), "Emissive"));
+
+    this->registeredMaterials.push_back(std::make_shared<PBRMaterial>("PBR"));
 
     // Add base light
     auto light = ofLight();
     light.enable();
     light.setDiffuseColor(ofFloatColor(1.0, 1.0, 1.0));
     light.setSpecularColor(ofFloatColor(1.0, 1.0, 1.0));
-    light.setAmbientColor(ofFloatColor(0.1, 0.1, 0.1));
-    light.lookAt(ofVec3f((float) ofGetWidth() / 2.0f, (float) ofGetHeight() / 2.0f, 0));
+    light.setPosition(ofVec3f(0.0f, 0.0f, 0.0f));
+    light.lookAt(ofVec3f(static_cast<float>(ofGetWidth()) / 2.0f, static_cast<float>(ofGetHeight()) / 2.0f, 0));
 
-    auto light_ptr = std::make_shared<Node>("Light", std::make_shared<ofLight>(light));
+    auto light_ptr = std::make_shared<Node>("Light", std::make_shared<Light>(light, LightType::POINT));
     this->sceneGraph.AddNode(light_ptr);
 
     ofBoxPrimitive box(100, 100, 100);
@@ -135,6 +154,31 @@ void Scene3D::setup()
 
 }
 
+    auto lambert = ofShader();
+    lambert.load("shaders/lambert.vert", "shaders/lambert.frag");
+
+    auto gouraud = ofShader();
+    gouraud.load("shaders/gouraud.vert", "shaders/gouraud.frag");
+
+    auto phong = ofShader();
+    phong.load("shaders/phong.vert", "shaders/phong.frag");
+
+    auto blinn_phong = ofShader();
+    blinn_phong.load("shaders/blinn_phong.vert", "shaders/blinn_phong.frag");
+
+    auto gooch = ofShader();
+    gooch.load("shaders/gooch.vert", "shaders/gooch.frag");
+
+
+    this->lightingModels.push_back(std::make_shared<Shader>(DEFAULT_SHADER));
+    this->lightingModels.push_back(std::make_shared<Shader>(lambert, "Lambert"));
+    this->lightingModels.push_back(std::make_shared<Shader>(gouraud, "Gouraud"));
+    this->lightingModels.push_back(std::make_shared<Shader>(phong, "Phong"));
+    this->lightingModels.push_back(std::make_shared<Shader>(blinn_phong, "Blinn-Phong"));
+    this->lightingModels.push_back(std::make_shared<Shader>(gooch, "Gooch"));
+
+    this->selectedLightingModel = this->lightingModels[0];
+}
 
 void Scene3D::draw()
 {
@@ -146,6 +190,8 @@ void Scene3D::draw()
     this->DrawSceneGraphWindow();
     this->DrawSelectedNodeWindow();
     this->DrawCommandHistoryWindow();
+    this->DrawModifyMaterialWindow();
+    this->DrawSelectLightingModelWindow();
 
     for (auto& camera: cameras)
     {
@@ -208,8 +254,15 @@ void Scene3D::draw()
 
 void Scene3D::drawScene()
 {
-    material.begin();
-    sceneGraph.Draw();
+    if (this->selectedLightingModel->GetName() == "Default") { sceneGraph.Draw(); }
+    else
+    {
+        auto light = this->FindLight();
+        if (light)
+        {
+            sceneGraph.Draw(this->selectedLightingModel, light->getPosition());
+        }
+    }
 
     if (is_selected)
     {
@@ -218,8 +271,6 @@ void Scene3D::drawScene()
 
         selectionMesh.draw();
     }
-
-    material.end();
 }
 
 void Scene3D::DrawSceneGraphWindow()
@@ -257,7 +308,7 @@ void Scene3D::DrawSelectedNodeWindow()
             this->DrawModifyNodeSliders(*this->selectedNode);
 
 
-            if (auto light = std::dynamic_pointer_cast<ofLight>(this->selectedNode->get()->GetInner()); light)
+            if (auto light = std::dynamic_pointer_cast<Light>(this->selectedNode->get()->GetInner()); light)
             {
                 this->DrawModifyLightSliders(light);
             }
@@ -349,91 +400,93 @@ void Scene3D::DrawSelectedNodeWindow()
     }
 }
 
-void Scene3D::DrawModifyLightSliders(const std::shared_ptr<ofLight>& light)
+
+void Scene3D::DrawModifyLightSliders(const std::shared_ptr<Light>& light)
 {
-    bool tempIsEnabled = light->getIsEnabled();
+    bool tempIsEnabled = light->GetIsEnabled();
     if (ImGui::Checkbox("Activate", &tempIsEnabled))
     {
         if (tempIsEnabled)
         {
-            light->enable();
+            light->Enable();
         }
         else
         {
-            light->disable();
+            light->Disable();
         }
     }
 
-    bool isDirectional = light->getIsDirectional();
-    bool isSpotlight = light->getIsSpotlight();
-    bool isPointLight = light->getIsPointLight();
+    LightType lightType = light->GetLightType();
+
+    bool isDirectional = lightType == LightType::DIRECTIONAL;
+    bool isSpotlight = lightType == LightType::SPOT;
+    bool isPointLight = lightType == LightType::POINT;
+    bool isAmbientLight = lightType == LightType::AMBIENT;
     if (ImGui::Checkbox("Directional", &isDirectional))
     {
-        light->setDirectional();
+        light->SetLightType(LightType::DIRECTIONAL);
     }
     ImGui::SameLine();
     if (ImGui::Checkbox("Spotlight", &isSpotlight))
     {
-        light->setSpotlight();
+        light->SetLightType(LightType::SPOT);
     }
     ImGui::SameLine();
     if (ImGui::Checkbox("Point light", &isPointLight))
     {
-        light->setPointLight();
+        light->SetLightType(LightType::POINT);
     }
+    ImGui::SameLine();
+    if (ImGui::Checkbox("Ambient light", &isAmbientLight)) { light->SetLightType(LightType::AMBIENT); }
 
-    ofFloatColor diffuseColor = light->getDiffuseColor();
-    float diffuseColorArr[3] = {diffuseColor.r, diffuseColor.g, diffuseColor.b};
-    if (ImGui::ColorEdit3("Diffuse color", diffuseColorArr))
+
+    lightType = light->GetLightType();
+
+    isDirectional = lightType == LightType::DIRECTIONAL;
+    isSpotlight = lightType == LightType::SPOT;
+    isPointLight = lightType == LightType::POINT;
+    isAmbientLight = lightType == LightType::AMBIENT;
+
+    if (!isAmbientLight)
     {
-        light->setDiffuseColor(ofFloatColor(diffuseColorArr[0], diffuseColorArr[1], diffuseColorArr[2]));
-    }
+        ofFloatColor diffuseColor = light->GetDiffuseColor();
+        float diffuseColorArr[3] = {diffuseColor.r, diffuseColor.g, diffuseColor.b};
+        if (ImGui::ColorEdit3("Diffuse color", diffuseColorArr)) { light->SetDiffuseColor(ofFloatColor(diffuseColorArr[0], diffuseColorArr[1], diffuseColorArr[2])); }
 
-    ofFloatColor specularColor = light->getSpecularColor();
-    float specularColorArr[3] = {specularColor.r, specularColor.g, specularColor.b};
-    if (ImGui::ColorEdit3("Specular color", specularColorArr))
+        ofFloatColor specularColor = light->GetSpecularColor();
+        float specularColorArr[3] = {specularColor.r, specularColor.g, specularColor.b};
+        if (ImGui::ColorEdit3("Specular color", specularColorArr)) { light->SetSpecularColor(ofFloatColor(specularColorArr[0], specularColorArr[1], specularColorArr[2])); }
+    }
+    else
     {
-        light->setSpecularColor(ofFloatColor(specularColorArr[0], specularColorArr[1], specularColorArr[2]));
+        ofFloatColor ambientColor = light->GetAmbientColor();
+        float ambientColorArr[3] = {ambientColor.r, ambientColor.g, ambientColor.b};
+        if (ImGui::ColorEdit3("Ambient color", ambientColorArr)) { light->SetAmbientColor(ofFloatColor(ambientColorArr[0], ambientColorArr[1], ambientColorArr[2])); }
     }
-
-    isDirectional = light->getIsDirectional();
-    isSpotlight = light->getIsSpotlight();
-    isPointLight = light->getIsPointLight();
 
     if (isSpotlight)
     {
-        float spotCutOff = light->getSpotlightCutOff();
+        float spotCutOff = light->GetSpotlightCutOff();
         if (ImGui::SliderFloat("Spotlight cut off", &spotCutOff, 0, 90))
         {
-            light->setSpotlightCutOff(spotCutOff);
+            light->SetSpotlightCutOff(spotCutOff);
         }
 
-        float spotConcentration = light->getSpotConcentration();
+        float spotConcentration = light->GetSpotConcentration();
         if (ImGui::SliderFloat("Spotlight concentration", &spotConcentration, 0, 128))
         {
-            light->setSpotConcentration(spotConcentration);
+            light->SetSpotConcentration(spotConcentration);
         }
     }
-    else if (isPointLight)
-    {
-        float attenuationConstant = light->getAttenuationConstant();
-        if (ImGui::SliderFloat("Attenuation constant", &attenuationConstant, 0, 1))
-        {
-            light->setAttenuation(attenuationConstant, light->getAttenuationLinear(), light->getAttenuationQuadratic());
-        }
 
-        float attenuationLinear = light->getAttenuationLinear();
-        if (ImGui::SliderFloat("Attenuation linear", &attenuationLinear, 0, 0.01, "%.5f"))
-        {
-            light->setAttenuation(attenuationConstant, attenuationLinear, light->getAttenuationQuadratic());
-        }
+    float attenuationConstant = light->GetAttenuationConstant();
+    if (ImGui::SliderFloat("Attenuation constant", &attenuationConstant, 0, 1)) { light->SetAttenuationConstant(attenuationConstant); }
 
-        float attenuationQuadratic = light->getAttenuationQuadratic();
-        if (ImGui::SliderFloat("Attenuation quadratic", &attenuationQuadratic, 0, 0.001, "%.6f"))
-        {
-            light->setAttenuation(attenuationConstant, attenuationLinear, attenuationQuadratic);
-        }
-    }
+    float attenuationLinear = light->GetAttenuationLinear();
+    if (ImGui::SliderFloat("Attenuation linear", &attenuationLinear, 0, 0.01, "%.5f")) { light->SetAttenuationLinear(attenuationLinear); }
+
+    float attenuationQuadratic = light->GetAttenuationQuadratic();
+    if (ImGui::SliderFloat("Attenuation quadratic", &attenuationQuadratic, 0, 0.001, "%.6f")) { light->SetAttenuationQuadratic(attenuationQuadratic); }
 }
 
 void Scene3D::DrawModifyCameraNodeSliders(const std::shared_ptr<Node>& node, shared_ptr<Camera> camera)
@@ -490,7 +543,8 @@ void Scene3D::DrawModifyNodeSliders(const std::shared_ptr<Node>& node)
     if (ImGui::SliderFloat3("Rotate", this->rotate, -360.0f, 360.0f))
     {
         glm::quat newRotation = glm::quat(glm::radians(glm::vec3(this->rotate[0], this->rotate[1], this->rotate[2])));
-        inner->setOrientation(newRotation);
+        if (auto light = std::dynamic_pointer_cast<Light>(inner); light) { light->setOrientation(newRotation); }
+        else { inner->setOrientation(newRotation); }
     }
     if (ImGui::IsItemActivated())
     {
@@ -516,6 +570,59 @@ void Scene3D::DrawModifyNodeSliders(const std::shared_ptr<Node>& node)
     {
         this->history.executeCommand(std::make_shared<SetScaleCommand>(node, glm::vec3(this->scale[0], this->scale[1], this->scale[2]), this->initialScale));
     }
+
+    // Color
+    if (const auto primitive = std::dynamic_pointer_cast<Primitive3D>(node->GetInner()); primitive)
+    {
+        const ofFloatColor currentColor = primitive->GetColor();
+        if (ImGui::ColorEdit4("Color##ChangeColor", this->color))
+        {
+            primitive->SetColor(ofFloatColor(this->color[0], this->color[1], this->color[2], this->color[3]));
+        }
+        if (ImGui::IsItemActivated())
+        {
+            this->initialColor = currentColor;
+        }
+        if (ImGui::IsItemDeactivatedAfterEdit())
+        {
+            this->history.executeCommand(std::make_shared<SetColorCommand>(node, ofFloatColor(this->color[0], this->color[1], this->color[2], this->color[3]), this->initialColor));
+        }
+    }
+}
+
+void Scene3D::DrawModifyMaterialWindow()
+{
+    if ((*this->selectedNode) != nullptr)
+    {
+        ImGui::SetNextWindowPos(ImVec2(320, 440), ImGuiCond_FirstUseEver);
+        ImGui::SetNextWindowSize(ImVec2(300, 400), ImGuiCond_FirstUseEver);
+        ImGui::Begin("Select material");
+        ImGui::Text("Selected node: %s", (*this->selectedNode)->GetName().c_str());
+        ImGui::Text("Material: %s", (*this->selectedNode)->GetMaterial()->GetName().c_str());
+
+        ImGui::Text("Available materials:");
+        for (const std::shared_ptr<Material>& material: this->registeredMaterials)
+        {
+            if (ImGui::Button(material->GetName().c_str()))
+            {
+                this->history.executeCommand(std::make_shared<SetMaterialCommand>(*this->selectedNode, material));
+            }
+        }
+        ImGui::End();
+    }
+}
+
+void Scene3D::DrawSelectLightingModelWindow()
+{
+    ImGui::SetNextWindowPos(ImVec2(630, 30), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowSize(ImVec2(300, 400), ImGuiCond_FirstUseEver);
+    ImGui::Begin("Select scene lighting model");
+    ImGui::Text("Lighting model: %s", this->selectedLightingModel->GetName().c_str());
+    for (const std::shared_ptr<Shader>& shader: this->lightingModels)
+    {
+        if (ImGui::Button(shader->GetName().c_str())) { this->selectedLightingModel = shader; }
+    }
+    ImGui::End();
 
 
     if (shared_ptr<Primitive3D> rayObject = std::dynamic_pointer_cast<Primitive3D>(node->GetInner()); rayObject)
@@ -700,6 +807,14 @@ void Scene3D::ResetParams(const std::shared_ptr<Node>& node)
     rotate[1] = eulerRotation.y;
     rotate[2] = eulerRotation.z;
 
+    if (const auto primitive = std::dynamic_pointer_cast<Primitive3D>(node->GetInner()); primitive)
+    {
+        const ofFloatColor currentColor = primitive->GetColor();
+        color[0] = currentColor.r;
+        color[1] = currentColor.g;
+        color[2] = currentColor.b;
+        color[3] = currentColor.a;
+    }
 
     if (auto camera = std::dynamic_pointer_cast<Camera>(node->GetInner()); camera)
     {
@@ -1069,101 +1184,109 @@ void Scene3D::keyPressed(int key)
             break;
         case 'p':
             toggleOrtho();
+            break;
     }
 }
 
 void Scene3D::keyPressed(ofKeyEventArgs& key)
 {
+    ofLog() << "Key pressed: " << key.keycode << " with modifiers: " << key.modifiers;
     if (key.hasModifier(OF_KEY_CONTROL))
     {
-        switch (charToLower(key.key))
+        switch (charToLower(key.keycode))
         {
-            case 26://z
+            case 'z'://z
+                ofLog() << "Undo";
                 this->history.undo();
                 break;
-            case 25://y
+            case 'y'://y
+                ofLog() << "Redo";
                 this->history.redo();
                 break;
         }
+        return;
     }
     else { this->keyPressed(key.key); }
 }
 
-void Scene3D::keyReleased(int key)
+void Scene3D::keyReleased(ofKeyEventArgs& key)
 {
-    key = charToLower(key);
-
-    switch (key)
+    key.key = charToLower(key.key);
+    if (key.modifiers == 0)
     {
-        case 119://w
-            is_key_press_w = false;
-            applyCameraTranslation();
-            break;
-        case 100://d
-            is_key_press_d = false;
-            applyCameraTranslation();
-            break;
-        case 115://s
-            is_key_press_s = false;
-            applyCameraTranslation();
-            break;
-        case 97://a
-            is_key_press_a = false;
-            applyCameraTranslation();
-            break;
-        case 57357://up
-            is_key_press_up = false;
-            applyCameraRotation();
-            break;
-        case 57358://right
-            is_key_press_right = false;
-            applyCameraRotation();
-            break;
-        case 57359://down
-            is_key_press_down = false;
-            applyCameraRotation();
-            break;
-        case 57356://left
-            is_key_press_left = false;
-            applyCameraRotation();
-            break;
-        case 113://q
-            is_key_press_q = false;
-            applyCameraTranslation();
-            break;
-        case 101://e
-            is_key_press_e = false;
-            applyCameraTranslation();
-            break;
-        case 102://f
-            is_key_press_f = false;
-            break;
-        case 103:
-            is_key_press_g = false;
-            break;
-        case 114://r
-            storeCameraTranslation();
-            storeCameraRotation();
-            reset();
-            applyCameraTranslation();
-            applyCameraRotation();
-            break;
-        case 45://-
-            is_key_press_minus = false;
-            applyCameraRotation();
-            break;
-        case 61:// =
-            is_key_press_plus = false;
-            applyCameraRotation();
-            break;
-        case 107://k
-            debugger = !debugger;
-            break;
-        case 'y':
-            storeCameraRotation();
-            focus();
-            applyCameraRotation();
-            break;
+        switch (key.key)
+        {
+            case 119://w
+                is_key_press_w = false;
+                applyCameraTranslation();
+                break;
+            case 100://d
+                is_key_press_d = false;
+                applyCameraTranslation();
+                break;
+            case 115://s
+                is_key_press_s = false;
+                applyCameraTranslation();
+                break;
+            case 97://a
+                is_key_press_a = false;
+                applyCameraTranslation();
+                break;
+            case 57357://up
+                is_key_press_up = false;
+                applyCameraRotation();
+                break;
+            case 57358://right
+                is_key_press_right = false;
+                applyCameraRotation();
+                break;
+            case 57359://down
+                is_key_press_down = false;
+                applyCameraRotation();
+                break;
+            case 57356://left
+                is_key_press_left = false;
+                applyCameraRotation();
+                break;
+            case 113://q
+                is_key_press_q = false;
+                applyCameraTranslation();
+                break;
+            case 101://e
+                is_key_press_e = false;
+                applyCameraTranslation();
+                break;
+            case 102://f
+                is_key_press_f = false;
+                break;
+            case 103:
+                is_key_press_g = false;
+                break;
+            case 114://r
+                storeCameraTranslation();
+                storeCameraRotation();
+                reset();
+                applyCameraTranslation();
+                applyCameraRotation();
+                break;
+            case 45://-
+                is_key_press_minus = false;
+                applyCameraRotation();
+                break;
+            case 61:// =
+                is_key_press_plus = false;
+                applyCameraRotation();
+                break;
+            case 107://k
+                debugger = !debugger;
+                break;
+            case 'y':
+                ofLog() << "focus";
+                storeCameraRotation();
+                focus();
+                applyCameraRotation();
+                break;
+        }
     }
 }
 

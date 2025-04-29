@@ -2,6 +2,7 @@
 
 #include "3dscene/commands/AddShapeChildToNodeCommand.h"
 #include "CreateShapeUI.h"
+#include "Primitive3D.h"
 #include "imgui.h"
 #include "of3dPrimitives.h"
 #include "Primitive3D.h"
@@ -32,6 +33,11 @@ public:
 
             if (ImGui::Button("Add"))
             {
+                auto sphere = PrimitiveCreator::createSphere(30, 30, radius);
+                auto sphere_3d = Primitive3D(sphere);
+                sphere_3d.SetColor(ofFloatColor(sharedParams->color[0], sharedParams->color[1], sharedParams->color[2], sharedParams->color[3]));
+
+                auto sphere_ptr = std::make_shared<Node>("Sphere", std::make_shared<Primitive3D>(sphere_3d));
                 ofFloatColor color(sharedParams->color[0], sharedParams->color[1], sharedParams->color[2], sharedParams->color[3]);
                 ofLog() << "Material Color" << color;
                 shared_ptr<Material> mat = sharedParams->material->clone();
@@ -45,11 +51,7 @@ public:
                 //of3dPrimitive sphere = PrimitiveCreator::createSphere(30, 30, radius);
                 //ofMesh mesh = sphere.getMesh();
                 auto& mesh = prim.getMesh();
-
-                for (size_t i = 0; i < mesh.getNumVertices(); ++i)
-                {
-                    mesh.addColor(color);
-                }
+                
                 RayMesh sphere(mat, prim);
                 auto sphere_ptr = std::make_shared<Node>("Sphere", std::make_shared<RayMesh>(sphere));
 

@@ -29,6 +29,11 @@ public:
 
             if (ImGui::Button("Add"))
             {
+                auto cube = PrimitiveCreator::createCube(width, height, depth);
+                auto cube_3d = Primitive3D(cube);
+                cube_3d.SetColor(ofFloatColor(sharedParams->color[0], sharedParams->color[1], sharedParams->color[2], sharedParams->color[3]));
+
+                auto cube_ptr = std::make_shared<Node>("Cube", std::make_shared<Primitive3D>(cube_3d));
                 //auto cube = ofBoxPrimitive(width, height, depth);
                 //for (int i = 0; i < 6; i++) { cube.setSideColor(i, ofFloatColor(sharedParams->color[0], sharedParams->color[1], sharedParams->color[2], sharedParams->color[3])); }
 

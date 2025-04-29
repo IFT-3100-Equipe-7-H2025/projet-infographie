@@ -124,6 +124,25 @@ public:
         return &this->wireFrame;
     }
 
+    void SetColor(const ofColor& color)
+    {
+        auto& mesh = model.getMesh();
+        mesh.clearColors();
+
+        auto floatColor = ofFloatColor(color);
+        for (size_t i = 0; i < mesh.getNumVertices(); ++i)
+        {
+            mesh.addColor(floatColor);
+        }
+
+        this->color = floatColor;
+    }
+
+    [[nodiscard]] const ofFloatColor& GetColor() const
+    {
+        return this->color;
+    }
+
     void setVisible(bool on)
     {
         this->isVisible = on;
@@ -157,6 +176,8 @@ private:
 
 protected:
     of3dPrimitive model;
+    bool wireFrame = false;
+    ofFloatColor color = ofFloatColor(1.0f, 1.0f, 1.0f, 1.0f);
     AABB bbox;
 
     

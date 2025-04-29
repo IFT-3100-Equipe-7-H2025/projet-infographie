@@ -139,7 +139,7 @@ void Application::dragEvent(ofDragInfo dragInfo)
     }
 }
 
-void Application::keyReleased(int key)
+void Application::keyReleased(ofKeyEventArgs& key)
 {
     //ofLog() << "<app::keyReleased: " << key << ">";
     try

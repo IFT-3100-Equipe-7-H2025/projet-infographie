@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Light.h"
 #include "scenegraph/Node.h"
 #include <glm/glm.hpp>
 #include <memory>
@@ -11,7 +12,7 @@ class SceneGraph
 public:
     SceneGraph();
 
-    void Draw() const;
+    void Draw(const std::shared_ptr<Shader>& lightingModel = nullptr, const glm::vec3& lightPosition = glm::vec3(0.0f)) const;
 
     void AddNode(std::shared_ptr<Node> node);
     [[nodiscard]] std::shared_ptr<Node> GetRoot() const;

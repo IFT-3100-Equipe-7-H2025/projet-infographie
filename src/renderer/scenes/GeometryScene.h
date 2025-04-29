@@ -1,4 +1,5 @@
 #pragma once
+#include "PrimitiveCreator.h"
 #include "Scene.h"
 #include "imgui.h"
 #include "of3dPrimitives.h"
@@ -6,14 +7,12 @@
 #include "ofMesh.h"
 #include <ofxAssimpModelLoader.h>
 #include <vector>
-#include "PrimitiveCreator.h"
-
 
 
 class GeometryScene : public Scene
 {
 
-friend class Scene3D;
+    friend class Scene3D;
 
 public:
     void draw() override;
@@ -23,8 +22,8 @@ public:
     void mousePressed(int x, int y, int button) override;
     void mouseDragged(int x, int y, int button) override;
     void dragEvent(ofDragInfo dragInfo) override;
-void     keyPressed(ofKeyEventArgs& key) override;
-    void keyReleased(int key) override;
+    void keyPressed(ofKeyEventArgs& key) override;
+    void keyReleased(ofKeyEventArgs& key) override;
     void nextCam();
     void previousCam();
 

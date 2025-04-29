@@ -2,6 +2,7 @@
 
 #include "3dscene/commands/AddShapeChildToNodeCommand.h"
 #include "CreateShapeUI.h"
+#include "Primitive3D.h"
 #include "imgui.h"
 #include "ofAppRunner.h"
 #include "renderer/PrimitiveCreator.h"
@@ -46,6 +47,9 @@ public:
 
 
                 auto pyramid_3d = Primitive3D(pyramid);
+                pyramid_3d.SetColor(ofFloatColor(sharedParams->color[0], sharedParams->color[1], sharedParams->color[2], sharedParams->color[3]));
+
+                auto pyramid_ptr = std::make_shared<Node>("Pyramid", std::make_shared<Primitive3D>(pyramid_3d));
                 //auto pyramid_ptr = std::make_shared<Node>("Pyramid", std::make_shared<Pyramid>(sides, Vec3(width, height, depth), mat, pyramid));
                 auto pyramid_ptr = std::make_shared<Node>("Pyramid", std::make_shared<RayMesh>(mat, pyramid));
 
