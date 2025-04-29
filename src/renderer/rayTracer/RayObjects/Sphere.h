@@ -4,7 +4,7 @@
 class Sphere : public Primitive3D
 {
 public:
-    Sphere(of3dPrimitive primitive, float radius, const shared_ptr<Material> material) : Primitive3D(primitive), center(getGlobalPosition()), radius(std::fmax(0,radius)) {
+    Sphere(of3dPrimitive primitive, float radius, const shared_ptr<RayMaterial> material) : Primitive3D(primitive), center(getGlobalPosition()), radius(std::fmax(0,radius)) {
         mat = material;
         update();
         
@@ -61,7 +61,7 @@ private:
 
 
 
-//    Sphere(of3dPrimitive primitive, float radius, shared_ptr<Material> material) : Primitive3D(primitive), center(getGlobalPosition()), radiusX(std::fmax(0, radius)), radiusY(std::fmax(0, radius)), radiusZ(std::fmax(0, radius))
+//    Sphere(of3dPrimitive primitive, float radius, shared_ptr<RayMaterial> material) : Primitive3D(primitive), center(getGlobalPosition()), radiusX(std::fmax(0, radius)), radiusY(std::fmax(0, radius)), radiusZ(std::fmax(0, radius))
 //{
 //    mat = material;
 //    update();

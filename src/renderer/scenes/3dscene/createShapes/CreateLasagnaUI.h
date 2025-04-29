@@ -39,28 +39,17 @@ public:
 
             if (ImGui::Button("Add"))
             {
-                auto lasagna = PrimitiveCreator::createLasagna(l_w_ratio, periods, resolution_l, resolution_w, width, height, depth);
-                auto lasagna_3d = Primitive3D(lasagna);
-                lasagna_3d.SetColor(ofFloatColor(sharedParams->color[0], sharedParams->color[1], sharedParams->color[2], sharedParams->color[3]));
+                shared_ptr<RayMaterial> mat = sharedParams->material->clone();
 
-                auto lasagna_ptr = std::make_shared<Node>("Lasagna", std::make_shared<Primitive3D>(lasagna_3d));
                 auto prim = PrimitiveCreator::createLasagna(l_w_ratio, periods, resolution_l, resolution_w, width, height, depth);
-
-                auto& mesh = prim.getMesh();
-
-                ofFloatColor color(sharedParams->color[0], sharedParams->color[1], sharedParams->color[2], sharedParams->color[3]);
-                for (size_t i = 0; i < mesh.getNumVertices(); ++i)
-                {
-                    mesh.addColor(color);
-                }
-                shared_ptr<Material> mat = sharedParams->material->clone();
+                //auto lasagna_3d = Primitive3D(prim);
                 RayMesh lasagna(mat, prim);
 
-                ComposedShape shape = ComposedShape(make_shared<BvhNode>(lasagna, 11), mat);
+                lasagna.SetColor(ofFloatColor(sharedParams->color[0], sharedParams->color[1], sharedParams->color[2], sharedParams->color[3]));
+
+                ComposedShape shape = ComposedShape(make_shared<BvhNode>(lasagna), mat);
                 auto lasagna_ptr = std::make_shared<Node>("Lasagna", std::make_shared<ComposedShape>(shape));
 
-                //auto lasagna_3d = Primitive3D(lasagna);
-                //auto lasagna_ptr = std::make_shared<Node>("Lasagna", std::make_shared<ComposedShape>(mat, lasagna));
                 history.executeCommand(std::make_shared<AddChildToNodeCommand>(*sharedParams->selectedNode, lasagna_ptr));
             }
 

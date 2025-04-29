@@ -4,10 +4,10 @@
 #define SCENEOBJECT_H
 
 #include "ofMain.h"
-#include "renderer/rayTracer/ray.h"
-#include "renderer/Interval.h"
+#include "renderer/rayTracer/Ray.h"
+#include "renderer/rayTracer/Interval.h"
 #include "HitRecord.h"
-#include "Material.h"
+#include "RayMaterial.h"
 #include "AABB.h"
 //#include "Material.h"
 
@@ -94,12 +94,12 @@ public:
         return new_mesh;
     }
 
-    shared_ptr<Material> getMaterial()
+    shared_ptr<RayMaterial> getMaterial()
     {
         return mat;
     }
 
-    void setMaterial(shared_ptr<Material> material)
+    void setMaterial(shared_ptr<RayMaterial> material)
     {
         mat->setColor(material->getColor());
         mat->setFuzz(material->getFuzz());
@@ -109,7 +109,7 @@ public:
 
 
 protected:
-    shared_ptr<Material> mat;
+    shared_ptr<RayMaterial> mat;
 
 };
 #endif

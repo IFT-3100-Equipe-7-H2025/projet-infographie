@@ -26,10 +26,10 @@
 #include <cmath>
 #include <memory>
 #include <numbers>
-#include "renderer/rayTracer/ray.h"
-#include "Quad.h"
-#include "Cube.h"
+#include "renderer/rayTracer/Ray.h"
+#include "renderer/rayTracer/RayObjects/Cube.h"
 #include "Material.h"
+#include "RayMaterial.h"
 #include <ranges>
 
 Scene3D::Scene3D() : history(CommandHistory()),
@@ -150,9 +150,6 @@ void Scene3D::setup()
 
     font.load("fonts/JetBrainsMono-Regular.ttf", 12, true, true);
 
-
-
-}
 
     auto lambert = ofShader();
     lambert.load("shaders/lambert.vert", "shaders/lambert.frag");
@@ -1041,7 +1038,7 @@ void Scene3D::dragEvent(ofDragInfo dragInfo)
         {
             model->setPosition(0, 0, 0);
             ofMesh mesh = model->getCombinedMesh();
-            shared_ptr<Material> lambert = make_shared<Lambert>(ofColor(255, 5, 50));
+            shared_ptr<RayMaterial> lambert = make_shared<Lambert>(ofColor(255, 5, 50));
             shared_ptr<Node> node = make_shared<Node>("Object ",  make_shared<RayMesh>(lambert ,mesh));
             shared_ptr<Node> parent = *selectedNode;
             history.executeCommand(std::make_shared<AddChildToNodeCommand>(parent, node));

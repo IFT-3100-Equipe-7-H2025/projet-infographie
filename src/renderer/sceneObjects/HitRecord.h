@@ -4,16 +4,17 @@
 #define HITRECORD_H
 
 #include "ofMain.h"
-#include "renderer/rayTracer/ray.h"
+#include "renderer/rayTracer/Ray.h"
 
-class Material;
+
+class RayMaterial;
 
 class HitRecord
 {
 public:
     ofVec3f p;
     ofVec3f normal;
-    shared_ptr<Material> mat;
+    shared_ptr<RayMaterial> mat;
     float t;
     double u;
     double v;

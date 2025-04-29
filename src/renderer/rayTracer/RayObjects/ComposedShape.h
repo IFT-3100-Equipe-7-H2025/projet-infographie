@@ -16,7 +16,7 @@ public:
     ComposedShape() {}
 
         
-    ComposedShape(shared_ptr<Primitive3D> object, shared_ptr<Material> material): Primitive3D(*object)
+    ComposedShape(shared_ptr<Primitive3D> object, shared_ptr<RayMaterial> material): Primitive3D(*object)
     {
         mat = material;
         copy(*object);
@@ -24,7 +24,7 @@ public:
         update();
     }
 
-    ComposedShape(const Vec3& size, shared_ptr<Material> material, of3dPrimitive primitive) : mat(material), size(size), Primitive3D(primitive, material)
+    ComposedShape(const Vec3& size, shared_ptr<RayMaterial> material, of3dPrimitive primitive) : mat(material), size(size), Primitive3D(primitive, material)
     {
         mat = material;
         model = primitive;
@@ -82,7 +82,7 @@ protected:
 
 
     Vec3 size;
-    shared_ptr<Material> mat;
+    shared_ptr<RayMaterial> mat;
 
 private:
 

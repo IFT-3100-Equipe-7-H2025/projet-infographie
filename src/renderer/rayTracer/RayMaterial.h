@@ -1,6 +1,6 @@
 ﻿#pragma once
-#ifndef MATERIAL_H
-#define MATERIAL_H
+#ifndef RAYMATERIAL_H
+#define RAYMATERIAL_H
 #include "HitRecord.h"
 #include "Vec3.h"
 #include "Ray.h"
@@ -33,15 +33,15 @@ const char* materialLabels[] = {
 //}
 //
 
-class Material
+class RayMaterial
 {
 public:
 
-    Material(ofColor color, float fuzz, float refraction) : albedo(color), fuzz(fuzz), refraction_index(refraction)
+    RayMaterial(ofColor color, float fuzz, float refraction) : albedo(color), fuzz(fuzz), refraction_index(refraction)
     {
     }
 
-    virtual ~Material() = default;
+    virtual ~RayMaterial() = default;
 
     virtual bool scatter(const Ray& ray_in, const HitRecord& rec, ofColor& attenuation, Ray& scattered) const {
         ofLog() << "Scattering wrong" << endl;
@@ -77,7 +77,7 @@ public:
         refraction_index = p_refraction_index;
     }
 
-    virtual std::shared_ptr<Material> clone() const = 0;
+    virtual std::shared_ptr<RayMaterial> clone() const = 0;
 
 protected:
     ofColor albedo = ofColor(255, 255, 255);
@@ -85,10 +85,10 @@ protected:
     double refraction_index = 1.0;
 };
 
-class Lambert : public Material
+class Lambert : public RayMaterial
 {
     public:
-    Lambert(const ofColor& p_albedo) : Material(p_albedo, 0.0, 1.0)
+    Lambert(const ofColor& p_albedo) : RayMaterial(p_albedo, 0.0, 1.0)
     {
     }
 
@@ -105,7 +105,7 @@ class Lambert : public Material
         return true;
     }
 
-    std::shared_ptr<Material> clone() const override
+    std::shared_ptr<RayMaterial> clone() const override
     {
         return std::make_shared<Lambert>(*this);
     }
@@ -114,10 +114,10 @@ class Lambert : public Material
 };
 
 
-class Metal : public Material
+class Metal : public RayMaterial
 {
 public:
-    Metal(const ofColor& p_albedo, double p_fuzz) : Material(p_albedo, p_fuzz, 1.0) {}
+    Metal(const ofColor& p_albedo, double p_fuzz) : RayMaterial(p_albedo, p_fuzz, 1.0) {}
 
 
     bool scatter(const Ray& r_in, const HitRecord& rec, ofColor& attenuation, Ray& scattered) const override
@@ -128,7 +128,7 @@ public:
         attenuation = albedo;
         return (scattered.getDirection().dot(rec.normal) > 0);
     }
-    std::shared_ptr<Material> clone() const override
+    std::shared_ptr<RayMaterial> clone() const override
     {
         return std::make_shared<Metal>(*this);
     }
@@ -138,10 +138,10 @@ public:
 };
 
 
-class Dielectric : public Material
+class Dielectric : public RayMaterial
 {
 public:
-    Dielectric(double p_refraction_index) : Material(ofColor(255, 255, 255), 0.0, p_refraction_index) {}
+    Dielectric(double p_refraction_index) : RayMaterial(ofColor(255, 255, 255), 0.0, p_refraction_index) {}
 
     bool scatter(const Ray& r_in, const HitRecord& rec, ofColor& attenuation, Ray& scattered)
             const override
@@ -171,7 +171,7 @@ public:
         return true;
     }
 
-    std::shared_ptr<Material> clone() const override
+    std::shared_ptr<RayMaterial> clone() const override
     {
         return std::make_shared<Dielectric>(*this);
     }
@@ -187,7 +187,7 @@ private:
 
 
 
-inline matType getMaterialType(shared_ptr<Material> material)
+inline matType getMaterialType(shared_ptr<RayMaterial> material)
 {
     if (shared_ptr<Lambert> lambert = std::dynamic_pointer_cast<Lambert>(material); lambert)
     {

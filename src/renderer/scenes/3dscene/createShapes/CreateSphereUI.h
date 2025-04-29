@@ -6,7 +6,7 @@
 #include "imgui.h"
 #include "of3dPrimitives.h"
 #include "Primitive3D.h"
-#include "../Sphere.h"
+#include "rayTracer/RayObjects/Sphere.h"
 #include "renderer/PrimitiveCreator.h"
 #include "RayMesh.h"
 #include "BvhNode.h"
@@ -33,43 +33,30 @@ public:
 
             if (ImGui::Button("Add"))
             {
-                auto sphere = PrimitiveCreator::createSphere(30, 30, radius);
-                auto sphere_3d = Primitive3D(sphere);
+                shared_ptr<RayMaterial> mat = sharedParams->material->clone();
+
+                auto sphere = PrimitiveCreator::createSphere(resolution_lat, resolution_lon, radius);
+                Sphere sphere_3d(sphere, radius, mat);
                 sphere_3d.SetColor(ofFloatColor(sharedParams->color[0], sharedParams->color[1], sharedParams->color[2], sharedParams->color[3]));
 
                 auto sphere_ptr = std::make_shared<Node>("Sphere", std::make_shared<Primitive3D>(sphere_3d));
-                ofFloatColor color(sharedParams->color[0], sharedParams->color[1], sharedParams->color[2], sharedParams->color[3]);
-                ofLog() << "Material Color" << color;
-                shared_ptr<Material> mat = sharedParams->material->clone();
 
-                ofLog() << "Material Color" << mat->getColor();
+                history.executeCommand(std::make_shared<AddChildToNodeCommand>(*sharedParams->selectedNode, sphere_ptr));
 
 
 
-                of3dPrimitive prim = PrimitiveCreator::createSphere(resolution_lat, resolution_lon, radius);
-                //RayMesh sphere = PrimitiveCreator::createSphere(30, 30, radius, mat);
-                //of3dPrimitive sphere = PrimitiveCreator::createSphere(30, 30, radius);
-                //ofMesh mesh = sphere.getMesh();
-                auto& mesh = prim.getMesh();
+
+ /*               of3dPrimitive prim = PrimitiveCreator::createSphere(resolution_lat, resolution_lon, radius);
+                RayMesh sphere_3d(mat, sphere);
                 
-                RayMesh sphere(mat, prim);
                 auto sphere_ptr = std::make_shared<Node>("Sphere", std::make_shared<RayMesh>(sphere));
 
                 if (sharedParams->useBVH) {
                     ComposedShape shape = ComposedShape(make_shared<BvhNode>(sphere), mat);
                     sphere_ptr = std::make_shared<Node>("Sphere", std::make_shared<ComposedShape>(shape));
-                    ofLog() << "Using BVH";
-
-                }
-                else {
-                    ofLog() << "Not uing BVH";
-
-                }
+                }*/
                 
-                
-                //Sphere sphere_scene();
-                sphere_ptr = std::make_shared<Node>("Sphere", std::make_shared<Sphere>(prim, radius, mat));
-                history.executeCommand(std::make_shared<AddChildToNodeCommand>(*sharedParams->selectedNode, sphere_ptr));
+               
             }
 
             ImGui::TreePop();

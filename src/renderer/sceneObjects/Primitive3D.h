@@ -2,8 +2,8 @@
 
 #include "SceneObject.h"
 #include "ofMain.h"
-#include "renderer/rayTracer/ray.h"
-#include "Material.h"
+#include "renderer/rayTracer/Ray.h"
+#include "RayMaterial.h"
 
 
 
@@ -25,7 +25,7 @@ public:
         initialize();
     }
 
-    Primitive3D(of3dPrimitive primitive, shared_ptr<Material> material)
+    Primitive3D(of3dPrimitive primitive, shared_ptr<RayMaterial> material)
     {
         mat = material;
         ofLog() << "Material created!";
@@ -167,7 +167,6 @@ public:
     };
 
 private:
-    bool wireFrame = false;
     bool isVisible = true;
     float time_current;
     float time_elapsed;

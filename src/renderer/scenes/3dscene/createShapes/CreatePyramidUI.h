@@ -33,24 +33,13 @@ public:
 
             if (ImGui::Button("Add"))
             {
+                shared_ptr<RayMaterial> mat = sharedParams->material->clone();
+
                 auto pyramid = PrimitiveCreator::createPyramid(sides, width, height, depth);
 
-                auto& mesh = pyramid.getMesh();
-
-                ofFloatColor color(sharedParams->color[0], sharedParams->color[1], sharedParams->color[2], sharedParams->color[3]);
-                for (size_t i = 0; i < mesh.getNumVertices(); ++i)
-                {
-                    mesh.addColor(color);
-                }
-
-                 shared_ptr<Material> mat = sharedParams->material->clone();
-
-
-                auto pyramid_3d = Primitive3D(pyramid);
+                RayMesh pyramid_3d = RayMesh(mat, pyramid);
                 pyramid_3d.SetColor(ofFloatColor(sharedParams->color[0], sharedParams->color[1], sharedParams->color[2], sharedParams->color[3]));
 
-                auto pyramid_ptr = std::make_shared<Node>("Pyramid", std::make_shared<Primitive3D>(pyramid_3d));
-                //auto pyramid_ptr = std::make_shared<Node>("Pyramid", std::make_shared<Pyramid>(sides, Vec3(width, height, depth), mat, pyramid));
                 auto pyramid_ptr = std::make_shared<Node>("Pyramid", std::make_shared<RayMesh>(mat, pyramid));
 
                 history.executeCommand(std::make_shared<AddChildToNodeCommand>(*sharedParams->selectedNode, pyramid_ptr));

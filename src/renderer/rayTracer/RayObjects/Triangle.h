@@ -10,13 +10,13 @@
 class Triangle : public Primitive3D
 {
 public:
-    Triangle(shared_ptr<ofVec3f>& reference, shared_ptr<ofVec3f>& scale, shared_ptr<ofQuaternion>& orientation, const Vec3& Q, const Vec3& u, const Vec3& v, shared_ptr<Material> material) : 
+    Triangle(shared_ptr<ofVec3f>& reference, shared_ptr<ofVec3f>& scale, shared_ptr<ofQuaternion>& orientation, const Vec3& Q, const Vec3& u, const Vec3& v, shared_ptr<RayMaterial> material) : 
         ve(v), ue(u), scale(scale), orient(orientation), mat(material), u(u), v(v), reference(reference), Q(Q), corner(Q)
     {
         update();
     }
 
-    static Triangle triangleFromPoints(shared_ptr<ofVec3f>& reference, shared_ptr<ofVec3f>& scale, shared_ptr<ofQuaternion>& orientation, const Vec3& A, const Vec3& B, const Vec3& C, shared_ptr<Material> material)
+    static Triangle triangleFromPoints(shared_ptr<ofVec3f>& reference, shared_ptr<ofVec3f>& scale, shared_ptr<ofQuaternion>& orientation, const Vec3& A, const Vec3& B, const Vec3& C, shared_ptr<RayMaterial> material)
     {
         Vec3 Q = A;
         Vec3 u = B - A;
@@ -128,7 +128,7 @@ private:
     ofVec3f corner;
     Vec3 u, v, w;
     Vec3 ue, ve;
-    shared_ptr<Material> mat;
+    shared_ptr<RayMaterial> mat;
     Vec3 normal;
     double D;
     shared_ptr<ofVec3f> reference;
