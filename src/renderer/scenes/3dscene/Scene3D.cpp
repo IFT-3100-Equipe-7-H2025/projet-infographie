@@ -585,6 +585,31 @@ void Scene3D::DrawModifyNodeSliders(const std::shared_ptr<Node>& node)
             this->history.executeCommand(std::make_shared<SetColorCommand>(node, ofFloatColor(this->color[0], this->color[1], this->color[2], this->color[3]), this->initialColor));
         }
     }
+
+      if (shared_ptr<Primitive3D> rayObject = std::dynamic_pointer_cast<Primitive3D>(node->GetInner()); rayObject)
+    {
+        matType type = getMaterialType(rayObject->getMaterial());
+        ofColor color = rayObject->getMaterial()->getColor();
+        float colorf[4] = {color.r / 255.0f, color.g / 255.0f, color.b / 255.0f, color.a / 255.0f};
+        ImGui::ColorEdit4("Change Color", colorf);
+        color = ofColor(colorf[0] * 255.0f, colorf[1] * 255.0f, colorf[2] * 255.0f, colorf[3] * 255.0f);
+        if (type == matType::GlassT)
+        {
+            float refraction = rayObject->getMaterial()->getRefractionIndex();
+            ImGui::SliderFloat("Change Refract", &refraction, 0.1f, 10.0f);
+            rayObject->setMaterial(make_shared<Dielectric>(refraction));
+        }
+        else if (type == matType::MetalT)
+        {
+            float fuzz = rayObject->getMaterial()->getFuzz();
+            ImGui::SliderFloat("Change Fuzz", &fuzz, 0.1f, 10.0f);
+            rayObject->setMaterial(make_shared<Metal>(color, fuzz));
+        }
+        else if (type == matType::LambertT)
+        {
+            rayObject->setMaterial(make_shared<Lambert>(color));
+        }
+    }
 }
 
 void Scene3D::DrawModifyMaterialWindow()
@@ -620,41 +645,6 @@ void Scene3D::DrawSelectLightingModelWindow()
         if (ImGui::Button(shader->GetName().c_str())) { this->selectedLightingModel = shader; }
     }
     ImGui::End();
-
-
-    if (shared_ptr<Primitive3D> rayObject = std::dynamic_pointer_cast<Primitive3D>(node->GetInner()); rayObject)
-    {
-        //ImGui::ColorEdit4("Color", sharedParams->color);
-        //ofFloatColor color(sharedParams->color[0], sharedParams->color[1], sharedParams->color[2], sharedParams->color[3]);
-        //int selected = static_cast<int>(getMaterialType(rayObject->getMaterial()));
-        matType type = getMaterialType(rayObject->getMaterial());
-        //if (ImGui::Combo("Change Material", &selected, materialLabels, 3))
-        //{
-        //    ofLog() << "Choosing material" << endl;
-        //    type = static_cast<matType>(selected);
-        //}
-        ofColor color = rayObject->getMaterial()->getColor();
-        float colorf[4] = {color.r / 255.0f, color.g / 255.0f, color.b / 255.0f, color.a / 255.0f};
-        ImGui::ColorEdit4("Change Color", colorf);
-        color = ofColor(colorf[0] * 255.0f, colorf[1] * 255.0f, colorf[2] * 255.0f, colorf[3] * 255.0f);
-        if (type == matType::GlassT)
-        {
-            float refraction = rayObject->getMaterial()->getRefractionIndex();
-            ImGui::SliderFloat("Change Refract", &refraction, 0.1f, 10.0f);
-            rayObject->setMaterial(make_shared<Dielectric>(refraction));
-        }
-        else if (type == matType::MetalT)
-        {
-            float fuzz = rayObject->getMaterial()->getFuzz();
-            ImGui::SliderFloat("Change Fuzz", &fuzz, 0.1f, 10.0f);
-            rayObject->setMaterial(make_shared<Metal>(color, fuzz));
-        }
-        else if (type == matType::LambertT)
-        {
-            rayObject->setMaterial(make_shared<Lambert>(color));
-        }
-    }
-
 }
 
 void Scene3D::DrawCommandHistoryWindow()
