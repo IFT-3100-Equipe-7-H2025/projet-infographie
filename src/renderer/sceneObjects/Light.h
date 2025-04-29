@@ -1,7 +1,5 @@
 #pragma once
 
-#pragma once
-
 #include "SceneObject.h"
 #include "ofLight.h"
 #include "ofMain.h"

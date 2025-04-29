@@ -1,6 +1,12 @@
 #include "Scene3D.h"
 
+#include "3dscene/commands/EnableLightCommand.h"
 #include "3dscene/commands/RemoveNodeCommand.h"
+#include "3dscene/commands/SetLightAttenuationCommand.h"
+#include "3dscene/commands/SetLightColorsCommand.h"
+#include "3dscene/commands/SetLightSpotConcentrationCommand.h"
+#include "3dscene/commands/SetLightSpotCutOffCommand.h"
+#include "3dscene/commands/SetLightTypeCommand.h"
 #include "3dscene/commands/SetPositionCommand.h"
 #include "3dscene/commands/SetRotationCommand.h"
 #include "3dscene/commands/SetScaleCommand.h"
@@ -53,18 +59,17 @@ void Scene3D::setup()
 
     ofMaterial specularMaterial;
     specularMaterial.setAmbientColor(ofFloatColor(0.1f, 0.1f, 0.1f));
-    specularMaterial.setDiffuseColor(ofFloatColor(0.6f, 0.5f, 0.5f));
-    specularMaterial.setSpecularColor(ofFloatColor(0.5f, 0.5f, 0.3f));
-    specularMaterial.setShininess(64);
+    specularMaterial.setDiffuseColor(ofFloatColor(0.2f, 0.2f, 0.2f));
+    specularMaterial.setSpecularColor(ofFloatColor(0.5f, 0.5f, 1.0f));
+    specularMaterial.setShininess(25);
     this->registeredMaterials.push_back(std::make_shared<DefaultMaterial>(std::make_shared<ofMaterial>(specularMaterial), "Specular"));
 
-    ofMaterial emissiveMaterial;
-    emissiveMaterial.setShininess(1);
-    emissiveMaterial.setAmbientColor(ofFloatColor(0.2f, 0.2f, 0.2f, 1.0f));
-    emissiveMaterial.setDiffuseColor(ofFloatColor(0.8f, 0.5f, 0.2f, 1.0f));
-    emissiveMaterial.setSpecularColor(ofFloatColor(0.0f, 0.0f, 0.0f, 1.0f));
-    emissiveMaterial.setEmissiveColor(ofFloatColor(0.6f, 0.0f, 0.0f, 1.0f));
-    this->registeredMaterials.push_back(std::make_shared<DefaultMaterial>(std::make_shared<ofMaterial>(emissiveMaterial), "Emissive"));
+    ofMaterial redMaterial;
+    redMaterial.setShininess(1);
+    redMaterial.setAmbientColor(ofFloatColor(0.2f, 0.2f, 0.2f, 1.0f));
+    redMaterial.setDiffuseColor(ofFloatColor(0.8f, 0.5f, 0.2f, 1.0f));
+    redMaterial.setSpecularColor(ofFloatColor(0.0f, 0.0f, 0.0f, 1.0f));
+    this->registeredMaterials.push_back(std::make_shared<DefaultMaterial>(std::make_shared<ofMaterial>(redMaterial), "Emissive"));
 
     this->registeredMaterials.push_back(std::make_shared<PBRMaterial>("PBR"));
 
@@ -282,11 +287,11 @@ void Scene3D::DrawModifyLightSliders(const std::shared_ptr<Light>& light)
     {
         if (tempIsEnabled)
         {
-            light->Enable();
+            this->history.executeCommand(std::make_shared<EnableLightCommand>(light, true));
         }
         else
         {
-            light->Disable();
+            this->history.executeCommand(std::make_shared<EnableLightCommand>(light, false));
         }
     }
 
@@ -298,20 +303,23 @@ void Scene3D::DrawModifyLightSliders(const std::shared_ptr<Light>& light)
     bool isAmbientLight = lightType == LightType::AMBIENT;
     if (ImGui::Checkbox("Directional", &isDirectional))
     {
-        light->SetLightType(LightType::DIRECTIONAL);
+        this->history.executeCommand(std::make_shared<SetLightTypeCommand>(light, LightType::DIRECTIONAL));
     }
     ImGui::SameLine();
     if (ImGui::Checkbox("Spotlight", &isSpotlight))
     {
-        light->SetLightType(LightType::SPOT);
+        this->history.executeCommand(std::make_shared<SetLightTypeCommand>(light, LightType::SPOT));
     }
     ImGui::SameLine();
     if (ImGui::Checkbox("Point light", &isPointLight))
     {
-        light->SetLightType(LightType::POINT);
+        this->history.executeCommand(std::make_shared<SetLightTypeCommand>(light, LightType::POINT));
     }
     ImGui::SameLine();
-    if (ImGui::Checkbox("Ambient light", &isAmbientLight)) { light->SetLightType(LightType::AMBIENT); }
+    if (ImGui::Checkbox("Ambient light", &isAmbientLight))
+    {
+        this->history.executeCommand(std::make_shared<SetLightTypeCommand>(light, LightType::AMBIENT));
+    }
 
 
     lightType = light->GetLightType();
@@ -321,46 +329,125 @@ void Scene3D::DrawModifyLightSliders(const std::shared_ptr<Light>& light)
     isPointLight = lightType == LightType::POINT;
     isAmbientLight = lightType == LightType::AMBIENT;
 
+    const ofFloatColor currentDiffuseColor = light->GetDiffuseColor();
+    const ofFloatColor currentSpecularColor = light->GetSpecularColor();
+    const ofFloatColor currentAmbientColor = light->GetAmbientColor();
+
     if (!isAmbientLight)
     {
-        ofFloatColor diffuseColor = light->GetDiffuseColor();
-        float diffuseColorArr[3] = {diffuseColor.r, diffuseColor.g, diffuseColor.b};
-        if (ImGui::ColorEdit3("Diffuse color", diffuseColorArr)) { light->SetDiffuseColor(ofFloatColor(diffuseColorArr[0], diffuseColorArr[1], diffuseColorArr[2])); }
+        if (ImGui::ColorEdit3("Diffuse color##ChangeColor", this->diffuseLight))
+        {
+            light->SetDiffuseColor(ofFloatColor(this->diffuseLight[0], this->diffuseLight[1], this->diffuseLight[2]));
+        }
+        if (ImGui::IsItemActivated())
+        {
+            this->initialDiffuseLight = currentDiffuseColor;
+        }
+        if (ImGui::IsItemDeactivatedAfterEdit())
+        {
+            this->history.executeCommand(std::make_shared<SetLightColorsCommand>(light, ofFloatColor(this->diffuseLight[0], this->diffuseLight[1], this->diffuseLight[2]), currentSpecularColor, currentAmbientColor, this->initialDiffuseLight, currentSpecularColor, currentAmbientColor));
+        }
 
-        ofFloatColor specularColor = light->GetSpecularColor();
-        float specularColorArr[3] = {specularColor.r, specularColor.g, specularColor.b};
-        if (ImGui::ColorEdit3("Specular color", specularColorArr)) { light->SetSpecularColor(ofFloatColor(specularColorArr[0], specularColorArr[1], specularColorArr[2])); }
+        const ofFloatColor currentSpecularColor = light->GetSpecularColor();
+        if (ImGui::ColorEdit3("Specular color##ChangeColor", this->specularLight))
+        {
+            light->SetSpecularColor(ofFloatColor(this->specularLight[0], this->specularLight[1], this->specularLight[2]));
+        }
+        if (ImGui::IsItemActivated())
+        {
+            this->initialSpecularLight = currentSpecularColor;
+        }
+        if (ImGui::IsItemDeactivatedAfterEdit())
+        {
+            this->history.executeCommand(std::make_shared<SetLightColorsCommand>(light, currentDiffuseColor, ofFloatColor(this->specularLight[0], this->specularLight[1], this->specularLight[2]), currentAmbientColor, currentDiffuseColor, this->initialSpecularLight, currentAmbientColor));
+        }
     }
     else
     {
-        ofFloatColor ambientColor = light->GetAmbientColor();
-        float ambientColorArr[3] = {ambientColor.r, ambientColor.g, ambientColor.b};
-        if (ImGui::ColorEdit3("Ambient color", ambientColorArr)) { light->SetAmbientColor(ofFloatColor(ambientColorArr[0], ambientColorArr[1], ambientColorArr[2])); }
+        if (ImGui::ColorEdit3("Ambient color", this->ambientLight)) { light->SetAmbientColor(ofFloatColor(this->ambientLight[0], this->ambientLight[1], this->ambientLight[2])); }
+        if (ImGui::IsItemActivated())
+        {
+            this->initialAmbientLight = currentAmbientColor;
+        }
+        if (ImGui::IsItemDeactivatedAfterEdit())
+        {
+            this->history.executeCommand(std::make_shared<SetLightColorsCommand>(light, currentDiffuseColor, currentSpecularColor, ofFloatColor(this->ambientLight[0], this->ambientLight[1], this->ambientLight[2]), currentDiffuseColor, currentSpecularColor, this->initialAmbientLight));
+        }
     }
 
     if (isSpotlight)
     {
         float spotCutOff = light->GetSpotlightCutOff();
-        if (ImGui::SliderFloat("Spotlight cut off", &spotCutOff, 0, 90))
+        float spotConcentration = light->GetSpotConcentration();
+
+        if (ImGui::SliderFloat("Spotlight cut off", &this->spotCutOff, 0, 90))
         {
-            light->SetSpotlightCutOff(spotCutOff);
+            light->SetSpotlightCutOff(this->spotCutOff);
+        }
+        if (ImGui::IsItemActivated())
+        {
+            this->initialSpotCutOff = spotCutOff;
+        }
+        if (ImGui::IsItemDeactivatedAfterEdit())
+        {
+            this->history.executeCommand(std::make_shared<SetLightSpotCutOffCommand>(light, this->spotCutOff, this->initialSpotCutOff));
         }
 
-        float spotConcentration = light->GetSpotConcentration();
-        if (ImGui::SliderFloat("Spotlight concentration", &spotConcentration, 0, 128))
+        if (ImGui::SliderFloat("Spotlight concentration", &this->spotConcentration, 0, 128))
         {
-            light->SetSpotConcentration(spotConcentration);
+            light->SetSpotConcentration(this->spotConcentration);
+        }
+        if (ImGui::IsItemActivated())
+        {
+            this->initialSpotConcentration = spotConcentration;
+        }
+        if (ImGui::IsItemDeactivatedAfterEdit())
+        {
+            this->history.executeCommand(std::make_shared<SetLightSpotConcentrationCommand>(light, this->spotConcentration, this->initialSpotConcentration));
         }
     }
 
     float attenuationConstant = light->GetAttenuationConstant();
-    if (ImGui::SliderFloat("Attenuation constant", &attenuationConstant, 0, 1)) { light->SetAttenuationConstant(attenuationConstant); }
-
     float attenuationLinear = light->GetAttenuationLinear();
-    if (ImGui::SliderFloat("Attenuation linear", &attenuationLinear, 0, 0.01, "%.5f")) { light->SetAttenuationLinear(attenuationLinear); }
-
     float attenuationQuadratic = light->GetAttenuationQuadratic();
-    if (ImGui::SliderFloat("Attenuation quadratic", &attenuationQuadratic, 0, 0.001, "%.6f")) { light->SetAttenuationQuadratic(attenuationQuadratic); }
+    if (ImGui::SliderFloat("Attenuation constant", &this->lightAttenuation[0], 0, 1))
+    {
+        light->SetAttenuationConstant(this->lightAttenuation[0]);
+    }
+    if (ImGui::IsItemActivated())
+    {
+        initialLightAttenuation = glm::vec3(attenuationConstant, attenuationLinear, attenuationQuadratic);
+    }
+    if (ImGui::IsItemDeactivatedAfterEdit())
+    {
+        this->history.executeCommand(std::make_shared<SetLightAttenuationCommand>(light, glm::vec3(lightAttenuation[0], lightAttenuation[1], lightAttenuation[2]), initialLightAttenuation));
+    }
+
+    if (ImGui::SliderFloat("Attenuation linear", &this->lightAttenuation[1], 0, 0.01, "%.5f"))
+    {
+        light->SetAttenuationLinear(this->lightAttenuation[1]);
+    }
+    if (ImGui::IsItemActivated())
+    {
+        initialLightAttenuation = glm::vec3(attenuationConstant, attenuationLinear, attenuationQuadratic);
+    }
+    if (ImGui::IsItemDeactivatedAfterEdit())
+    {
+        this->history.executeCommand(std::make_shared<SetLightAttenuationCommand>(light, glm::vec3(lightAttenuation[0], lightAttenuation[1], lightAttenuation[2]), initialLightAttenuation));
+    }
+
+    if (ImGui::SliderFloat("Attenuation quadratic", &this->lightAttenuation[2], 0, 0.001, "%.6f"))
+    {
+        light->SetAttenuationQuadratic(this->lightAttenuation[2]);
+    }
+    if (ImGui::IsItemActivated())
+    {
+        initialLightAttenuation = glm::vec3(attenuationConstant, attenuationLinear, attenuationQuadratic);
+    }
+    if (ImGui::IsItemDeactivatedAfterEdit())
+    {
+        this->history.executeCommand(std::make_shared<SetLightAttenuationCommand>(light, glm::vec3(lightAttenuation[0], lightAttenuation[1], lightAttenuation[2]), initialLightAttenuation));
+    }
 }
 
 void Scene3D::DrawModifyCameraNodeSliders(const std::shared_ptr<Node>& node, shared_ptr<ofCamera> camera)
@@ -686,6 +773,33 @@ void Scene3D::ResetParams(const std::shared_ptr<Node>& node)
         rotate[0] = eulerRotation.x;
         rotate[1] = eulerRotation.y;
         rotate[2] = eulerRotation.z;
+
+        const ofFloatColor ambientColor = light->GetAmbientColor();
+        ambientLight[0] = ambientColor.r;
+        ambientLight[1] = ambientColor.g;
+        ambientLight[2] = ambientColor.b;
+
+        const ofFloatColor diffuseColor = light->GetDiffuseColor();
+        diffuseLight[0] = diffuseColor.r;
+        diffuseLight[1] = diffuseColor.g;
+        diffuseLight[2] = diffuseColor.b;
+
+        const ofFloatColor specularColor = light->GetSpecularColor();
+        specularLight[0] = specularColor.r;
+        specularLight[1] = specularColor.g;
+        specularLight[2] = specularColor.b;
+
+        const float constantAttenuation = light->GetAttenuationConstant();
+        const float linearAttenuation = light->GetAttenuationLinear();
+        const float quadraticAttenuation = light->GetAttenuationQuadratic();
+        lightAttenuation[0] = constantAttenuation;
+        lightAttenuation[1] = linearAttenuation;
+        lightAttenuation[2] = quadraticAttenuation;
+
+        const float spotCutOff = light->GetSpotlightCutOff();
+        const float spotConcentration = light->GetSpotConcentration();
+        this->spotCutOff = spotCutOff;
+        this->spotConcentration = spotConcentration;
     }
     else
     {
@@ -705,6 +819,7 @@ void Scene3D::ResetParams(const std::shared_ptr<Node>& node)
         rotate[1] = eulerRotation.y;
         rotate[2] = eulerRotation.z;
     }
+
     if (const auto primitive = std::dynamic_pointer_cast<Primitive3D>(node->GetInner()); primitive)
     {
         const ofFloatColor currentColor = primitive->GetColor();

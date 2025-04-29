@@ -90,6 +90,24 @@ private:
     float color[4] = {1.0f, 1.0f, 1.0f, 1.0f};
     ofFloatColor initialColor;// Used to store the initial color of the selected node when using the sliders, so that we can undo the change in a single command
 
+    float ambientLight[3] = {0.2f, 0.2f, 0.2f};
+    ofFloatColor initialAmbientLight;// Used to store the initial ambient light color of the selected node when using the sliders, so that we can undo the change in a single command
+
+    float specularLight[3] = {0.5f, 0.5f, 0.5f};
+    ofFloatColor initialSpecularLight;// Used to store the initial specular light color of the selected node when using the sliders, so that we can undo the change in a single command
+
+    float diffuseLight[3] = {0.5f, 0.5f, 0.5f};
+    ofFloatColor initialDiffuseLight;// Used to store the initial diffuse light color of the selected node when using the sliders, so that we can undo the change in a single command
+
+    float lightAttenuation[3] = {1.0f, 0.0f, 0.0f};
+    glm::vec3 initialLightAttenuation;
+
+    float spotCutOff = 45.0f;
+    float initialSpotCutOff;
+
+    float spotConcentration = 128.0f;
+    float initialSpotConcentration;
+
     float fov = 0;
     float initialFov = 0;
 
