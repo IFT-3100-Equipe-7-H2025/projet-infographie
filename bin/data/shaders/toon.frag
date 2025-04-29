@@ -19,7 +19,6 @@ void main()
     vec3 N = normalize(surface_normal);
 
     // calculer la direction de la surface vers la lumière (l)
-    // Use lightPosEye or light_position depending on which is set in Node.cpp
     vec3 L = normalize(lightPosEye - surface_position);
     vec3 V = normalize(vViewDir); // Use the passed view direction
 
@@ -44,7 +43,4 @@ void main()
 
     // Output the final color
     fragColor = vec4(colour, 1.0);
-
-    // Debug output - uncomment to help diagnose problems
-    // fragColor = vec4(1.0, 0.0, 0.0, 1.0);  // Pure red for visibility testing
 }
