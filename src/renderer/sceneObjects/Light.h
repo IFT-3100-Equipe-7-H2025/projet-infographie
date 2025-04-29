@@ -131,6 +131,7 @@ public:
     void setOrientation(const glm::quat& q) { light->setOrientation(q); }
     void setPosition(const glm::vec3& position) { light->setPosition(position); }
     [[nodiscard]] glm::vec3 getPosition() const { return light->getPosition(); }
+    [[nodiscard]] glm::vec3 getGlobalPosition() const { return light->getGlobalPosition(); }
     [[nodiscard]] glm::quat getOrientation() const { return light->getOrientationQuat(); }
 
     void customDraw() override

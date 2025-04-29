@@ -118,7 +118,7 @@ void Node::Draw(const std::shared_ptr<Shader>& lightingModel, const glm::vec3& l
     }
     for (const auto& child: children)
     {
-        child->Draw(lightingModel);
+        child->Draw(lightingModel, lightPosition);
     }
 }
 
