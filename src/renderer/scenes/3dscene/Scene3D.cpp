@@ -64,12 +64,12 @@ void Scene3D::setup()
     specularMaterial.setShininess(25);
     this->registeredMaterials.push_back(std::make_shared<DefaultMaterial>(std::make_shared<ofMaterial>(specularMaterial), "Specular"));
 
-    ofMaterial redMaterial;
-    redMaterial.setShininess(1);
-    redMaterial.setAmbientColor(ofFloatColor(0.2f, 0.2f, 0.2f, 1.0f));
-    redMaterial.setDiffuseColor(ofFloatColor(0.8f, 0.5f, 0.2f, 1.0f));
-    redMaterial.setSpecularColor(ofFloatColor(0.0f, 0.0f, 0.0f, 1.0f));
-    this->registeredMaterials.push_back(std::make_shared<DefaultMaterial>(std::make_shared<ofMaterial>(redMaterial), "Emissive"));
+    ofMaterial verySpecularMaterial;
+    verySpecularMaterial.setShininess(1);
+    verySpecularMaterial.setAmbientColor(ofFloatColor(0.2f, 0.2f, 0.2f, 1.0f));
+    verySpecularMaterial.setDiffuseColor(ofFloatColor(0.8f, 0.5f, 0.2f, 1.0f));
+    verySpecularMaterial.setSpecularColor(ofFloatColor(1.0f, 1.0f, 1.0f, 1.0f));
+    this->registeredMaterials.push_back(std::make_shared<DefaultMaterial>(std::make_shared<ofMaterial>(verySpecularMaterial), "Very specular"));
 
     this->registeredMaterials.push_back(std::make_shared<PBRMaterial>("PBR"));
 
