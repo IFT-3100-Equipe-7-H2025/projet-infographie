@@ -166,6 +166,10 @@ void Scene3D::drawScene()
 
     if (is_selected)
     {
+        if (auto light = dynamic_pointer_cast<Light>(this->selectedNode->get()->GetInner()); light)
+        {
+            return;
+        }
         selectionMesh.enableColors();
         selectionMesh.setColorForIndices(255, 255, 0);
 
@@ -684,10 +688,6 @@ void Scene3D::mouseReleased(int x, int y, int button)
             shared_ptr<Node> node = *(this->selectedNode);
             if (auto light = std::dynamic_pointer_cast<Light>(node->GetInner()); light)
             {
-                ofVec3f current_pos = light->getPosition();
-                glm::vec3 initial = glm::vec3(initialSelectedPosition.x, initialSelectedPosition.y, initialSelectedPosition.z);
-
-                this->history.executeCommand(std::make_shared<SetPositionCommand>(node, glm::vec3(current_pos[0], current_pos[1], current_pos[2]), initial));
             }
             else
             {
@@ -721,15 +721,6 @@ void Scene3D::mouseDragged(int x, int y, int button)
                 shared_ptr<Node> node = *(this->selectedNode);
                 if (auto light = dynamic_pointer_cast<Light>(node->GetInner()); light)
                 {
-                    ofVec3f current_pos = light->getPosition();
-
-                    ofVec3f current_view_pos = worldToViewPort(current_pos);
-
-                    ofVec3f current = ofVec3f(x, y, current_view_pos.z);
-
-                    ofVec3f new_pos = viewPortToWorld(current);
-
-                    light->setGlobalPosition(new_pos);
                 }
                 else
                 {
