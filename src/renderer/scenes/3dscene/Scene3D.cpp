@@ -472,6 +472,45 @@ void Scene3D::DrawModifyMaterialWindow()
                 this->history.executeCommand(std::make_shared<SetMaterialCommand>(*this->selectedNode, material));
             }
         }
+
+        if (auto pbr_material = std::dynamic_pointer_cast<PBRMaterial>((*this->selectedNode)->GetMaterial()))
+        {
+            ImGui::Separator();
+
+            ImGui::Text("PBR Material");
+            float color_ambient[3] = {pbr_material->material_color_ambient.r / 255.0f, pbr_material->material_color_ambient.g / 255.0f, pbr_material->material_color_ambient.b / 255.0f};
+            if (ImGui::ColorEdit3("Color ambient", color_ambient))
+            {
+                pbr_material->material_color_ambient = glm::vec3(color_ambient[0] * 255.0f, color_ambient[1] * 255.0f, color_ambient[2] * 255.0f);
+            }
+
+            float color_diffuse[3] = {pbr_material->material_color_diffuse.r / 255.0f, pbr_material->material_color_diffuse.g / 255.0f, pbr_material->material_color_diffuse.b / 255.0f};
+            if (ImGui::ColorEdit3("Color diffuse", color_diffuse))
+            {
+                pbr_material->material_color_diffuse = glm::vec3(color_diffuse[0] * 255.0f, color_diffuse[1] * 255.0f, color_diffuse[2] * 255.0f);
+            }
+
+            float color_specular[3] = {pbr_material->material_color_specular.r / 255.0f, pbr_material->material_color_specular.g / 255.0f, pbr_material->material_color_specular.b / 255.0f};
+            if (ImGui::ColorEdit3("Color specular", color_specular))
+            {
+                pbr_material->material_color_specular = glm::vec3(color_specular[0] * 255.0f, color_specular[1] * 255.0f, color_specular[2] * 255.0f);
+            }
+
+            float light_color[3] = {pbr_material->light_color.r / 255.0f, pbr_material->light_color.g / 255.0f, pbr_material->light_color.b / 255.0f};
+            if (ImGui::ColorEdit3("Light color", light_color))
+            {
+                pbr_material->light_color = glm::vec3(light_color[0] * 255.0f, light_color[1] * 255.0f, light_color[2] * 255.0f);
+            }
+
+            ImGui::SliderFloat("Light intensity", &pbr_material->light_intensity, 0.0f, 1.0f);
+
+            ImGui::SliderFloat("Brightness", &pbr_material->material_brightness, 0.0f, 1.0f);
+            ImGui::SliderFloat("Metallic", &pbr_material->material_metallic, 0.0f, 1.0f);
+            ImGui::SliderFloat("Roughness", &pbr_material->material_roughness, 0.0f, 1.0f);
+            ImGui::SliderFloat("Occlusion", &pbr_material->material_occlusion, 0.0f, 1.0f);
+
+            ImGui::Checkbox("Toggle tone mapping", &pbr_material->tone_mapping_toggle);
+        }
         ImGui::End();
     }
 }

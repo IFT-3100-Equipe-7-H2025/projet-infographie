@@ -2,7 +2,6 @@
 #include "material/Material.h"
 #include <glm/glm.hpp>
 #include <memory>
-#include <shared_mutex>
 
 class ShaderMaterial : public Material
 {
@@ -34,6 +33,7 @@ protected:
 };
 
 inline std::shared_ptr<Material> DEFAULT_SHADER_MATERIAL = std::make_shared<ShaderMaterial>(std::make_shared<Shader>(), "Default");
+
 
 class PBRMaterial : public ShaderMaterial
 {
@@ -77,7 +77,7 @@ public:
         material->setUniform1i("tone_mapping_toggle", tone_mapping_toggle);
     }
 
-private:
+public:
     glm::vec3 material_color_ambient = glm::vec3(63.0f);
     glm::vec3 material_color_diffuse = glm::vec3(255.0f);
     glm::vec3 material_color_specular = glm::vec3(255.0f);
