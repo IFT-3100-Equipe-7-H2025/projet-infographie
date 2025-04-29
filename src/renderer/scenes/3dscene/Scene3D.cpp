@@ -379,7 +379,14 @@ void Scene3D::DrawModifyNodeSliders(const std::shared_ptr<Node>& node)
     const glm::vec3 currentPosition = inner->getPosition();
     if (ImGui::SliderFloat3("Translate", this->translate, -static_cast<float>(ofGetWidth()), static_cast<float>(ofGetWidth())))
     {
-        inner->setPosition(this->translate[0], this->translate[1], this->translate[2]);
+        if (auto light = std::dynamic_pointer_cast<Light>(inner); light)
+        {
+            light->setPosition(glm::vec3(this->translate[0], this->translate[1], this->translate[2]));
+        }
+        else
+        {
+            inner->setPosition(this->translate[0], this->translate[1], this->translate[2]);
+        }
     }
     if (ImGui::IsItemActivated())
     {
@@ -607,23 +614,42 @@ void Scene3D::ShowChildren(const std::shared_ptr<Node>& node)
 void Scene3D::ResetParams(const std::shared_ptr<Node>& node)
 {
     const std::shared_ptr<ofNode>& inner = node->GetInner();
+    if (auto light = std::dynamic_pointer_cast<Light>(inner))
+    {
+        const glm::vec3 currentPosition = light->getPosition();
+        translate[0] = currentPosition.x;
+        translate[1] = currentPosition.y;
+        translate[2] = currentPosition.z;
 
-    const glm::vec3 currentPosition = inner->getPosition();
-    translate[0] = currentPosition.x;
-    translate[1] = currentPosition.y;
-    translate[2] = currentPosition.z;
+        const glm::vec3 currentScale = light->getScale();
+        scale[0] = currentScale.x;
+        scale[1] = currentScale.y;
+        scale[2] = currentScale.z;
 
-    const glm::vec3 currentScale = inner->getScale();
-    scale[0] = currentScale.x;
-    scale[1] = currentScale.y;
-    scale[2] = currentScale.z;
+        const glm::quat currentRotation = light->getOrientationQuat();
+        glm::vec3 eulerRotation = glm::degrees(glm::eulerAngles(currentRotation));
+        rotate[0] = eulerRotation.x;
+        rotate[1] = eulerRotation.y;
+        rotate[2] = eulerRotation.z;
+    }
+    else
+    {
+        const glm::vec3 currentPosition = inner->getPosition();
+        translate[0] = currentPosition.x;
+        translate[1] = currentPosition.y;
+        translate[2] = currentPosition.z;
 
-    const glm::quat currentRotation = inner->getOrientationQuat();
-    glm::vec3 eulerRotation = glm::degrees(glm::eulerAngles(currentRotation));
-    rotate[0] = eulerRotation.x;
-    rotate[1] = eulerRotation.y;
-    rotate[2] = eulerRotation.z;
+        const glm::vec3 currentScale = inner->getScale();
+        scale[0] = currentScale.x;
+        scale[1] = currentScale.y;
+        scale[2] = currentScale.z;
 
+        const glm::quat currentRotation = inner->getOrientationQuat();
+        glm::vec3 eulerRotation = glm::degrees(glm::eulerAngles(currentRotation));
+        rotate[0] = eulerRotation.x;
+        rotate[1] = eulerRotation.y;
+        rotate[2] = eulerRotation.z;
+    }
     if (const auto primitive = std::dynamic_pointer_cast<Primitive3D>(node->GetInner()); primitive)
     {
         const ofFloatColor currentColor = primitive->GetColor();
@@ -655,11 +681,20 @@ void Scene3D::mouseReleased(int x, int y, int button)
         // translate
         if (is_selected)
         {
-
-            ofVec3f current_pos = selectedNode->get()->GetInner()->getPosition();
-            glm::vec3 initial = glm::vec3(initialSelectedPosition.x, initialSelectedPosition.y, initialSelectedPosition.z);
             shared_ptr<Node> node = *(this->selectedNode);
-            this->history.executeCommand(std::make_shared<SetPositionCommand>(node, glm::vec3(current_pos[0], current_pos[1], current_pos[2]), initial));
+            if (auto light = std::dynamic_pointer_cast<Light>(node->GetInner()); light)
+            {
+                ofVec3f current_pos = light->getPosition();
+                glm::vec3 initial = glm::vec3(initialSelectedPosition.x, initialSelectedPosition.y, initialSelectedPosition.z);
+
+                this->history.executeCommand(std::make_shared<SetPositionCommand>(node, glm::vec3(current_pos[0], current_pos[1], current_pos[2]), initial));
+            }
+            else
+            {
+                ofVec3f current_pos = node->GetInner()->getPosition();
+                glm::vec3 initial = glm::vec3(initialSelectedPosition.x, initialSelectedPosition.y, initialSelectedPosition.z);
+                this->history.executeCommand(std::make_shared<SetPositionCommand>(node, glm::vec3(current_pos[0], current_pos[1], current_pos[2]), initial));
+            }
         }
     }
     else if (button == 2)
@@ -683,15 +718,30 @@ void Scene3D::mouseDragged(int x, int y, int button)
         case 0://left
             if (is_selected)
             {
-                ofVec3f current_pos = selectedNode->get()->GetInner()->getGlobalPosition();
+                shared_ptr<Node> node = *(this->selectedNode);
+                if (auto light = dynamic_pointer_cast<Light>(node->GetInner()); light)
+                {
+                    ofVec3f current_pos = light->getPosition();
 
-                ofVec3f current_view_pos = worldToViewPort(current_pos);
+                    ofVec3f current_view_pos = worldToViewPort(current_pos);
 
-                ofVec3f current = ofVec3f(x, y, current_view_pos.z);
+                    ofVec3f current = ofVec3f(x, y, current_view_pos.z);
 
-                ofVec3f new_pos = viewPortToWorld(current);
+                    ofVec3f new_pos = viewPortToWorld(current);
 
-                selectedNode->get()->GetInner()->setGlobalPosition(new_pos);
+                    light->setGlobalPosition(new_pos);
+                }
+                else
+                {
+                    ofVec3f current_pos = node->GetInner()->getPosition();
+
+                    ofVec3f current_view_pos = worldToViewPort(current_pos);
+
+                    ofVec3f current = ofVec3f(x, y, current_view_pos.z);
+
+                    ofVec3f new_pos = viewPortToWorld(current);
+                    selectedNode->get()->GetInner()->setGlobalPosition(new_pos);
+                }
             }
 
             break;

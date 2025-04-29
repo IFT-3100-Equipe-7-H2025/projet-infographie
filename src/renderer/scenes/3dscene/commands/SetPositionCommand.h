@@ -24,13 +24,27 @@ public:
 
     bool Execute() override
     {
-        this->node->GetInner()->setPosition(this->newPosition);
+        if (auto light = std::dynamic_pointer_cast<Light>(this->node->GetInner()); light)
+        {
+            light->setPosition(glm::vec3(this->newPosition[0], this->newPosition[1], this->newPosition[2]));
+        }
+        else
+        {
+            this->node->GetInner()->setPosition(this->newPosition);
+        }
         return true;
     }
 
     void Undo() override
     {
-        this->node->GetInner()->setPosition(this->oldPosition);
+        if (auto light = std::dynamic_pointer_cast<Light>(this->node->GetInner()); light)
+        {
+            light->setPosition(glm::vec3(this->oldPosition[0], this->oldPosition[1], this->oldPosition[2]));
+        }
+        else
+        {
+            this->node->GetInner()->setPosition(this->oldPosition);
+        }
     }
 
     [[nodiscard]] std::string DisplayName() const override
