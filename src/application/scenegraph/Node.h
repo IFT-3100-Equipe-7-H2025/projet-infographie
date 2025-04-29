@@ -22,7 +22,7 @@ public:
 
     bool Delete();
 
-    void Draw(const std::shared_ptr<Shader>& lightingModel = nullptr, const glm::vec3& lightPosition = glm::vec3(0.0f)) const;
+    void Draw(const glm::vec3& lightPosition = glm::vec3(0.0f), const std::shared_ptr<Shader>& lightingModel = nullptr) const;
 
     void SetMaterial(std::shared_ptr<Material> material);
     [[nodiscard]] const std::shared_ptr<Material>& GetMaterial() const;

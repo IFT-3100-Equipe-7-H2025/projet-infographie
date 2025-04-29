@@ -154,13 +154,14 @@ void Scene3D::draw()
 
 void Scene3D::drawScene()
 {
-    if (this->selectedLightingModel->GetName() == "Default") { sceneGraph.Draw(); }
-    else
+    auto light = this->FindLight();
+    if (light)
     {
-        auto light = this->FindLight();
-        if (light)
+        if (this->selectedLightingModel->GetName() == "Default") { sceneGraph.Draw(light->getGlobalPosition()); }
+        else
         {
-            sceneGraph.Draw(this->selectedLightingModel, light->getGlobalPosition());
+
+            sceneGraph.Draw(light->getGlobalPosition(), this->selectedLightingModel);
         }
     }
 
