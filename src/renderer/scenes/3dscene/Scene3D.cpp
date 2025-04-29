@@ -28,6 +28,8 @@
 #include <numbers>
 
 #include <ranges>
+#include <vector>
+#include <algorithm>
 
 Scene3D::Scene3D() : history(CommandHistory()),
                      sceneGraph(SceneGraph()),
@@ -158,17 +160,28 @@ void Scene3D::draw()
 
 void Scene3D::drawScene()
 {
-    auto light = this->FindLight();
-    if (light)
-    {
-        if (this->selectedLightingModel->GetName() == "Default") { sceneGraph.Draw(light->getGlobalPosition()); }
-        else
-        {
+    auto lights = this->FindLights();
 
-            sceneGraph.Draw(light->getGlobalPosition(), this->selectedLightingModel);
-        }
+    // Determine which lighting model shader to pass down (if any)
+    std::shared_ptr<Shader> shaderToUse = nullptr;
+    if (this->selectedLightingModel->GetName() != "Default") {
+        shaderToUse = this->selectedLightingModel;
     }
 
+    // Pass the lights vector and the chosen shader (or nullptr) to the scene graph draw call.
+    // Node::Draw will decide whether to use the shaderToUse based on the node's material.
+    if (!lights.empty())
+    {
+        sceneGraph.Draw(lights, shaderToUse);
+    }
+    else
+    {
+        // Draw without lights if none are found
+        std::vector<std::shared_ptr<Light>> emptyLights;
+        sceneGraph.Draw(emptyLights, shaderToUse);
+    }
+
+    // Selection box drawing logic remains the same
     if (is_selected)
     {
         if (auto light = dynamic_pointer_cast<Light>(this->selectedNode->get()->GetInner()); light)
@@ -507,14 +520,6 @@ void Scene3D::DrawModifyMaterialWindow()
                 pbr_material->material_color_specular = glm::vec3(color_specular[0] * 255.0f, color_specular[1] * 255.0f, color_specular[2] * 255.0f);
             }
 
-            float light_color[3] = {pbr_material->light_color.r / 255.0f, pbr_material->light_color.g / 255.0f, pbr_material->light_color.b / 255.0f};
-            if (ImGui::ColorEdit3("Light color", light_color))
-            {
-                pbr_material->light_color = glm::vec3(light_color[0] * 255.0f, light_color[1] * 255.0f, light_color[2] * 255.0f);
-            }
-
-            ImGui::SliderFloat("Light intensity", &pbr_material->light_intensity, 0.0f, 1.0f);
-
             ImGui::SliderFloat("Brightness", &pbr_material->material_brightness, 0.0f, 1.0f);
             ImGui::SliderFloat("Metallic", &pbr_material->material_metallic, 0.0f, 1.0f);
             ImGui::SliderFloat("Roughness", &pbr_material->material_roughness, 0.0f, 1.0f);
@@ -644,7 +649,7 @@ void Scene3D::ShowChildren(const std::shared_ptr<Node>& node)
         {
             IM_ASSERT(payload->DataSize == sizeof(std::shared_ptr<Node>));
 
-            if (std::shared_ptr<Node> payload_node = *static_cast<std::shared_ptr<Node>*>(payload->Data); !payload_node->GetId() == 0) { commandQueue.push(std::make_shared<MoveChildCommand>(payload_node, node)); }
+            if (std::shared_ptr<Node> payload_node = *static_cast<std::shared_ptr<Node>*>(payload->Data); payload_node->GetId() != 0) { commandQueue.push(std::make_shared<MoveChildCommand>(payload_node, node)); }
             else { ofLogError() << "Cannot move the root node"; }
         }
         ImGui::EndDragDropTarget();
@@ -1388,8 +1393,6 @@ void Scene3D::updateViewPorts()
     }
 
     int camNumber = activatedCameras.size();
-    int prev_height = 0;
-    int prev_width = 0;
     if (camNumber >= 3)
     {
         cameras.emplace_back(activatedCameras[0].second.first, pair(ofRectangle(0, 0, ofGetWidth() / 2, ofGetHeight() / 2), activatedCameras[0].second.second));
@@ -1496,4 +1499,20 @@ void Scene3D::updateViewPorts()
         current_viewPort = cameras[0].second.first;
         current_camera_id = activatedCameras[0].first;
     }
+}
+
+std::vector<std::shared_ptr<Light>> Scene3D::FindLights()
+{
+    std::vector<std::shared_ptr<Light>> lights;
+    for (const auto& node : sceneGraph.GetNodes())
+    {
+        if (auto lightNode = std::dynamic_pointer_cast<Light>(node->GetInner()); lightNode)
+        {
+            if (lightNode->GetIsEnabled()) // Only add enabled lights
+            {
+                 lights.push_back(lightNode);
+            }
+        }
+    }
+    return lights;
 }

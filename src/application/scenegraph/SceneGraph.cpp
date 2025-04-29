@@ -3,17 +3,24 @@
 #include "Light.h"
 #include "of3dPrimitives.h"
 #include <stack>
+#include <vector>
 
-SceneGraph::SceneGraph() : root(std::make_shared<Node>("World", std::make_shared<ofBoxPrimitive>(ofBoxPrimitive(0, 0, 0)))) {}
+SceneGraph::SceneGraph() : root(std::make_shared<Node>("World", std::make_shared<ofBoxPrimitive>(ofBoxPrimitive(0, 0, 0))))
+{
+    nodes.emplace(root->GetId(), root);
+}
 
 void SceneGraph::AddNode(std::shared_ptr<Node> node)
 {
     root->AddChild(std::move(node));
 }
 
-void SceneGraph::Draw(const glm::vec3& lightPosition, const std::shared_ptr<Shader>& lightingModel) const
+void SceneGraph::Draw(const std::vector<std::shared_ptr<Light>>& lights, const std::shared_ptr<Shader>& lightingModel) const
 {
-    root->Draw(lightPosition, lightingModel);
+    if (root)
+    {
+        root->Draw(lights, lightingModel);
+    }
 }
 
 [[nodiscard]] std::shared_ptr<Node> SceneGraph::GetRoot() const
