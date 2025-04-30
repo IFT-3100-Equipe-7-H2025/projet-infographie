@@ -39,6 +39,14 @@ public:
                 Sphere sphere_3d(sphere, radius, mat);
                 sphere_3d.SetColor(ofFloatColor(sharedParams->color[0], sharedParams->color[1], sharedParams->color[2], sharedParams->color[3]));
 
+                //RayMesh rayMesh(mat, sphere);
+                //auto sphere_ptr = std::make_shared<Node>("Sphere", std::make_shared<RayMesh>(rayMesh));
+
+                //if (sharedParams->useBVH)
+                //{
+                //    ComposedShape shape = ComposedShape(make_shared<BvhNode>(rayMesh), mat);
+                //    sphere_ptr = std::make_shared<Node>("Sphere", std::make_shared<ComposedShape>(shape));
+                //}
                 auto sphere_ptr = std::make_shared<Node>("Sphere", std::make_shared<Sphere>(sphere_3d));
 
                 history.executeCommand(std::make_shared<AddChildToNodeCommand>(*sharedParams->selectedNode, sphere_ptr));

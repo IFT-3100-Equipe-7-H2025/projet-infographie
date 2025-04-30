@@ -131,7 +131,7 @@ public:
     {
         Vec3 reflected = reflect(r_in.getDirection(), rec.normal);
         reflected = unit_vector(reflected) + (fuzz * random_unit_vector());
-        scattered = Ray(rec.p, reflected);
+        scattered = Ray(rec.p + rec.normal * 1e-3f, reflected);
         attenuation = albedo;
         return (scattered.getDirection().dot(rec.normal) > 0);
     }
@@ -167,14 +167,16 @@ public:
         {
             //reflect
             direction = reflect(unit_direction, rec.normal);
+            scattered = Ray(rec.p + rec.normal * 1e-3f, direction);
         }
         else {
             //refract
             direction = refract(unit_direction, rec.normal, ri);
+            scattered = Ray(rec.p - rec.normal * 1e-3f, direction);
         }
 
 
-        scattered = Ray(rec.p, direction);
+        
         return true;
     }
 

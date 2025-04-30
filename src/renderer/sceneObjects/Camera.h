@@ -450,7 +450,7 @@ private:
         }
 
         ofColor scatterColor = attenuation * rayColor(scattered, depth - 1, sceneGraph);
-        return emitted + scatterColor;
+        return emitted * 5 + scatterColor;
         //return ofColor(0, 0, 0);
         ////Vec3 direction = random_on_hemisphere(rec.normal);
         //Vec3 direction = rec.normal + random_unit_vector();
