@@ -4,19 +4,61 @@
 #include "ofLog.h"
 
 
+void ImportImageScene::setup()
+{
+    ofDisableArbTex();
+    ofEnableTextureEdgeHack();
+
+    ofLogNotice() << "Avant de loder toneMappingShader!";
+
+    toneMapingshader.load("shaders/tone_mapping_vs.glsl", "shaders/tone_mapping_fs.glsl");
+
+    if (!toneMapingshader.isLoaded())
+    {
+        ofLogError() << "Shader failed to load!";
+    }
+    else
+    {
+        ofLogNotice() << "Shader loaded successfully!";
+    }
+}
+
 void ImportImageScene::draw()
 {
     ImGui::Begin(this->GetName().c_str());
     if (ImGui::Button("Import image")) { this->ImportImageButtonPressed(); }
     if (ImGui::Button("Sample image")) { this->SampleImage(); }
     if (ImGui::Button("Generate new images")) { this->GenerateNewImages(); }
+
+    ImGui::Text("Tone mapping");
+    ImGui::Checkbox("ACES Filmic", &toneMappingActive);
+    ImGui::SliderFloat("Exposure", &exposure, 0.0f, 5.0f);
+    ImGui::SliderFloat("Gamma", &gamma, 0.0f, 5.0f);
     ImGui::End();
 
-    for (auto& [image, position]: images)
+    if (toneMappingActive)
     {
-        image.draw(position);
-    }
+        for (auto& [image, position]: images)
+        {
 
+            toneMapingshader.begin();
+            toneMapingshader.setUniformTexture("image", image.getTexture(), 1);
+
+            toneMapingshader.setUniform1f("tone_mapping_exposure", exposure);
+            toneMapingshader.setUniform1f("tone_mapping_gamma", gamma);
+
+            image.draw(position);
+
+            toneMapingshader.end();
+        }
+    }
+    else
+    {
+        for (auto& [image, position]: images)
+        {
+            image.draw(position);
+        }  
+    }
     float xOffset = 20;
     for (auto& img: generatedImages)
     {

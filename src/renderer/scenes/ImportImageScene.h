@@ -18,11 +18,17 @@ class ImportImageScene : public Scene
 {
 public:
     void draw() override;
+    void setup() override;
 
     void ImportImage(const std::string& path);
     void ImportImageButtonPressed();
     void SampleImage();
     void GenerateNewImages();
+
+    ofShader toneMapingshader;
+    bool toneMappingActive = false;
+    float exposure = 1.0f;
+    float gamma = 2.2f;
 
     std::string GetName() override { return "Image importing"; }
 
