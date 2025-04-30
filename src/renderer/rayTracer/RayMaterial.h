@@ -20,20 +20,9 @@ const char* materialLabels[] = {
         "Lambert",
         "Emissive"};
 
+// avoids float precision issues with ray hitting the same surface it comes from
+const float EPSILON = 1e-1f;
 
-
-
-
-
-//inline Material getMaterial(matType type, ofColor albedo, double fuzz, double refracion_index)
-//{
-//    switch (type)
-//    {
-//        case Metal:
-//            return
-//    }
-//}
-//
 
 class RayMaterial
 {
@@ -107,7 +96,7 @@ class Lambert : public RayMaterial
             scatter_direction = rec.normal;
         }
 
-        scattered = Ray(rec.p + rec.normal * 1e-3f, scatter_direction);
+        scattered = Ray(rec.p + rec.normal * EPSILON, scatter_direction);
         attenuation = albedo;
         return true;
     }
@@ -131,7 +120,7 @@ public:
     {
         Vec3 reflected = reflect(r_in.getDirection(), rec.normal);
         reflected = unit_vector(reflected) + (fuzz * random_unit_vector());
-        scattered = Ray(rec.p + rec.normal * 1e-3f, reflected);
+        scattered = Ray(rec.p + rec.normal * EPSILON, reflected);
         attenuation = albedo;
         return (scattered.getDirection().dot(rec.normal) > 0);
     }
@@ -167,12 +156,12 @@ public:
         {
             //reflect
             direction = reflect(unit_direction, rec.normal);
-            scattered = Ray(rec.p + rec.normal * 1e-3f, direction);
+            scattered = Ray(rec.p + rec.normal * EPSILON, direction);
         }
         else {
             //refract
             direction = refract(unit_direction, rec.normal, ri);
-            scattered = Ray(rec.p - rec.normal * 1e-3f, direction);
+            scattered = Ray(rec.p - rec.normal * EPSILON, direction);
         }
 
 
