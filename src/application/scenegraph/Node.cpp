@@ -4,6 +4,7 @@
 #include "material/ShaderMaterial.h"
 #include "of3dPrimitives.h"
 #include <memory>
+#include <vector>
 
 Node::Node(std::string name, std::shared_ptr<ofNode> node) : inner(std::move(node)), name(std::move(name)), id(nextId++)
 {}
@@ -61,18 +62,19 @@ bool Node::Delete()
 }
 
 // NOLINTNEXTLINE(misc-no-recursion)
-void Node::Draw(const glm::vec3& lightPosition, const std::shared_ptr<Shader>& lightingModel) const
+void Node::Draw(const std::vector<std::shared_ptr<Light>>& lights, const std::shared_ptr<Shader>& lightingModel) const
 {
     if (inner)
     {
-        if (material && lightingModel == nullptr)
+        if (material && lightingModel == nullptr && !std::dynamic_pointer_cast<PBRMaterial>(this->material))
         {
             material->begin();
         }
-        if (auto material_ptr = std::dynamic_pointer_cast<DefaultMaterial>(this->material); lightingModel && material_ptr)
+        else if (auto material_ptr = std::dynamic_pointer_cast<DefaultMaterial>(this->material); lightingModel && material_ptr)
         {
             lightingModel->begin();
 
+            glm::vec3 lightPosition = lights.empty() ? glm::vec3(0.0f) : lights[0]->getGlobalPosition();
             glm::mat4 viewMatrix = ofGetCurrentMatrix(OF_MATRIX_MODELVIEW);
             glm::vec4 lightPosInViewSpace = viewMatrix * glm::vec4(lightPosition, 1.0);
 
@@ -111,26 +113,24 @@ void Node::Draw(const glm::vec3& lightPosition, const std::shared_ptr<Shader>& l
                 lightingModel->setUniform3f("color_diffuse", diffuseColor.r, diffuseColor.g, diffuseColor.b);
                 lightingModel->setUniform3f("color_specular", specularColor.r, specularColor.g, specularColor.b);
                 lightingModel->setUniform1f("brightness", shininess);
-                lightingModel->setUniform3f("light_position", lightPosInViewSpace);
+                lightingModel->setUniform3f("light_position", glm::vec3(lightPosInViewSpace));
             }
         }
         else if (auto material_ptr = std::dynamic_pointer_cast<PBRMaterial>(this->material); material_ptr)
         {
             material_ptr->begin();
-            glm::mat4 viewMatrix = ofGetCurrentMatrix(OF_MATRIX_MODELVIEW);
-            glm::vec4 lightPosInViewSpace = viewMatrix * glm::vec4(lightPosition, 1.0);
-            material_ptr->SetUniforms(lightPosInViewSpace);
+            material_ptr->SetUniforms(lights);
         }
         inner->draw();
         if (lightingModel) { lightingModel->end(); }
-        if (material && lightingModel == nullptr)
+        if (material && (lightingModel == nullptr || std::dynamic_pointer_cast<PBRMaterial>(this->material)))
         {
             material->end();
         }
     }
     for (const auto& child: children)
     {
-        child->Draw(lightPosition, lightingModel);
+        child->Draw(lights, lightingModel);
     }
 }
 

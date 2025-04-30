@@ -5,6 +5,8 @@
 #include "material/DefaultMaterial.h"
 #include "material/Material.h"
 #include "ofNode.h"
+#include <vector>
+#include <memory>
 
 typedef unsigned int NodeId;
 
@@ -22,7 +24,7 @@ public:
 
     bool Delete();
 
-    void Draw(const glm::vec3& lightPosition = glm::vec3(0.0f), const std::shared_ptr<Shader>& lightingModel = nullptr) const;
+    void Draw(const std::vector<std::shared_ptr<Light>>& lights, const std::shared_ptr<Shader>& lightingModel = nullptr) const;
 
     void SetMaterial(std::shared_ptr<Material> material);
     [[nodiscard]] const std::shared_ptr<Material>& GetMaterial() const;
