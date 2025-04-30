@@ -599,30 +599,24 @@ void Scene3D::DrawModifyNodeSliders(const std::shared_ptr<Node>& node)
         {
             this->history.executeCommand(std::make_shared<SetColorCommand>(node, ofFloatColor(this->color[0], this->color[1], this->color[2], this->color[3]), this->initialColor));
         }
-    }
 
-      if (shared_ptr<Primitive3D> rayObject = std::dynamic_pointer_cast<Primitive3D>(node->GetInner()); rayObject)
-    {
-        matType type = getMaterialType(rayObject->getMaterial());
-        ofColor color = rayObject->getMaterial()->getColor();
-        float colorf[4] = {color.r / 255.0f, color.g / 255.0f, color.b / 255.0f, color.a / 255.0f};
-        ImGui::ColorEdit4("Change Color", colorf);
-        color = ofColor(colorf[0] * 255.0f, colorf[1] * 255.0f, colorf[2] * 255.0f, colorf[3] * 255.0f);
+        matType type = getMaterialType(primitive->getMaterial());
+        ofColor color = ofColor(currentColor[0] * 255.0f, currentColor[1] * 255.0f, currentColor[2] * 255.0f, currentColor[3] * 255.0f);
         if (type == matType::GlassT)
         {
-            float refraction = rayObject->getMaterial()->getRefractionIndex();
+            float refraction = primitive->getMaterial()->getRefractionIndex();
             ImGui::SliderFloat("Change Refract", &refraction, 0.1f, 10.0f);
-            rayObject->setMaterial(make_shared<Dielectric>(refraction));
+            primitive->setMaterial(make_shared<Dielectric>(refraction));
         }
         else if (type == matType::MetalT)
         {
-            float fuzz = rayObject->getMaterial()->getFuzz();
+            float fuzz = primitive->getMaterial()->getFuzz();
             ImGui::SliderFloat("Change Fuzz", &fuzz, 0.1f, 10.0f);
-            rayObject->setMaterial(make_shared<Metal>(color, fuzz));
+            primitive->setMaterial(make_shared<Metal>(color, fuzz));
         }
         else if (type == matType::LambertT)
         {
-            rayObject->setMaterial(make_shared<Lambert>(color));
+            primitive->setMaterial(make_shared<Lambert>(color));
         }
     }
 }

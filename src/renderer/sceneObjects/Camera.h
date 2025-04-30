@@ -316,14 +316,16 @@ public:
 
     void saveImage()
     {
+        int samples = getSamples();
+        int depth = getDepth();
         ofImage rayTrace = getRayImage();
         int width = rayTrace.getWidth();
         int height = rayTrace.getHeight();
-        string filename = "rayImage_" + ofToString(width) + "x " + ofToString(height) + ".png";
+        string filename = ofToString(width) + "x" + ofToString(height) + "_D" + ofToString(depth) + "_R" + ofToString(samples) + ".png";
         ofFileDialogResult saveDialog = ofSystemSaveDialog("default.png", "Save your image");
         if (saveDialog.bSuccess)
         {
-            rayTrace.save(saveDialog.getPath() + ".png");
+            rayTrace.save(saveDialog.getPath() + filename);
         }
     }
 
