@@ -309,6 +309,12 @@ void Scene3D::DrawSelectedNodeWindow()
             {
                 this->DrawModifyLightSliders(light);
             }
+            if (this->selectedNode->get()->GetName() == "World 0") {
+                ImGui::Text("World node");
+                float color[4] = {clearColor.r / 255.0f, clearColor.g / 255.0f, clearColor.b / 255.0f, clearColor.a / 255.0f};
+                ImGui::ColorEdit4("World Color", color);
+                clearColor.set(color[0] * 255.0f, color[1] * 255.0f, color[2] * 255.0f, color[3] * 255.0f);
+            }
 
             if (auto camera = std::dynamic_pointer_cast<Camera>(this->selectedNode->get()->GetInner()); camera)
             {
@@ -1037,8 +1043,12 @@ void Scene3D::dragEvent(ofDragInfo dragInfo)
         {
             model->setPosition(0, 0, 0);
             ofMesh mesh = model->getCombinedMesh();
-            shared_ptr<RayMaterial> lambert = make_shared<Lambert>(ofColor(255, 5, 50));
-            shared_ptr<Node> node = make_shared<Node>("Object ",  make_shared<RayMesh>(lambert ,mesh));
+            shared_ptr<RayMaterial> lambert = make_shared<Dielectric>(1.3f);
+            RayMesh rayMesh = RayMesh(lambert, mesh);
+
+            ComposedShape shape = ComposedShape(make_shared<BvhNode>(rayMesh), lambert);
+
+            shared_ptr<Node> node = make_shared<Node>("Object ", make_shared<ComposedShape>(shape));
             shared_ptr<Node> parent = *selectedNode;
             history.executeCommand(std::make_shared<AddChildToNodeCommand>(parent, node));
         }
