@@ -10,13 +10,15 @@ enum matType
 {
     MetalT,
     GlassT,
-    LambertT
+    LambertT, 
+    DiffuseLightT
 };
 
 const char* materialLabels[] = {
         "Metal",
         "Glass",
-        "Lambert"};
+        "Lambert",
+        "Emissive"};
 
 
 
@@ -44,8 +46,13 @@ public:
     virtual ~RayMaterial() = default;
 
     virtual bool scatter(const Ray& ray_in, const HitRecord& rec, ofColor& attenuation, Ray& scattered) const {
-        ofLog() << "Scattering wrong" << endl;
+        //ofLog() << "Scattering wrong" << endl;
         return false;
+    }
+
+    virtual ofColor emitted() const
+    {
+        return ofColor(0, 0, 0);
     }
 
     void setColor(ofColor color) {
@@ -100,7 +107,7 @@ class Lambert : public RayMaterial
             scatter_direction = rec.normal;
         }
 
-        scattered = Ray(rec.p, scatter_direction);
+        scattered = Ray(rec.p + rec.normal * 1e-3f, scatter_direction);
         attenuation = albedo;
         return true;
     }
@@ -183,6 +190,25 @@ private:
         r0 = r0 * r0;
         return r0 + (1 - r0) * std::pow((1 - cosine), 5);
     }
+};
+
+class DiffuseLight : public RayMaterial
+{
+public:
+    DiffuseLight(ofColor color) : RayMaterial(color, 0.0, 0) {}
+
+    ofColor emitted()  const override 
+    {
+        return albedo;
+    }
+
+    std::shared_ptr<RayMaterial> clone() const override
+    {
+        return std::make_shared<DiffuseLight>(*this);
+    }
+
+private:
+
 };
 
 

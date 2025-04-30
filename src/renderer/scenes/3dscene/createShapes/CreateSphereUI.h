@@ -39,7 +39,7 @@ public:
                 Sphere sphere_3d(sphere, radius, mat);
                 sphere_3d.SetColor(ofFloatColor(sharedParams->color[0], sharedParams->color[1], sharedParams->color[2], sharedParams->color[3]));
 
-                auto sphere_ptr = std::make_shared<Node>("Sphere", std::make_shared<Primitive3D>(sphere_3d));
+                auto sphere_ptr = std::make_shared<Node>("Sphere", std::make_shared<Sphere>(sphere_3d));
 
                 history.executeCommand(std::make_shared<AddChildToNodeCommand>(*sharedParams->selectedNode, sphere_ptr));
 

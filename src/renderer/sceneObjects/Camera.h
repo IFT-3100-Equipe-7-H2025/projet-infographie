@@ -24,6 +24,8 @@ public:
     int max_depth = 4;
     int new_depth = 4;
     float screenCrop = 0.2;
+    ofColor backgroundColor1 = ofColor(0, 77, 98);
+    ofColor backgroundColor2 = ofColor(255, 200, 250);
     ofImage rayImage;
     ofImage prevImage;
 
@@ -35,6 +37,27 @@ public:
     Camera(): activated(false), drawFrustrum(false), rendering(false) {
         prevImage.allocate(image_width, image_height, OF_IMAGE_COLOR);
         initialize();
+    }
+
+
+    ofColor getAmbient1()
+    {
+        return backgroundColor1;
+    }
+
+    ofColor getAmbient2()
+    {
+        return backgroundColor2;
+    }
+
+    void setAmbient1(ofColor color)
+    {
+        backgroundColor1 = color;
+    }
+
+    void setAmbient2(ofColor color)
+    {
+        backgroundColor2 = color;
     }
 
     float portionDone() {
@@ -328,8 +351,8 @@ private:
     int last_i = 0;
 
     void initialize() {
-        time_start = time_last = ofGetElapsedTimef();
         rendering = false;
+        time_start = time_last = ofGetElapsedTimef();
         last_i = 0;
         last_j = 0;
 
@@ -396,36 +419,50 @@ private:
 
     ofColor rayColor(const Ray& r, int depth, const SceneGraph& sceneGraph) const
     {
-        if (depth <= 0) {
+        if (depth <= 0)
+        {
             return ofColor(0, 0, 0);
         }
 
         // If the ray hits the background, return a color based on the ray direction.
         HitRecord rec;
 
-        if (hitAnything(r, Interval(0.0001, INFINITY), rec, sceneGraph))
-        {
-            Ray scattered;
-            ofColor attenuation;
 
-             if (rec.mat->scatter(r, rec, attenuation, scattered))
-            {
-                return attenuation * rayColor(scattered, depth - 1, sceneGraph);
-            }
-            return ofColor(0, 0, 0);
-            ////Vec3 direction = random_on_hemisphere(rec.normal);
-            //Vec3 direction = rec.normal + random_unit_vector();
-            ///*ofColor normal_color = ofColor(
-            //        (rec.normal.x + 1) * 127.5f,
-            //        (rec.normal.y + 1) * 127.5f,
-            //        (rec.normal.z + 1) * 127.5f);
-            //return normal_color;*/
-            //return 0.5 * rayColor(Ray(rec.p, direction), depth - 1, sceneGraph);
+
+        if (!hitAnything(r, Interval(0.0001, INFINITY), rec, sceneGraph))
+        {
+            //return backgroundColor;
+            auto unit_direction = r.getDirection().getNormalized();
+            auto a = 0.5 * (unit_direction.y + 1.0);
+            // get the backgroundColor + a little brighter
+
+            return (1.0 - a) * backgroundColor2 + a * backgroundColor1;
+            //return (1.0 - a) * ofColor(255, 255, 255) + a * ofColor(127, 200, 255);
         }
 
-        auto unit_direction = r.getDirection().getNormalized();
-        auto a = 0.5 * (unit_direction.y + 1.0);
-        return (1.0 - a) * ofColor(255, 255, 255) + a * ofColor(127, 200, 255);
+
+        Ray scattered;
+        ofColor attenuation;
+        ofColor emitted = rec.mat->emitted();
+
+        if (!rec.mat->scatter(r, rec, attenuation, scattered)) {
+            return emitted;
+        }
+
+        ofColor scatterColor = attenuation * rayColor(scattered, depth - 1, sceneGraph);
+        return emitted + scatterColor;
+        //return ofColor(0, 0, 0);
+        ////Vec3 direction = random_on_hemisphere(rec.normal);
+        //Vec3 direction = rec.normal + random_unit_vector();
+        ///*ofColor normal_color = ofColor(
+        //        (rec.normal.x + 1) * 127.5f,
+        //        (rec.normal.y + 1) * 127.5f,
+        //        (rec.normal.z + 1) * 127.5f);
+        //return normal_color;*/
+        //return 0.5 * rayColor(Ray(rec.p, direction), depth - 1, sceneGraph);
+
+        
+        
     }
 
     bool hitAnything(const Ray& r, Interval ray_t, HitRecord& rec, const SceneGraph& sceneGraph) const

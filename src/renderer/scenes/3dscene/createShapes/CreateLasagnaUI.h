@@ -47,8 +47,14 @@ public:
 
                 lasagna.SetColor(ofFloatColor(sharedParams->color[0], sharedParams->color[1], sharedParams->color[2], sharedParams->color[3]));
 
-                ComposedShape shape = ComposedShape(make_shared<BvhNode>(lasagna), mat);
-                auto lasagna_ptr = std::make_shared<Node>("Lasagna", std::make_shared<ComposedShape>(shape));
+                auto lasagna_ptr = std::make_shared<Node>("Cube", std::make_shared<RayMesh>(lasagna));
+
+                if (sharedParams->useBVH)
+                {
+                    ComposedShape shape = ComposedShape(make_shared<BvhNode>(lasagna), mat);
+                    lasagna_ptr = std::make_shared<Node>("Lasagna", std::make_shared<ComposedShape>(shape));
+                }
+
 
                 history.executeCommand(std::make_shared<AddChildToNodeCommand>(*sharedParams->selectedNode, lasagna_ptr));
             }

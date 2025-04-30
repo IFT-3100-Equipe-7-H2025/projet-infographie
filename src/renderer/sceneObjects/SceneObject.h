@@ -32,7 +32,7 @@ public:
     
     virtual bool hit(const Ray& r, Interval ray_t, HitRecord& rec)
     {
-        ofLog() << "Default no hit" << endl;
+        //ofLog() << "Default no hit" << endl;
         return false;
     }
 

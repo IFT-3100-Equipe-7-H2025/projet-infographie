@@ -377,10 +377,13 @@ void Scene3D::DrawSelectedNodeWindow()
                 {
                     sharedParams->material = make_shared<Lambert>(Lambert(color));
                 }
-
+                else if (sharedParams->mat == matType::DiffuseLightT)
+                {
+                    sharedParams->material = make_shared<DiffuseLight>(DiffuseLight(color));
+                }
 
                 int selected = static_cast<int>(sharedParams->mat);
-                if (ImGui::Combo("Choose Material", &selected, materialLabels, 3))
+                if (ImGui::Combo("Choose Material", &selected, materialLabels, 4))
                 {
                     ofLog() << "Choosing material" << endl;
                     sharedParams->mat = static_cast<matType>(selected);
@@ -505,6 +508,18 @@ void Scene3D::DrawModifyCameraNodeSliders(const std::shared_ptr<Node>& node, sha
         ImGui::SliderInt("Depth", &camera->getDepth(), 1, 100);
         ImGui::SliderInt("Resolution", &camera->getWidth(), 10, 4000);
         ImGui::SliderFloat("Portion of Screen", &camera->getScreenCrop(), 0.05, 1);
+        ofColor color1 = camera->getAmbient1();
+        float colorf[4] = {color1.r / 255.0f, color1.g / 255.0f, color1.b / 255.0f, color1.a / 255.0f};
+        if (ImGui::ColorEdit4("Ambient 1##ChangeColor", colorf))
+        {
+            camera->setAmbient1(ofColor(colorf[0] * 255, colorf[1] * 255, colorf[2] * 255, colorf[3] * 255));
+        }
+        ofColor color2 = camera->getAmbient2();
+        float colorf2[4] = {color2.r / 255.0f, color2.g / 255.0f, color2.b / 255.0f, color2.a / 255.0f};
+        if (ImGui::ColorEdit4("Ambient 2##ChangeColor", colorf2))
+        {
+            camera->setAmbient2(ofColor(colorf2[0] * 255, colorf2[1] * 255, colorf2[2] * 255, colorf2[3] * 255));
+        }
         if (ImGui::Button("Save Render"))
         {
             camera->saveImage();
@@ -1296,8 +1311,11 @@ void Scene3D::update()
 {
     time_current = ofGetElapsedTimef();
     time_elapsed = time_current - time_last;
-    //time_left = std::fmax(0, std::max(1.0f / ofGetFrameRate() - time_elapsed, 1.0f / ofGetTargetFrameRate() - time_elapsed));
-    time_left = 1.0f / 240.0f;
+    //time_left = std::fmax(0, std::min(1.0f / ofGetFrameRate() - time_elapsed, 1.0f / ofGetTargetFrameRate() - time_elapsed));
+    //time_left = std::fmin(std::fmax(0, (1.0f / ofGetFrameRate()) - time_elapsed), 1.0f / 30.0f);
+    //time_left = (((1.0f / ofGetFrameRate()) - time_elapsed) * 0.98f) * (1.0f / fmax(1.0f, fabs(ofGetFrameRate() - ofGetTargetFrameRate())));
+     time_left = 1.0f / fmax(45.0f, ofGetFrameRate()) - time_elapsed;
+    //time_left = 1.0f / 240.0f;
     time_elapsed_timer = time_current - time_last_timer;
     time_last = time_current;
 
@@ -1306,10 +1324,10 @@ void Scene3D::update()
         ofLog() << "Target Fps" << ofGetTargetFrameRate() << endl;
         ofLog() << "Real Fps" << ofGetFrameRate() << endl;
 
-        //ofLog() << "Exporting ray trace";
         time_last_timer = time_current;
-        //exportRayTrace(time_left);
         ofLog() << "Time elapsed" << time_elapsed << " Time Left : " << time_left << endl;
+        ofLog() << "Time elapsed draw" << time_elapsed_draw << " Time Left : " << time_left << endl;
+        ofLog() << "target frame rate" << ofGetTargetFrameRate() << " frame rate : " << ofGetFrameRate() << endl;
         ofLog() << "Time elapsed draw" << time_elapsed_draw << " Time Left : " << time_left << endl;
 
         for (auto& camera : cameras) {
@@ -1321,10 +1339,11 @@ void Scene3D::update()
      
     }
 
+    time_elapsed += ofGetElapsedTimef() - time_last;
+
     exportRayTrace(time_left);
 
-    time_current = ofGetElapsedTimef();
-    time_last = time_current;
+    time_last = ofGetElapsedTimef();
 
     speed_translation = translate_speed * time_elapsed;
     speed_rotation = rotate_speed * time_elapsed;
@@ -1564,6 +1583,8 @@ void Scene3D::saveImage(ofImage rayTrace)
 
 void Scene3D::exportRayTrace(float time_left)
 {
+    float current_time = ofGetElapsedTimef();
+    float elapsed_time = 0;
     if (cameraRayCount == 0) {
         return;
     }
