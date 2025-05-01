@@ -5,9 +5,10 @@
 #include "imgui.h"
 #include "of3dPrimitives.h"
 #include "renderer/PrimitiveCreator.h"
-#include "Cube.h"
-#include "BvhNode.h"
-#include "RayMesh.h"
+#include "rayTracer/RayObjects/RayMesh.h"
+#include "rayTracer/RayObjects/ComposedShape.h"
+#include "rayTracer/RayMaterial.h"
+
 constexpr float DEFAULT_CUBE_WIDTH = 100.0f;
 constexpr float DEFAULT_CUBE_HEIGHT = 100.0f;
 constexpr float DEFAULT_CUBE_DEPTH = 100.0f;

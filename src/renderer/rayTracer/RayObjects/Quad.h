@@ -3,9 +3,8 @@
 #define QUAD_H
 
 #include "Primitive3D.h"
-#include "Vec3.h"
+#include "rayTracer/Utilities/Vec3.h"
 #include <cmath>
-#include "Utility.h"
 
 class Quad : public Primitive3D
 {

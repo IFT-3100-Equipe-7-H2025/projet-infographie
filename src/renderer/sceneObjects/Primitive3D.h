@@ -3,8 +3,9 @@
 #include "SceneObject.h"
 #include "ofMain.h"
 #include "renderer/rayTracer/Ray.h"
-#include "RayMaterial.h"
+#include "rayTracer/RayMaterial.h"
 
+#include <rayTracer/Utilities/AABB.h>
 
 
 class Primitive3D : public SceneObject

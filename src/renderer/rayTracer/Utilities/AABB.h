@@ -2,9 +2,9 @@
 #ifndef AABB_H
 #define AABB_H
 
-#include "Interval.h"
+#include "rayTracer/Interval.h"
 #include "Vec3.h"
-#include "Ray.h"
+#include "rayTracer/Ray.h"
 
 class AABB
 {

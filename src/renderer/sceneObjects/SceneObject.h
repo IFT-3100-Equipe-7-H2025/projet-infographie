@@ -7,7 +7,7 @@
 #include "renderer/rayTracer/Ray.h"
 #include "renderer/rayTracer/Interval.h"
 #include "HitRecord.h"
-#include "RayMaterial.h"
+#include "rayTracer/RayMaterial.h"
 #include "AABB.h"
 //#include "Material.h"
 

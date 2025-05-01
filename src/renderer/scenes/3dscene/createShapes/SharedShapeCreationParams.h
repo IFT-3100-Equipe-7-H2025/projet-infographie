@@ -2,7 +2,7 @@
 
 #include "scenegraph/Node.h"
 #include "Material.h"
-#include "RayMaterial.h"
+#include "rayTracer/RayMaterial.h"
 
 #include <memory>
 

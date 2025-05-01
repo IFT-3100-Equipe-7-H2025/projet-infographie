@@ -4,9 +4,9 @@
 
 
 #include "Primitive3D.h"
-#include "Vec3.h"
+#include "rayTracer/Utilities/Vec3.h"
 #include <cmath>
-#include "Utility.h"
+#include "rayTracer/Utilities/AABB.h"
 #include "Quad.h"
 #include "Node.h"
 class ComposedShape : public Primitive3D

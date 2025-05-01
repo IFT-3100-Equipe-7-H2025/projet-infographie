@@ -4,11 +4,11 @@
 
 #include "SceneObject.h"
 #include "SceneGraph.h"
-#include "ComposedShape.h"
+#include "rayTracer/RayObjects/ComposedShape.h"
 #include "ofMain.h"
-#include "Vec3.h"
+#include "rayTracer/Utilities/Vec3.h"
 #include "Material.h"
-#include "BvhNode.h"
+#include "rayTracer/Utilities/BvhNode.h"
 
 
 

@@ -6,7 +6,6 @@
 #include "ComposedShape.h"
 #include "Triangle.h"
 #include "Material.h"
-#include "RayMaterial.h"
 #include <numbers>
 
 
