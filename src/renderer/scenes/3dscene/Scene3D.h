@@ -11,6 +11,8 @@
 #include "sceneObjects/SceneObject.h"
 #include "scenegraph/SceneGraph.h"
 #include <ofxAssimpModelLoader.h>
+#include "renderer/rayTracer/ray.h"
+#include "renderer/sceneObjects/Camera.h"
 #include <vector>
 
 class Scene3D : public Scene
@@ -34,6 +36,8 @@ public:
     void DrawModifyMaterialWindow();
     void DrawSelectLightingModelWindow();
 
+    void DrawModifyLightSliders(const std::shared_ptr<ofLight>& light);
+    void DrawModifyCameraNodeSliders(const std::shared_ptr<Node>& node, shared_ptr<Camera> camera);
     void DrawModifyLightSliders(const std::shared_ptr<Light>& light);
     void DrawModifyCameraNodeSliders(const std::shared_ptr<Node>& node, shared_ptr<ofCamera> camera);
 
@@ -108,9 +112,9 @@ private:
     using Toggled = bool;
     using DrawFrustum = bool;
 
-    map<NodeId, std::pair<weak_ptr<ofCamera>, pair<Toggled, DrawFrustum>>> cameraMap;
+    map<NodeId, weak_ptr<Camera>> cameraMap;
 
-    std::shared_ptr<ofCamera> camera;
+    std::shared_ptr<Camera> camera;
     NodeId current_camera_id;
     ofRectangle current_viewPort;
 
@@ -119,8 +123,18 @@ private:
     ofVec3f initialSelectedPosition;
     ofVec3f initialSelectedScale;
 
+    ofTrueTypeFont font;
+
+    int cameraRayCount = 0;
+    int rayTimeChoice = 0;
+
+    int cameraTranslateCount = 0;
+    int cameraRotateCount = 0;
     ofVec3f initialCameraPosition;
     glm::quat initialCameraRotation;
+    float initialCameraFov;
+
+    ofColor clearColor;
 
     ofRectangle onScreenCorners;
     bool is_selected;
@@ -129,7 +143,14 @@ private:
 
     float time_current;
     float time_elapsed;
-    float time_last;
+    float time_elapsed_draw;
+    float time_current_draw;
+    float time_last_draw;
+    float time_start_draw;
+    float time_last = 0;
+    float time_left;
+    float time_last_timer = 0.0f;
+    float time_elapsed_timer = 0.0f;
 
     bool is_key_press_up = false;
     bool is_key_press_right = false;
@@ -159,7 +180,11 @@ private:
 
     using ViewPort = ofRectangle;
 
-    std::vector<std::pair<shared_ptr<ofCamera>, pair<ViewPort, DrawFrustum>>> cameras;
+    ofImage rayImage;
+    bool hitAnyPixel;
+
+    std::vector<shared_ptr<Camera>> cameras;
+    //std::vector<std::pair<shared_ptr<ofCamera>, pair<ViewPort, DrawFrustum>>> cameras;
 
     std::vector<ofVec3f> getPrimitiveVertices(of3dPrimitive& primitive);
     void focus();
@@ -182,6 +207,20 @@ private:
 
     int getCameraRotationCommands() const;
     int getCameraTranslationCommands() const;
+
+    ofColor rayColor(const Ray& r);
+    
+    double hitAnything(const Ray& r, Interval ray_t, HitRecord& rec);
+
+    ofVec3f unitVector(const ofVec3f& v)
+    {
+        return v / v.length();
+    }
+
+
+    void divideCamera(int first, int last, int x1, int y1, int width, int height, vector<pair<NodeId, shared_ptr<Camera>>> activatedCameras);
+    void exportRayTrace(float time_left);
+    void saveImage(ofImage rayTrace);
 
     int charToLower(int key);
 

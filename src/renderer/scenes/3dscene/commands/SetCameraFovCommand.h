@@ -1,11 +1,11 @@
 #pragma once
 #include "Command.h"
-#include "ofCamera.h"
+#include "Camera.h"
 
 class SetCameraFovCommand : public Command
 {
 public:
-    explicit SetCameraFovCommand(std::shared_ptr<ofCamera> camera, float newFov) : camera(std::move(camera))
+    explicit SetCameraFovCommand(std::shared_ptr<Camera> camera, float newFov) : camera(std::move(camera))
                                                                                  , newFov(newFov)
     {
         this->oldFov = this->camera->getFov();
@@ -13,7 +13,7 @@ public:
         this->name = "Set camera FOV to " + std::to_string(this->newFov);
     }
 
-    SetCameraFovCommand(std::shared_ptr<ofCamera> camera, float newFov, float oldFov) : camera(std::move(camera))
+    SetCameraFovCommand(std::shared_ptr<Camera> camera, float newFov, float oldFov) : camera(std::move(camera))
                                                                                       , newFov(newFov)
                                                                                       , oldFov(oldFov)
     {
@@ -32,7 +32,7 @@ public:
 private:
     std::string name;
 
-    std::shared_ptr<ofCamera> camera;
+    std::shared_ptr<Camera> camera;
 
     float newFov;
     float oldFov;

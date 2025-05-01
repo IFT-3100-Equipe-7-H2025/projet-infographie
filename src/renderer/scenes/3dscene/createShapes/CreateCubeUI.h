@@ -5,6 +5,9 @@
 #include "imgui.h"
 #include "of3dPrimitives.h"
 #include "renderer/PrimitiveCreator.h"
+#include "rayTracer/RayObjects/RayMesh.h"
+#include "rayTracer/RayObjects/ComposedShape.h"
+#include "rayTracer/RayMaterial.h"
 
 constexpr float DEFAULT_CUBE_WIDTH = 100.0f;
 constexpr float DEFAULT_CUBE_HEIGHT = 100.0f;
@@ -27,12 +30,32 @@ public:
 
             if (ImGui::Button("Add"))
             {
-                auto cube = PrimitiveCreator::createCube(width, height, depth);
-                auto cube_3d = Primitive3D(cube);
-                cube_3d.SetColor(ofFloatColor(sharedParams->color[0], sharedParams->color[1], sharedParams->color[2], sharedParams->color[3]));
+                shared_ptr<MaterialContainer> mat = sharedParams->material->clone();
 
-                auto cube_ptr = std::make_shared<Node>("Cube", std::make_shared<Primitive3D>(cube_3d));
+                auto prim = PrimitiveCreator::createCube(width, height, depth);
+                //auto cube_3d = Primitive3D(prim);
+                RayMesh cube(mat, prim);
+
+                cube.SetColor(ofFloatColor(sharedParams->color[0], sharedParams->color[1], sharedParams->color[2], sharedParams->color[3]));
+
+                auto cube_ptr = std::make_shared<Node>("Cube", std::make_shared<RayMesh>(cube));
+
+                if (sharedParams->useBVH)
+                {
+                    ComposedShape shape = ComposedShape(make_shared<BvhNode>(cube), mat);
+                    cube_ptr = std::make_shared<Node>("Cube", std::make_shared<ComposedShape>(shape));
+                }
+
                 history.executeCommand(std::make_shared<AddChildToNodeCommand>(*sharedParams->selectedNode, cube_ptr));
+
+
+
+                //auto cube_ptr = std::make_shared<Node>("Cube", std::make_shared<Primitive3D>(cube_3d));
+                //auto cube = ofBoxPrimitive(width, height, depth);
+                //for (int i = 0; i < 6; i++) { cube.setSideColor(i, ofFloatColor(sharedParams->color[0], sharedParams->color[1], sharedParams->color[2], sharedParams->color[3])); }
+
+                //cube_ptr = std::make_shared<Node>("Cube", std::make_shared<Cube>(Vec3(width, height, depth), mat, cube));
+
             }
 
             ImGui::TreePop();
