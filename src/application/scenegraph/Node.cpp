@@ -135,6 +135,7 @@ void Node::Draw(const std::vector<std::shared_ptr<Light>>& lights, const std::sh
          }
          else if (auto material_ptr = std::dynamic_pointer_cast<GalaxyMaterial>(this->material); material_ptr)
         {
+            material_ptr->begin();
              glm::mat4 modelMatrix = inner->getGlobalTransformMatrix();
              glm::mat4 viewMatrix = ofGetCurrentMatrix(OF_MATRIX_MODELVIEW);
              glm::mat4 projMatrix = ofGetCurrentMatrix(OF_MATRIX_PROJECTION);
