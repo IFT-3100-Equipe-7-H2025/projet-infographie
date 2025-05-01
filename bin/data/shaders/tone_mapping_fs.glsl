@@ -8,13 +8,19 @@ uniform sampler2D image;
 uniform float tone_mapping_exposure;
 uniform float tone_mapping_gamma;
 
+uniform float tone_mapping_contrast;
+uniform float tone_mapping_lifts;
+uniform float tone_mapping_flattens;
+uniform float tone_mapping_compres;
+uniform float tone_mapping_clamp;
+
 vec3 tone_mapping_aces_filmic(vec3 x)
 {
-  float a = 2.51f;
-  float b = 0.03f;
-  float c = 2.43f;
-  float d = 0.59f;
-  float e = 0.14f;
+  float a = tone_mapping_contrast;
+  float b = tone_mapping_lifts;
+  float c = tone_mapping_flattens;
+  float d = tone_mapping_compres;
+  float e = tone_mapping_clamp;
   return clamp((x * (a * x + b)) / (x * (c * x + d) + e), 0.0, 1.0);
 }
 

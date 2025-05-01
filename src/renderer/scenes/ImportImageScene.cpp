@@ -18,6 +18,8 @@ void ImportImageScene::setup()
 
 void ImportImageScene::draw()
 {
+    ImGui::SetNextWindowPos(ImVec2(10, 30), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowSize(ImVec2(300, 600), ImGuiCond_FirstUseEver);
     ImGui::Begin(this->GetName().c_str());
     if (ImGui::Button("Import image")) { this->ImportImageButtonPressed(); }
     if (ImGui::Button("Sample image")) { this->SampleImage(); }
@@ -25,12 +27,19 @@ void ImportImageScene::draw()
 
     ImGui::Text("Tone mapping");
     ImGui::Checkbox("ACES Filmic", &toneMappingActive);
-    ImGui::SliderFloat("Exposure", &exposure, 0.0f, 5.0f);
-    ImGui::SliderFloat("Gamma", &gamma, 0.0f, 5.0f);
-    ImGui::End();
+   
 
     if (toneMappingActive)
     {
+        ImGui::SliderFloat("Exposure", &exposure, 0.0f, 5.0f);
+        ImGui::SliderFloat("Gamma", &gamma, 0.0f, 5.0f);
+        ImGui::SliderFloat("Contrast", &contrast, 0.0f, 5.0f);
+        ImGui::SliderFloat("Lift", &lift, 0.0f, 1.0f);
+        ImGui::SliderFloat("Flatten", &flatten, 0.0f, 5.0f);
+        ImGui::SliderFloat("Compress", &compress, 0.0f, 1.0f);
+        ImGui::SliderFloat("Clamp", &clamp, 0.0f, 1.0f);
+        
+
         for (auto& [image, position]: images)
         {
 
@@ -40,13 +49,22 @@ void ImportImageScene::draw()
             toneMapingshader.setUniform1f("tone_mapping_exposure", exposure);
             toneMapingshader.setUniform1f("tone_mapping_gamma", gamma);
 
+            toneMapingshader.setUniform1f("tone_mapping_contrast", contrast);
+            toneMapingshader.setUniform1f("tone_mapping_lifts", lift);
+            toneMapingshader.setUniform1f("tone_mapping_flattens", flatten);
+            toneMapingshader.setUniform1f("tone_mapping_compres", compress);
+            toneMapingshader.setUniform1f("tone_mapping_clamp", clamp);
+
+
             image.draw(position);
 
             toneMapingshader.end();
         }
+        if (ImGui::Button("Reset Tone Mapping")) {ResetToneMapping();}
     }
     else
     {
+        
         for (auto& [image, position]: images)
         {
             image.draw(position);
@@ -58,6 +76,8 @@ void ImportImageScene::draw()
         img.draw(xOffset, 20);
         xOffset += img.getWidth() + 10;
     }
+
+    ImGui::End();
 }
 
 void ImportImageScene::ImportImageButtonPressed()
@@ -118,4 +138,16 @@ void ImportImageScene::GenerateNewImages()
             xOffset += img.getWidth() + 10;
         }
     }
+}
+
+void ImportImageScene::ResetToneMapping()
+{
+    toneMappingActive = true;
+    exposure = 1.0f;
+    gamma = 2.2f;
+    contrast = 2.51f;
+    lift = 0.03f;
+    flatten = 2.43f;
+    compress = 0.59f;
+    clamp = 0.14f;
 }
