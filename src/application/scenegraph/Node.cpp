@@ -3,6 +3,7 @@
 #include "Light.h"
 #include "material/ShaderMaterial.h"
 #include "material/CubemapMaterial.h"
+#include "material/GalaxyMaterial.h"
 #include "of3dPrimitives.h"
 #include <memory>
 
@@ -114,10 +115,18 @@ void Node::Draw(const std::shared_ptr<Shader>& lightingModel, const glm::vec3& l
              glm::mat4 viewMatrix = ofGetCurrentMatrix(OF_MATRIX_MODELVIEW);
              glm::mat4 projMatrix = ofGetCurrentMatrix(OF_MATRIX_PROJECTION);
              glm::mat4 mvp = projMatrix * viewMatrix * modelMatrix;
-             glm::vec4 lightPosInViewSpace = viewMatrix * glm::vec4(lightPosition, 1.0);
 
              material_ptr->SetUniforms(mvp);
          }
+         else if (auto material_ptr = std::dynamic_pointer_cast<GalaxyMaterial>(this->material); material_ptr)
+        {
+             glm::mat4 modelMatrix = inner->getGlobalTransformMatrix();
+             glm::mat4 viewMatrix = ofGetCurrentMatrix(OF_MATRIX_MODELVIEW);
+             glm::mat4 projMatrix = ofGetCurrentMatrix(OF_MATRIX_PROJECTION);
+             glm::mat4 mvp = projMatrix * viewMatrix * modelMatrix;
+
+              material_ptr->SetUniforms(mvp);
+        }
 
         inner->draw();
         if (lightingModel) { lightingModel->end(); }

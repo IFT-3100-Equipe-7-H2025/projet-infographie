@@ -27,6 +27,7 @@
 #include <memory>
 #include <numbers>
 #include <material/CubemapMaterial.h>
+#include <material/GalaxyMaterial.h>
 
 #include <ranges>
 
@@ -69,9 +70,8 @@ void Scene3D::setup()
 
     this->registeredMaterials.push_back(std::make_shared<PBRMaterial>("PBR"));
 
-    //cubemap
-    //std::vector<std::string> faces;
-    //cubemapTextureID = LoadCubemap(faces);
+    this->registeredMaterials.push_back(std::make_shared<GalaxyMaterial>("Galaxy"));
+
     loadAllCubemaps();
     this->registeredMaterials.push_back(std::make_shared<CubemapMaterial>(cubemaps["Vatican"], "Cubemap_Vatican"));
     this->registeredMaterials.push_back(std::make_shared<CubemapMaterial>(cubemaps["Bridge"], "Cubemap_Bridge"));
@@ -1430,12 +1430,7 @@ GLuint Scene3D::LoadCubemap(const std::vector<std::string>& faces)
             continue;
         }
 
-        image.setImageType(OF_IMAGE_COLOR);// force RGB format
-        /*
-        if (i == 2 || i == 3)// i==2: POSITIVE_Y (top), i==3: NEGATIVE_Y (bottom)
-        {
-            image.rotate90(2);
-        }*/
+        image.setImageType(OF_IMAGE_COLOR);
 
         glTexImage2D(
                 GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0,
