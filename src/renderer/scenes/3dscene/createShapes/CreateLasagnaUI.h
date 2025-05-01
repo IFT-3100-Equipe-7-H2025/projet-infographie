@@ -6,9 +6,6 @@
 #include "imgui.h"
 #include "of3dPrimitives.h"
 #include "renderer/PrimitiveCreator.h"
-//#include "Metal.h"
-#include "RayMesh.h"
-#include "BvhNode.h"
 
 constexpr float DEFAULT_LASAGNA_L_W_RATIO = 0.5;
 constexpr int DEFAULT_LASAGNA_PERIODS = 4;

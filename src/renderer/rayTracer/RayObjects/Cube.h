@@ -6,7 +6,7 @@
 #include "ComposedShape.h"
 #include "Quad.h"
 #include "Material.h"
-#include "RayMaterial.h"
+#include "rayTracer/RayMaterial.h"
 
 
 class Cube : public ComposedShape

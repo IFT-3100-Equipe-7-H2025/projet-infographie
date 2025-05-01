@@ -2,7 +2,7 @@
 #ifndef RAYMATERIAL_H
 #define RAYMATERIAL_H
 #include "HitRecord.h"
-#include "Vec3.h"
+#include "Utilities/Vec3.h"
 #include "Ray.h"
 
 

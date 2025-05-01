@@ -2,10 +2,7 @@
 #ifndef BVHNODE_H
 #define BVHNODE_H
 
-#include "Interval.h"
 #include "Vec3.h"
-#include "Ray.h"
-#include "ComposedShape.h"
 
 #include "PrimitiveCreator.h"
 

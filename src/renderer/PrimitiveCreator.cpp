@@ -1,7 +1,6 @@
 #include "PrimitiveCreator.h"
 #include <cmath>
 #include <numbers>
-#include "RayMesh.h"
 
 
 of3dPrimitive PrimitiveCreator::createTriangle()

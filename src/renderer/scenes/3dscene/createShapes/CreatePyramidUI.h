@@ -6,8 +6,6 @@
 #include "imgui.h"
 #include "ofAppRunner.h"
 #include "renderer/PrimitiveCreator.h"
-#include "Pyramid.h"
-#include "RayMesh.h"
 
 constexpr int DEFAULT_PYRAMID_SIDES = 4;
 constexpr float DEFAULT_PYRAMID_WIDTH = 100.0f;

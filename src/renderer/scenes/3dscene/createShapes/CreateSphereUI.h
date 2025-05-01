@@ -8,8 +8,6 @@
 #include "Primitive3D.h"
 #include "rayTracer/RayObjects/Sphere.h"
 #include "renderer/PrimitiveCreator.h"
-#include "RayMesh.h"
-#include "BvhNode.h"
 
 
 constexpr float DEFAULT_SPHERE_RADIUS = 100.0f;

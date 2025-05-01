@@ -3,9 +3,7 @@
 #define TRIANGLE_H
 
 #include "Primitive3D.h"
-#include "Vec3.h"
 #include <cmath>
-#include "Utility.h"
 
 class Triangle : public Primitive3D
 {
