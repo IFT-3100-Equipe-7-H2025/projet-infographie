@@ -63,13 +63,13 @@
 class Sphere : public Primitive3D
 {
 public :
-  Sphere(of3dPrimitive primitive, float radius, shared_ptr<RayMaterial> material) : Primitive3D(primitive), center(getGlobalPosition()), radiusX(std::fmax(0, radius)), radiusY(std::fmax(0, radius)), radiusZ(std::fmax(0, radius))
+  Sphere(of3dPrimitive primitive, float radius, shared_ptr<MaterialContainer> material) : Primitive3D(primitive), center(getGlobalPosition()), radiusX(std::fmax(0, radius)), radiusY(std::fmax(0, radius)), radiusZ(std::fmax(0, radius))
     {
-        mat = material;
+        mat = material; 
         update();
     }
 
-void update()
+void update() override
 {
     center = getGlobalPosition();
     rcenter = Ray(center, Vec3(0, 0, 0));
@@ -84,7 +84,6 @@ AABB bounding_box() const override { return bbox; }
 
 bool hit(const Ray& r, Interval ray_t, HitRecord& rec) override
 {
-    update();
     auto oc = center - r.getOrigin();
 
     ofVec3f scaled_origin(oc.x / new_radiusX, oc.y / new_radiusY, oc.z / new_radiusZ);
@@ -129,7 +128,7 @@ bool hit(const Ray& r, Interval ray_t, HitRecord& rec) override
 
 
     rec.set_face_normal(r, outward_normal);
-    rec.mat = mat;
+    rec.mat = mat->getMaterial();
 
     return true;
 }

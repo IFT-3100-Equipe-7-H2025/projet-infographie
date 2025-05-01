@@ -27,7 +27,16 @@ public:
 
     BvhNode(vector<shared_ptr<Primitive3D>>& objects, size_t start, size_t end, int depth_p) : depth(depth_p)
     {
-        int axis = random_int(0, 2);
+        bbox = AABB::empty;
+        for (size_t object_index = start; object_index < end; object_index++)
+        {
+            auto& object = objects[object_index];
+            bbox = AABB(bbox, object->bounding_box());
+        }
+        int axis = bbox.longest_axis();
+
+        //int axis = random_int(0, 2);
+
         //ofLog() << "depth : " << depth_p;
         auto comparator = (axis == 0)   ? box_x_compare 
                           : (axis == 1) ? box_y_compare
@@ -36,7 +45,11 @@ public:
         object_span = end - start;
    
         //ofLog() << "Size : " << objects.size();
-        if (object_span == 1) {
+        //ofLog() << "object_span : " << object_span;
+        if (object_span == 0) {
+            return;
+        }
+        else if (object_span == 1) {
             groups.push_back(objects[start]);
         }
         else if (object_span == 2) {
@@ -59,26 +72,6 @@ public:
             groups.push_back(node1);
             groups.push_back(node2);
         }
-        for (auto& object: groups)
-        {
-            AABB box1 = object->bounding_box();
-
-            bbox = AABB(bbox, box1);
-            //if (depth <= 41 && start == 0)
-            //{
-
-            //    ofLog() << "Depth : " << depth;
-            //    ofLog() << "BBox in loop " << groups.size();
-
-            //    ofLog() << " Gotten BBox" << box1.x.min << box1.y.min << box1.z.min;
-            //    ofLog() << " Gotten BBox" << box1.x.max << box1.y.max << box1.z.max;
-
-            //    ofLog() << "BBox" << bbox.x.min << bbox.y.min << bbox.z.min;
-            //    ofLog() << "BBox" << bbox.x.max << bbox.y.max << bbox.z.max;
-            //}
-            
-            
-        }
        
     }
 
@@ -91,65 +84,14 @@ public:
         }
     }
 
-    void customDraw(ofMatrix4x4 transform) override
+    void aabbDraw(ofMatrix4x4 transform) override
     {
         //return;
-        //ofLog() << "In bvh custom draw";
         for (auto& object: groups)
         {
-            //ofLog() << "Object in bvh custom draw (size = " << object_span << ")";
-            object->customDraw(transform);
+            object->aabbDraw(transform);
         }
-        ofPushMatrix();
-        ofPushStyle();
-        ofSetColor(ofColor(0, 255, 0));
-        ofMesh boxMesh;
-        AABB bbox_t = bbox;
-        //ofMatrix4x4 transform = getGlobalTransformMatrix();
-        bbox_t.transform(transform.getInverse());
-        boxMesh.setMode(ofPrimitiveMode::OF_PRIMITIVE_LINE_STRIP);
-        boxMesh.addVertex(ofVec3f(bbox_t.x.min, bbox_t.y.min, bbox_t.z.min));
-        boxMesh.addVertex(ofVec3f(bbox_t.x.min, bbox_t.y.min, bbox_t.z.max));
-        boxMesh.addVertex(ofVec3f(bbox_t.x.min, bbox_t.y.max, bbox_t.z.max));
-        boxMesh.addVertex(ofVec3f(bbox_t.x.min, bbox_t.y.max, bbox_t.z.min));
-
-
-        boxMesh.addVertex(ofVec3f(bbox_t.x.min, bbox_t.y.min, bbox_t.z.min));
-        boxMesh.addVertex(ofVec3f(bbox_t.x.max, bbox_t.y.min, bbox_t.z.min));
-        boxMesh.addVertex(ofVec3f(bbox_t.x.max, bbox_t.y.max, bbox_t.z.min));
-        boxMesh.addVertex(ofVec3f(bbox_t.x.min, bbox_t.y.max, bbox_t.z.min));
-        boxMesh.addVertex(ofVec3f(bbox_t.x.min, bbox_t.y.min, bbox_t.z.min));
-
-        boxMesh.addVertex(ofVec3f(bbox_t.x.min, bbox_t.y.min, bbox_t.z.min));
-        boxMesh.addVertex(ofVec3f(bbox_t.x.max, bbox_t.y.min, bbox_t.z.min));
-        boxMesh.addVertex(ofVec3f(bbox_t.x.max, bbox_t.y.min, bbox_t.z.max));
-        boxMesh.addVertex(ofVec3f(bbox_t.x.min, bbox_t.y.min, bbox_t.z.max));
-
-        boxMesh.addVertex(ofVec3f(bbox_t.x.max, bbox_t.y.min, bbox_t.z.max));
-        boxMesh.addVertex(ofVec3f(bbox_t.x.max, bbox_t.y.min, bbox_t.z.min));
-        boxMesh.addVertex(ofVec3f(bbox_t.x.max, bbox_t.y.min, bbox_t.z.max));
-        boxMesh.addVertex(ofVec3f(bbox_t.x.max, bbox_t.y.max, bbox_t.z.max));
-        boxMesh.addVertex(ofVec3f(bbox_t.x.max, bbox_t.y.max, bbox_t.z.min));
-        boxMesh.addVertex(ofVec3f(bbox_t.x.max, bbox_t.y.min, bbox_t.z.min));
-        boxMesh.addVertex(ofVec3f(bbox_t.x.min, bbox_t.y.min, bbox_t.z.min));
-
-        boxMesh.addVertex(ofVec3f(bbox_t.x.min, bbox_t.y.min, bbox_t.z.max));
-        boxMesh.addVertex(ofVec3f(bbox_t.x.max, bbox_t.y.min, bbox_t.z.max));
-        boxMesh.addVertex(ofVec3f(bbox_t.x.max, bbox_t.y.max, bbox_t.z.max));
-        boxMesh.addVertex(ofVec3f(bbox_t.x.min, bbox_t.y.max, bbox_t.z.max));
-        boxMesh.addVertex(ofVec3f(bbox_t.x.min, bbox_t.y.min, bbox_t.z.max));
-        boxMesh.addVertex(ofVec3f(bbox_t.x.min, bbox_t.y.min, bbox_t.z.min));
-
-        boxMesh.addVertex(ofVec3f(bbox_t.x.min, bbox_t.y.max, bbox_t.z.min));
-        boxMesh.addVertex(ofVec3f(bbox_t.x.max, bbox_t.y.max, bbox_t.z.min));
-        boxMesh.addVertex(ofVec3f(bbox_t.x.max, bbox_t.y.max, bbox_t.z.max));
-        boxMesh.addVertex(ofVec3f(bbox_t.x.min, bbox_t.y.max, bbox_t.z.max));
-
-
-
-        boxMesh.draw();
-        ofPopStyle();
-        ofPopMatrix();
+        Primitive3D::aabbDraw(transform);
     }
 
     bool hit(const Ray& r, Interval ray_t, HitRecord& rec) override {

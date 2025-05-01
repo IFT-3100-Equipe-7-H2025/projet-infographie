@@ -19,13 +19,13 @@ public:
 
     Primitive3D(of3dPrimitive primitive)
     {
-        mat = make_shared<Lambert>(ofColor(5, 50, 255));
+        mat = make_shared<MaterialContainer>(make_shared<Lambert>(ofColor(5, 50, 255)));
         ofLog() << "Material created!";
         model = primitive;
         initialize();
     }
 
-    Primitive3D(of3dPrimitive primitive, shared_ptr<RayMaterial> material)
+    Primitive3D(of3dPrimitive primitive, shared_ptr<MaterialContainer> material)
     {
         mat = material;
         ofLog() << "Material created!";
@@ -80,7 +80,57 @@ public:
     }
     virtual void update() {}
 
-    virtual void customDraw(ofMatrix4x4 transform) {}
+    virtual void aabbDraw(ofMatrix4x4 transform) {
+        ofPushMatrix();
+        ofPushStyle();
+        ofSetColor(ofColor(0, 255, 0));
+        ofMesh boxMesh;
+        AABB bbox_t = bbox;
+        //ofMatrix4x4 transform = getGlobalTransformMatrix();
+        bbox_t.transform(transform.getInverse());
+        boxMesh.setMode(ofPrimitiveMode::OF_PRIMITIVE_LINE_STRIP);
+        boxMesh.addVertex(ofVec3f(bbox_t.x.min, bbox_t.y.min, bbox_t.z.min));
+        boxMesh.addVertex(ofVec3f(bbox_t.x.min, bbox_t.y.min, bbox_t.z.max));
+        boxMesh.addVertex(ofVec3f(bbox_t.x.min, bbox_t.y.max, bbox_t.z.max));
+        boxMesh.addVertex(ofVec3f(bbox_t.x.min, bbox_t.y.max, bbox_t.z.min));
+
+
+        boxMesh.addVertex(ofVec3f(bbox_t.x.min, bbox_t.y.min, bbox_t.z.min));
+        boxMesh.addVertex(ofVec3f(bbox_t.x.max, bbox_t.y.min, bbox_t.z.min));
+        boxMesh.addVertex(ofVec3f(bbox_t.x.max, bbox_t.y.max, bbox_t.z.min));
+        boxMesh.addVertex(ofVec3f(bbox_t.x.min, bbox_t.y.max, bbox_t.z.min));
+        boxMesh.addVertex(ofVec3f(bbox_t.x.min, bbox_t.y.min, bbox_t.z.min));
+
+        boxMesh.addVertex(ofVec3f(bbox_t.x.min, bbox_t.y.min, bbox_t.z.min));
+        boxMesh.addVertex(ofVec3f(bbox_t.x.max, bbox_t.y.min, bbox_t.z.min));
+        boxMesh.addVertex(ofVec3f(bbox_t.x.max, bbox_t.y.min, bbox_t.z.max));
+        boxMesh.addVertex(ofVec3f(bbox_t.x.min, bbox_t.y.min, bbox_t.z.max));
+
+        boxMesh.addVertex(ofVec3f(bbox_t.x.max, bbox_t.y.min, bbox_t.z.max));
+        boxMesh.addVertex(ofVec3f(bbox_t.x.max, bbox_t.y.min, bbox_t.z.min));
+        boxMesh.addVertex(ofVec3f(bbox_t.x.max, bbox_t.y.min, bbox_t.z.max));
+        boxMesh.addVertex(ofVec3f(bbox_t.x.max, bbox_t.y.max, bbox_t.z.max));
+        boxMesh.addVertex(ofVec3f(bbox_t.x.max, bbox_t.y.max, bbox_t.z.min));
+        boxMesh.addVertex(ofVec3f(bbox_t.x.max, bbox_t.y.min, bbox_t.z.min));
+        boxMesh.addVertex(ofVec3f(bbox_t.x.min, bbox_t.y.min, bbox_t.z.min));
+
+        boxMesh.addVertex(ofVec3f(bbox_t.x.min, bbox_t.y.min, bbox_t.z.max));
+        boxMesh.addVertex(ofVec3f(bbox_t.x.max, bbox_t.y.min, bbox_t.z.max));
+        boxMesh.addVertex(ofVec3f(bbox_t.x.max, bbox_t.y.max, bbox_t.z.max));
+        boxMesh.addVertex(ofVec3f(bbox_t.x.min, bbox_t.y.max, bbox_t.z.max));
+        boxMesh.addVertex(ofVec3f(bbox_t.x.min, bbox_t.y.min, bbox_t.z.max));
+        boxMesh.addVertex(ofVec3f(bbox_t.x.min, bbox_t.y.min, bbox_t.z.min));
+
+        boxMesh.addVertex(ofVec3f(bbox_t.x.min, bbox_t.y.max, bbox_t.z.min));
+        boxMesh.addVertex(ofVec3f(bbox_t.x.max, bbox_t.y.max, bbox_t.z.min));
+        boxMesh.addVertex(ofVec3f(bbox_t.x.max, bbox_t.y.max, bbox_t.z.max));
+        boxMesh.addVertex(ofVec3f(bbox_t.x.min, bbox_t.y.max, bbox_t.z.max));
+
+
+        boxMesh.draw();
+        ofPopStyle();
+        ofPopMatrix();
+    }
 
     bool updateSettings()
     {

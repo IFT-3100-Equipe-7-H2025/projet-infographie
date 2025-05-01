@@ -10,13 +10,14 @@
 class Triangle : public Primitive3D
 {
 public:
-    Triangle(shared_ptr<ofVec3f>& reference, shared_ptr<ofVec3f>& scale, shared_ptr<ofQuaternion>& orientation, const Vec3& Q, const Vec3& u, const Vec3& v, shared_ptr<RayMaterial> material) : 
-        ve(v), ue(u), scale(scale), orient(orientation), mat(material), u(u), v(v), reference(reference), Q(Q), corner(Q)
+    Triangle(shared_ptr<ofVec3f>& reference, shared_ptr<ofVec3f>& scale, shared_ptr<ofQuaternion>& orientation, const Vec3& Q, const Vec3& u, const Vec3& v, shared_ptr<MaterialContainer> material) : 
+        ve(v), ue(u), scale(scale), orient(orientation), u(u), v(v), reference(reference), Q(Q), corner(Q)
     {
+        mat = material;
         update();
     }
 
-    static Triangle triangleFromPoints(shared_ptr<ofVec3f>& reference, shared_ptr<ofVec3f>& scale, shared_ptr<ofQuaternion>& orientation, const Vec3& A, const Vec3& B, const Vec3& C, shared_ptr<RayMaterial> material)
+    static Triangle triangleFromPoints(shared_ptr<ofVec3f>& reference, shared_ptr<ofVec3f>& scale, shared_ptr<ofQuaternion>& orientation, const Vec3& A, const Vec3& B, const Vec3& C, shared_ptr<MaterialContainer> material)
     {
         Vec3 Q = A;
         Vec3 u = B - A;
@@ -35,9 +36,9 @@ public:
           u(other.u),
           v(other.v),
           Q(other.Q),
-          corner(other.corner),
-          mat(other.mat)
+          corner(other.corner)
     {
+        mat = other.mat;
         bbox = other.bbox;
         model = other.model;
         update();
@@ -99,7 +100,7 @@ public:
 
         rec.t = t;
         rec.p = intersection;
-        rec.mat = mat;
+        rec.mat = mat->getMaterial();
         rec.set_face_normal(r, normal);
         return true;
     }
@@ -128,7 +129,6 @@ private:
     ofVec3f corner;
     Vec3 u, v, w;
     Vec3 ue, ve;
-    shared_ptr<RayMaterial> mat;
     Vec3 normal;
     double D;
     shared_ptr<ofVec3f> reference;

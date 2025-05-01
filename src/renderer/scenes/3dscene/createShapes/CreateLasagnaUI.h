@@ -39,7 +39,7 @@ public:
 
             if (ImGui::Button("Add"))
             {
-                shared_ptr<RayMaterial> mat = sharedParams->material->clone();
+                shared_ptr<MaterialContainer> mat = sharedParams->material->clone();
 
                 auto prim = PrimitiveCreator::createLasagna(l_w_ratio, periods, resolution_l, resolution_w, width, height, depth);
                 //auto lasagna_3d = Primitive3D(prim);

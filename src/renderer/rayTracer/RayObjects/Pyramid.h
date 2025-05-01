@@ -13,7 +13,7 @@ class Pyramid : public ComposedShape
 {
 public:
 
-    Pyramid(int sides, const Vec3& size, shared_ptr<RayMaterial> mat, of3dPrimitive primitive) : ComposedShape(size, mat, primitive), sides(sides){
+    Pyramid(int sides, const Vec3& size, shared_ptr<MaterialContainer> mat, of3dPrimitive primitive) : ComposedShape(size, mat, primitive), sides(sides){
         setShapes();
     }
     void setShapes() override{

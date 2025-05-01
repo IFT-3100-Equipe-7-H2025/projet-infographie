@@ -62,6 +62,18 @@ public:
         return x;
     }
 
+    int longest_axis() const
+    {
+        // Returns the index of the longest axis of the bounding box.
+
+        if (x.size() > y.size())
+            return x.size() > z.size() ? 0 : 2;
+        else
+            return y.size() > z.size() ? 1 : 2;
+    }
+
+    static const AABB empty, universe;
+
     bool hit(const Ray& r, Interval ray_t) const {
         const Vec3& ray_orig = r.getOrigin();
         const Vec3& ray_dir = r.getDirection();
@@ -95,14 +107,15 @@ public:
 private:
     void pad_to_minimums()
     {
-        //WAS THIS( would make quicker)
         double delta = 0.0001;
-        //double delta = 0.01;
         if (x.size() < delta) x = x.expand(delta);
         if (y.size() < delta) y = y.expand(delta);
         if (z.size() < delta) z = z.expand(delta);
     }
     
 };
+
+const AABB AABB::empty = AABB(Interval::empty, Interval::empty, Interval::empty);
+const AABB AABB::universe = AABB(Interval::universe, Interval::universe, Interval::universe);
 
 #endif

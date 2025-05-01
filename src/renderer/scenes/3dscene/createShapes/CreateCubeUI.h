@@ -29,7 +29,7 @@ public:
 
             if (ImGui::Button("Add"))
             {
-                shared_ptr<RayMaterial> mat = sharedParams->material->clone();
+                shared_ptr<MaterialContainer> mat = sharedParams->material->clone();
 
                 auto prim = PrimitiveCreator::createCube(width, height, depth);
                 //auto cube_3d = Primitive3D(prim);

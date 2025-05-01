@@ -96,20 +96,23 @@ public:
 
     shared_ptr<RayMaterial> getMaterial()
     {
+        return mat->getMaterial();
+    }
+
+    shared_ptr<MaterialContainer> getMaterialContainer()
+    {
         return mat;
     }
 
     void setMaterial(shared_ptr<RayMaterial> material)
     {
-        mat->setColor(material->getColor());
-        mat->setFuzz(material->getFuzz());
-        mat->setRefractionIndex(material->getRefractionIndex());
+        mat->setMaterial(material);
     }
 
 
 
 protected:
-    shared_ptr<RayMaterial> mat;
+    shared_ptr<MaterialContainer> mat;
 
 };
 #endif

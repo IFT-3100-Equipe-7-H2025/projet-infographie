@@ -13,7 +13,8 @@ class Cube : public ComposedShape
 {
 public:
 
-    Cube(const Vec3& size, shared_ptr<RayMaterial> mat, of3dPrimitive primitive) : ComposedShape(size, mat, primitive) {
+    Cube(const Vec3& size, shared_ptr<MaterialContainer> mat, of3dPrimitive primitive) : ComposedShape(size, mat, primitive)
+    {
         setShapes();
     }
     void setShapes() override

@@ -4,9 +4,11 @@
 
 #include "SceneObject.h"
 #include "SceneGraph.h"
+#include "ComposedShape.h"
 #include "ofMain.h"
 #include "Vec3.h"
 #include "Material.h"
+#include "BvhNode.h"
 
 
 
@@ -28,13 +30,16 @@ public:
     ofColor backgroundColor2 = ofColor(255, 200, 250);
     ofImage rayImage;
     ofImage prevImage;
-
+    bool useBvh = true;
+    bool drawBvh = false;
     ofPixels* pixels = nullptr;
     bool rayTrace = true;
+    shared_ptr<ComposedShape> bvhRoot = make_shared<ComposedShape>();
+    vector<shared_ptr<Node>> snapshotObjects;
 
 
 
-    Camera(): activated(false), drawFrustrum(false), rendering(false) {
+    Camera(): activated(false), drawsFrustum(false), rendering(false) {
         prevImage.allocate(image_width, image_height, OF_IMAGE_COLOR);
         initialize();
     }
@@ -115,6 +120,26 @@ public:
         return prevImage;
     }
 
+    void customDraw() override
+    {
+        //ofCamera::customDraw();
+        if (drawsFrustum)
+        {
+            drawFrustum();
+        }
+        //drawBVH();
+    }
+
+    void drawBVH() {
+        if (drawBvh)
+        {
+            ofPushStyle();
+            ofSetColor(ofColor(255, 0, 0));
+            bvhRoot->aabbDraw();
+            ofPopStyle();
+        }
+    }
+
 
     ofImage render(const SceneGraph& sceneGraph) {
         initialize();
@@ -183,29 +208,30 @@ public:
     void renderPixel(const SceneGraph& sceneGraph) {
         if (!rendering) {
             initialize();
+            ComposedShape shape(sceneGraph.GetNodes());
+            //bvhRoot = make_shared<ComposedShape>(shape);
+            bvhRoot = make_shared<ComposedShape>(make_shared<BvhNode>(shape), shape.getMaterialContainer());
+            bvhRoot->update();
+            snapshotObjects = sceneGraph.GetNodes();
             rendering = true;
             snapshot = sceneGraph;
         }
 
         writePixel(last_i, last_j, snapshot);
-        //ofLog() << "width  : " << image_width << " height : " << image_height << "i  : " << last_i << " j : " << last_j;
         last_i++;
         if (last_i == image_width && last_j == image_height - 1)
         {
             rendering = false;
             rayImage.update();
-            //ofLog() << "Allocating from rayImage" << endl;
             prevImage.allocate(rayImage.getWidth(), rayImage.getHeight(), OF_IMAGE_COLOR);
             prevImage.setFromPixels(rayImage);
 
-            //ofLog() << "After allocating from rayImage" << endl;
             last_i = 0;
             last_j = 0;
         }
         else if (last_i == image_width) {
             last_j++;
             last_i = 0;
-            //ofLog() << "width  : " << image_width << " height : " << image_height << "i  : " << last_i << " j : " << last_j;
         }
     }
 
@@ -276,16 +302,26 @@ public:
         activated = false;
     }
 
-    void viewFrustrum() {
-        drawFrustrum = true;
+    void viewFrustum() {
+        drawsFrustum = true;
     }
     
-    void hideFrustrum() {
-        drawFrustrum = false;
+    void hideFrustum() {
+        drawsFrustum = false;
     }
 
-    bool& frustrumVisible() {
-        return drawFrustrum;
+    bool& FrustumVisible() {
+        return drawsFrustum;
+    }
+
+    bool& getUseBvh()
+    {
+        return useBvh;
+    }
+
+    bool& getDrawBvh()
+    {
+        return drawBvh;
     }
 
     bool& isRayTracing()
@@ -344,7 +380,7 @@ private:
     ofVec3f pixel_delta_u;
     ofVec3f pixel_delta_v;
     bool activated;
-    bool drawFrustrum;
+    bool drawsFrustum;
     ViewPort viewPort;
     SceneGraph snapshot;
 
@@ -419,7 +455,7 @@ private:
         return ofVec3f(random_double() - 0.5, random_double() - 0.5, 0);
     }
 
-    ofColor rayColor(const Ray& r, int depth, const SceneGraph& sceneGraph) const
+    ofColor rayColor(const Ray& r, int depth, const SceneGraph& sceneGraph)
     {
         if (depth <= 0)
         {
@@ -467,29 +503,37 @@ private:
         
     }
 
-    bool hitAnything(const Ray& r, Interval ray_t, HitRecord& rec, const SceneGraph& sceneGraph) const
+    bool hitAnything(const Ray& r, Interval ray_t, HitRecord& rec, const SceneGraph& sceneGraph)
     {
         HitRecord temp_rec;
         double closest_so_far = ray_t.max;
         bool hit_anything = false;
 
-        for (const auto& node: sceneGraph.GetNodes())
+        if (useBvh)
         {
-
-            if (auto object = std::dynamic_pointer_cast<SceneObject>(node->GetInner()))
+            if (bvhRoot->hit(r, Interval(ray_t.min, closest_so_far), temp_rec))
             {
-                if (object->hit(r, Interval(ray_t.min, closest_so_far), temp_rec))
+                hit_anything = true;
+                closest_so_far = temp_rec.t;
+                rec = temp_rec;
+            }
+        }
+        else
+        {
+            for (const auto& node: snapshotObjects)
+            {
+                if (auto object = std::dynamic_pointer_cast<SceneObject>(node->GetInner()))
                 {
-                    hit_anything = true;
-                    closest_so_far = temp_rec.t;
-                    rec = temp_rec;
+                    if (object->hit(r, Interval(ray_t.min, closest_so_far), temp_rec))
+                    {
+                        hit_anything = true;
+                        closest_so_far = temp_rec.t;
+                        rec = temp_rec;
+                    }
                 }
             }
         }
+
         return hit_anything;
     }
-
 };
-
-
-

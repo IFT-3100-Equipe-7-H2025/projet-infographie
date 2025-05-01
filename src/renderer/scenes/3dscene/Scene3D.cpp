@@ -91,7 +91,7 @@ void Scene3D::setup()
     camera->setPosition(0, 0, -200);
     camera->lookAt(ofVec3f(0, 0, 0));
     camera->activate();
-    camera->hideFrustrum();
+    camera->hideFrustum();
     auto cam_ptr = std::make_shared<Node>("Camera", camera);
     this->sceneGraph.AddNode(cam_ptr);
     cameraMap.emplace(cam_ptr->GetId(), camera);
@@ -107,45 +107,6 @@ void Scene3D::setup()
     int image_height = int(image_width / aspect_ratio);
     clearColor.set(0, 77, 98);
     rayImage.allocate(image_width, image_height, OF_IMAGE_COLOR);
-
-    auto material_ground = make_shared<Lambert>(ofColor(204, 204, 0.0));
-    auto material_center = make_shared<Lambert>(ofColor(26, 51, 125));
-    auto material_left = make_shared<Dielectric>(1.50);
-    auto material_bubble = make_shared<Dielectric>(1.00 / 1.50);
-    auto material_right = make_shared<Metal>(ofColor(204, 153, 51), 1.0);
-
-    auto primGround = PrimitiveCreator::createSphere(30, 30, 100);
-    auto primCenter = PrimitiveCreator::createSphere(30, 30, 20);
-    auto primLeft = PrimitiveCreator::createSphere(30, 30, 20);
-    auto primBubble = PrimitiveCreator::createSphere(30, 30, 18);
-    auto primRight = PrimitiveCreator::createSphere(30, 30, 20);
-    auto primCube = PrimitiveCreator::createCube(50, 50, 50);
-
-    shared_ptr<Sphere> ground = make_shared<Sphere>(primGround, 100.0, material_ground);
-    shared_ptr<Sphere> center = make_shared<Sphere>(primCenter, 20, material_center);
-    shared_ptr<Sphere> left = make_shared<Sphere>(primLeft, 20, material_left);
-    shared_ptr<Sphere> bubble = make_shared<Sphere>(primBubble, 18, material_bubble);
-    shared_ptr<Sphere> right = make_shared<Sphere>(primRight, 20, material_right);
-    ground->setGlobalPosition(Vec3(0.0, 0.0, 0.0));
-    center->setGlobalPosition(Vec3(0.0, 0.0, -1.2));
-    left->setGlobalPosition(Vec3(-30, 0.0, -1.0));
-    bubble->setGlobalPosition(Vec3(-30, 0.0, -1.0));
-    right->setGlobalPosition(Vec3(30, 0.0, -1.0));
-
-    //sceneGraph.AddNode(make_shared<Node>("Ground", ground));
-    //sceneGraph.AddNode(make_shared<Node>("Center", center));
-    //sceneGraph.AddNode(make_shared<Node>("Left", left));
-    //sceneGraph.AddNode(make_shared<Node>("Bubble", bubble));
-    //sceneGraph.AddNode(make_shared<Node>("Right", right));
-
-    shared_ptr<ofVec3f> reference = make_shared<ofVec3f>(0, 0, 0);
-
-    //sceneGraph.AddNode(make_shared<Node>("Ground", make_shared<Quad>(reference, Vec3(0.0f, 0.0f, 0.0f), Vec3(400.0f, 0.0f, 0.0f), Vec3(0.0f, -400.00f, 0.0f), material_ground)));
-    //sceneGraph.AddNode(make_shared<Node>("Center", make_shared<Quad>(Vec3(-20, -20, 0), Vec3(40, 0, 0), Vec3(0, 40, 0), material_center)));
-    //sceneGraph.AddNode(make_shared<Node>("Left", make_shared<Quad>(Vec3(30, -20, 10), Vec3(0, 0, 40), Vec3(0, 40, 0), material_left)));
-    //sceneGraph.AddNode(make_shared<Node>("Bubble", make_shared<Quad>(Vec3(-20, 30, 10), Vec3(40, 0, 0), Vec3(0, 0, 40), material_bubble)));
-    //sceneGraph.AddNode(make_shared<Node>("Right", make_shared<Quad>(Vec3(-20, -30, 50), Vec3(40, 0, 0), Vec3(0, 0, -40), material_right)));
-    //sceneGraph.AddNode(make_shared<Node>("Cube", make_shared<Cube>(Vec3(50,50,50), material_ground, primCube)));
 
 
     font.load("fonts/JetBrainsMono-Regular.ttf", 12, true, true);
@@ -193,12 +154,10 @@ void Scene3D::draw()
     for (auto& camera: cameras)
     {
         camera->begin(camera->getViewPort());
+        camera->drawBVH();
         for (auto& camera: cameras)
         {
-            if (camera->frustrumVisible())
-            {
-                camera->drawFrustum();
-            }
+            camera->customDraw();
         }
         drawScene();
         camera->end();
@@ -329,7 +288,7 @@ void Scene3D::DrawSelectedNodeWindow()
                     updateViewPorts();
                 }
 
-                bool& frustumActivated = cameraMap.at(id).lock()->frustrumVisible();
+                bool& frustumActivated = cameraMap.at(id).lock()->FrustumVisible();
                 if (ImGui::Checkbox("Visible Frustum", &frustumActivated))
                 {
                     updateViewPorts();
@@ -340,6 +299,12 @@ void Scene3D::DrawSelectedNodeWindow()
                 {
                     updateViewPorts();
                 }
+
+                bool& useBvh = cameraMap.at(id).lock()->getUseBvh();
+                ImGui::Checkbox("Use BVH for scene", &useBvh);
+
+                bool& drawBvh = cameraMap.at(id).lock()->getDrawBvh();
+                ImGui::Checkbox("Draw BVH", &drawBvh);
 
                 bool tempOrtho = camera->getOrtho();
                 if (ImGui::Checkbox("Orthogonal Projection", &tempOrtho))
@@ -367,25 +332,25 @@ void Scene3D::DrawSelectedNodeWindow()
                 ImGui::ColorEdit4("Color", sharedParams->color);
                 ofFloatColor color(sharedParams->color[0], sharedParams->color[1], sharedParams->color[2], sharedParams->color[3]);
                 
-                sharedParams->material->setColor(color);
+                sharedParams->material->getMaterial()->setColor(color);
 
                 if (sharedParams->mat == matType::GlassT)
                 {
                     ImGui::SliderFloat("Refract Index", &sharedParams->refract, 0.1f, 10.0f);
-                    sharedParams->material = make_shared<Dielectric>(Dielectric(sharedParams->refract));
+                    sharedParams->material = make_shared<MaterialContainer>(make_shared<Dielectric>(Dielectric(sharedParams->refract)));
                 }
                 else if (sharedParams->mat == matType::MetalT)
                 {
                     ImGui::SliderFloat("Metal Fuzz", &sharedParams->fuzz, 0.1f, 10.0f);
-                    sharedParams->material = make_shared<Metal>(Metal(color, sharedParams->fuzz));
+                    sharedParams->material = make_shared<MaterialContainer>(make_shared<Metal>(Metal(color, sharedParams->fuzz)));
                 }
                 else if (sharedParams->mat == matType::LambertT)
                 {
-                    sharedParams->material = make_shared<Lambert>(Lambert(color));
+                    sharedParams->material = make_shared<MaterialContainer>(make_shared<Lambert>(Lambert(color)));
                 }
                 else if (sharedParams->mat == matType::DiffuseLightT)
                 {
-                    sharedParams->material = make_shared<DiffuseLight>(DiffuseLight(color));
+                    sharedParams->material = make_shared<MaterialContainer>(make_shared<DiffuseLight>(DiffuseLight(color)));
                 }
 
                 int selected = static_cast<int>(sharedParams->mat);
@@ -511,6 +476,7 @@ void Scene3D::DrawModifyCameraNodeSliders(const std::shared_ptr<Node>& node, sha
     }
     if (camera->isRayTracing()) {
         ImGui::SliderInt("Samples", &camera->getSamples(), 1, 4000);
+
         ImGui::SliderInt("Depth", &camera->getDepth(), 1, 100);
         ImGui::SliderInt("Resolution", &camera->getWidth(), 10, 4000);
         ImGui::SliderFloat("Portion of Screen", &camera->getScreenCrop(), 0.05, 1);
@@ -592,7 +558,7 @@ void Scene3D::DrawModifyNodeSliders(const std::shared_ptr<Node>& node)
     // Color
     if (const auto primitive = std::dynamic_pointer_cast<Primitive3D>(node->GetInner()); primitive)
     {
-        const ofFloatColor currentColor = primitive->GetColor();
+        ofFloatColor currentColor = primitive->GetColor();
         if (ImGui::ColorEdit4("Color##ChangeColor", this->color))
         {
             primitive->SetColor(ofFloatColor(this->color[0], this->color[1], this->color[2], this->color[3]));
@@ -605,14 +571,38 @@ void Scene3D::DrawModifyNodeSliders(const std::shared_ptr<Node>& node)
         {
             this->history.executeCommand(std::make_shared<SetColorCommand>(node, ofFloatColor(this->color[0], this->color[1], this->color[2], this->color[3]), this->initialColor));
         }
-
+        currentColor = primitive->GetColor();
         matType type = getMaterialType(primitive->getMaterial());
         ofColor color = ofColor(currentColor[0] * 255.0f, currentColor[1] * 255.0f, currentColor[2] * 255.0f, currentColor[3] * 255.0f);
-        if (type == matType::GlassT)
+
+        int selected = static_cast<int>(type);
+        if (ImGui::Combo("Change Material", &selected, materialLabels, 4))
+        {
+            ofLog() << "Choosing material" << endl;
+            matType mat = static_cast<matType>(selected);
+            if (mat == matType::GlassT)
+            {
+                primitive->setMaterial(make_shared<Dielectric>(1.0f));
+            }
+            else if (mat == matType::MetalT)
+            {
+                primitive->setMaterial(make_shared<Metal>(color, 0.0f));
+            }
+            else if (mat == matType::LambertT)
+            {
+                primitive->setMaterial(make_shared<Lambert>(color));
+            }
+            else if (mat == matType::DiffuseLightT)
+            {
+                primitive->setMaterial(make_shared<DiffuseLight>(color));
+            }
+        }
+        else if (type == matType::GlassT)
         {
             float refraction = primitive->getMaterial()->getRefractionIndex();
-            ImGui::SliderFloat("Change Refract", &refraction, 0.1f, 10.0f);
-            primitive->setMaterial(make_shared<Dielectric>(refraction));
+            if (ImGui::SliderFloat("Change Refract", &refraction, 0.1f, 10.0f)) {
+                primitive->setMaterial(make_shared<Dielectric>(refraction));
+            }
         }
         else if (type == matType::MetalT)
         {
@@ -624,6 +614,12 @@ void Scene3D::DrawModifyNodeSliders(const std::shared_ptr<Node>& node)
         {
             primitive->setMaterial(make_shared<Lambert>(color));
         }
+        else if (type == matType::DiffuseLightT)
+        {
+            primitive->setMaterial(make_shared<DiffuseLight>(color));
+        }
+
+
     }
 }
 
@@ -1043,7 +1039,7 @@ void Scene3D::dragEvent(ofDragInfo dragInfo)
         {
             model->setPosition(0, 0, 0);
             ofMesh mesh = model->getCombinedMesh();
-            shared_ptr<RayMaterial> lambert = make_shared<Dielectric>(1.3f);
+            shared_ptr<MaterialContainer> lambert = make_shared<MaterialContainer>(make_shared<Dielectric>(1.3f));
             RayMesh rayMesh = RayMesh(lambert, mesh);
 
             ComposedShape shape = ComposedShape(make_shared<BvhNode>(rayMesh), lambert);

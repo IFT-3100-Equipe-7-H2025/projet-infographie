@@ -33,7 +33,7 @@ public:
 
             if (ImGui::Button("Add"))
             {
-                shared_ptr<RayMaterial> mat = sharedParams->material->clone();
+                shared_ptr<MaterialContainer> mat = sharedParams->material->clone();
 
                 auto pyramid = PrimitiveCreator::createPyramid(sides, width, height, depth);
 

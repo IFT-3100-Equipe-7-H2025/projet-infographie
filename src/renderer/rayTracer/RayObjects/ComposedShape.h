@@ -8,7 +8,7 @@
 #include <cmath>
 #include "Utility.h"
 #include "Quad.h"
-
+#include "Node.h"
 class ComposedShape : public Primitive3D
 {
 public:
@@ -16,7 +16,7 @@ public:
     ComposedShape() {}
 
         
-    ComposedShape(shared_ptr<Primitive3D> object, shared_ptr<RayMaterial> material): Primitive3D(*object)
+    ComposedShape(shared_ptr<Primitive3D> object, shared_ptr<MaterialContainer> material): Primitive3D(*object)
     {
         mat = material;
         copy(*object);
@@ -24,7 +24,33 @@ public:
         update();
     }
 
-    ComposedShape(const Vec3& size, shared_ptr<RayMaterial> material, of3dPrimitive primitive) : mat(material), size(size), Primitive3D(primitive, material)
+    ComposedShape(vector<shared_ptr<Primitive3D>> objects, shared_ptr<MaterialContainer> material)
+    {
+        mat = material;
+        for (auto& object: objects)
+        {
+            addShape(object);
+        }
+        initialize();
+        update();
+    }
+
+    ComposedShape(vector<shared_ptr<Node>> nodes)
+    {
+        updateSets = false;
+        for (auto& node: nodes)
+        {
+            if (auto primitive3d = std::dynamic_pointer_cast<Primitive3D>(node->GetInner()); primitive3d) {
+                auto object = primitive3d;
+                addShape(object);
+            }
+        }
+        initialize();
+        update();
+    }
+
+
+    ComposedShape(const Vec3& size, shared_ptr<MaterialContainer> material, of3dPrimitive primitive) : size(size), Primitive3D(primitive, material)
     {
         mat = material;
         model = primitive;
@@ -37,11 +63,23 @@ public:
     void customDraw() override
     {
         Primitive3D::customDraw();
-        //for (auto& object : objects) {
-        //    object->customDraw(getGlobalTransformMatrix());
-        //}
     }
 
+    void aabbDraw()
+    {
+        for (auto& object: objects)
+        {
+            object->aabbDraw(getGlobalTransformMatrix());
+        }
+    }
+
+    void aabbDraw(ofMatrix4x4 transform) override
+    {
+        for (auto& object: objects)
+        {
+            object->aabbDraw(transform);
+        }
+    }
 
 
     void addShape(shared_ptr<Primitive3D> object) {
@@ -51,18 +89,25 @@ public:
     }
 
 
+
+    void update() override
+    {
+        bool update_bbox = updateSettings();
+        bbox = AABB();
+        for (auto& object: objects)
+        {
+            object->update();
+            bbox = AABB(bbox, object->bounding_box());
+        }
+    }
+
+
     bool hit(const Ray& r, Interval ray_t, HitRecord& rec) override
     {
-        //ofLog() << "Composed Shape hit";
-        bool update_bbox = updateSettings();
         bool hit = false;
         float closest_so_far = ray_t.max;
         HitRecord temp_rec;
         for (auto& object : objects) {
-            if (update_bbox)
-            {
-                object->update();
-            }
             if (object->hit(r, Interval(ray_t.min, closest_so_far), temp_rec))
             {
                 hit = true;
@@ -73,16 +118,15 @@ public:
         return hit;
     }
 
-    virtual void setShapes() {};
-
+    virtual void setShapes(){}
+    
     vector<shared_ptr<Primitive3D>> objects;
 
 
 protected:
 
-
     Vec3 size;
-    shared_ptr<RayMaterial> mat;
+    bool updateSets = true;
 
 private:
 

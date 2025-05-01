@@ -24,6 +24,8 @@ const char* materialLabels[] = {
 const float EPSILON = 1e-1f;
 
 
+
+
 class RayMaterial
 {
 public:
@@ -218,7 +220,38 @@ inline matType getMaterialType(shared_ptr<RayMaterial> material)
     {
         return GlassT;
     }
+
+    if (shared_ptr<DiffuseLight> glass = std::dynamic_pointer_cast<DiffuseLight>(material); glass)
+    {
+        return DiffuseLightT;
+    }
     return LambertT;
 }
+
+
+struct MaterialContainer
+{
+    std::shared_ptr<RayMaterial> material;
+    MaterialContainer(std::shared_ptr<RayMaterial> p_material) : material(p_material)
+    {
+    }
+
+    shared_ptr<RayMaterial> getMaterial()
+    {
+        return material;
+    }
+
+    void setMaterial(shared_ptr<RayMaterial> p_material)
+    {
+        material = p_material;
+    }
+
+    std::shared_ptr<MaterialContainer> clone() const
+    {
+        shared_ptr<RayMaterial> newMat = material->clone();
+        return std::make_shared<MaterialContainer>(newMat);
+    }
+};
+
 
 #endif

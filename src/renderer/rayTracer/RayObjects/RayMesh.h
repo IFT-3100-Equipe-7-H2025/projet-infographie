@@ -14,7 +14,8 @@ class RayMesh : public ComposedShape
 {
 public:
 
-    RayMesh(shared_ptr<RayMaterial> mat, of3dPrimitive primitive) : ComposedShape(size, mat, primitive){
+    RayMesh(shared_ptr<MaterialContainer> mat, of3dPrimitive primitive) : ComposedShape(size, mat, primitive)
+    {
         setShapes();
     }
     void setShapes() override{
