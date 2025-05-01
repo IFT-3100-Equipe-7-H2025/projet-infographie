@@ -1,10 +1,8 @@
 #pragma once
 
-#pragma once
-
 #include "SceneObject.h"
-#include "ofMain.h"
 #include "ofLight.h"
+#include "ofMain.h"
 
 enum class LightType
 {
@@ -41,7 +39,7 @@ public:
     void SetLightType(LightType type)
     {
         lightType = type;
-        switch ( type )
+        switch (type)
         {
             case LightType::DIRECTIONAL:
                 light->setDirectional();
@@ -129,17 +127,22 @@ public:
     }
 
     void setOrientation(const glm::quat& q) { light->setOrientation(q); }
+    void setPosition(const glm::vec3& position) { light->setPosition(position); }
+    [[nodiscard]] glm::vec3 getPosition() const { return light->getPosition(); }
+    [[nodiscard]] glm::vec3 getGlobalPosition() const { return light->getGlobalPosition(); }
+    [[nodiscard]] glm::quat getOrientation() const { return light->getOrientationQuat(); }
 
     void customDraw() override
     {
-       ofPushMatrix();
-       light->draw();
-       //light->setPosition(ofNode::getPosition());
-       ofPopMatrix();
+        ofPushMatrix();
+        light->draw();
+        // light->setPosition(ofNode::getPosition());
+        ofPopMatrix();
     }
 
-    std::pair<ofVec3f, ofVec3f> getBoundingVertices() override {
-        ofVec3f pos = getGlobalPosition();
+    std::pair<ofVec3f, ofVec3f> getBoundingVertices() override
+    {
+        ofVec3f pos = light->getGlobalPosition();
         ofVec3f minVertex = ofVec3f(pos.x - 5, pos.y - 5, pos.z - 5);
         ofVec3f maxVertex = ofVec3f(pos.x + 5, pos.y + 5, pos.z + 5);
 
@@ -150,8 +153,8 @@ private:
     void SetAttenuation() { light->setAttenuation(attenuationConstant, attenuationLinear, attenuationQuadratic); }
 
     std::shared_ptr<ofLight> light;
-    LightType                lightType = LightType::POINT;
-    float                    attenuationConstant;
-    float                    attenuationLinear;
-    float                    attenuationQuadratic;
+    LightType lightType = LightType::POINT;
+    float attenuationConstant;
+    float attenuationLinear;
+    float attenuationQuadratic;
 };

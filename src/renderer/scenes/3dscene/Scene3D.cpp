@@ -1,6 +1,12 @@
 #include "Scene3D.h"
 
+#include "3dscene/commands/EnableLightCommand.h"
 #include "3dscene/commands/RemoveNodeCommand.h"
+#include "3dscene/commands/SetLightAttenuationCommand.h"
+#include "3dscene/commands/SetLightColorsCommand.h"
+#include "3dscene/commands/SetLightSpotConcentrationCommand.h"
+#include "3dscene/commands/SetLightSpotCutOffCommand.h"
+#include "3dscene/commands/SetLightTypeCommand.h"
 #include "3dscene/commands/SetPositionCommand.h"
 #include "3dscene/commands/SetRotationCommand.h"
 #include "3dscene/commands/SetScaleCommand.h"
@@ -28,6 +34,8 @@
 #include <numbers>
 
 #include <ranges>
+#include <vector>
+#include <algorithm>
 
 Scene3D::Scene3D() : history(CommandHistory()),
                      sceneGraph(SceneGraph()),
@@ -53,18 +61,17 @@ void Scene3D::setup()
 
     ofMaterial specularMaterial;
     specularMaterial.setAmbientColor(ofFloatColor(0.1f, 0.1f, 0.1f));
-    specularMaterial.setDiffuseColor(ofFloatColor(0.6f, 0.5f, 0.5f));
-    specularMaterial.setSpecularColor(ofFloatColor(0.5f, 0.5f, 0.3f));
-    specularMaterial.setShininess(64);
+    specularMaterial.setDiffuseColor(ofFloatColor(0.2f, 0.2f, 0.2f));
+    specularMaterial.setSpecularColor(ofFloatColor(0.5f, 0.5f, 1.0f));
+    specularMaterial.setShininess(25);
     this->registeredMaterials.push_back(std::make_shared<DefaultMaterial>(std::make_shared<ofMaterial>(specularMaterial), "Specular"));
 
-    ofMaterial emissiveMaterial;
-    emissiveMaterial.setShininess(1);
-    emissiveMaterial.setAmbientColor(ofFloatColor(0.2f, 0.2f, 0.2f, 1.0f));
-    emissiveMaterial.setDiffuseColor(ofFloatColor(0.8f, 0.5f, 0.2f, 1.0f));
-    emissiveMaterial.setSpecularColor(ofFloatColor(0.0f, 0.0f, 0.0f, 1.0f));
-    emissiveMaterial.setEmissiveColor(ofFloatColor(0.6f, 0.0f, 0.0f, 1.0f));
-    this->registeredMaterials.push_back(std::make_shared<DefaultMaterial>(std::make_shared<ofMaterial>(emissiveMaterial), "Emissive"));
+    ofMaterial verySpecularMaterial;
+    verySpecularMaterial.setShininess(1);
+    verySpecularMaterial.setAmbientColor(ofFloatColor(0.2f, 0.2f, 0.2f, 1.0f));
+    verySpecularMaterial.setDiffuseColor(ofFloatColor(0.8f, 0.5f, 0.2f, 1.0f));
+    verySpecularMaterial.setSpecularColor(ofFloatColor(1.0f, 1.0f, 1.0f, 1.0f));
+    this->registeredMaterials.push_back(std::make_shared<DefaultMaterial>(std::make_shared<ofMaterial>(verySpecularMaterial), "Very specular"));
 
     this->registeredMaterials.push_back(std::make_shared<PBRMaterial>("PBR"));
 
@@ -110,6 +117,9 @@ void Scene3D::setup()
     auto gooch = ofShader();
     gooch.load("shaders/gooch.vert", "shaders/gooch.frag");
 
+    auto toon = ofShader();
+    toon.load("shaders/toon.vert", "shaders/toon.frag");
+
 
     this->lightingModels.push_back(std::make_shared<Shader>(DEFAULT_SHADER));
     this->lightingModels.push_back(std::make_shared<Shader>(lambert, "Lambert"));
@@ -117,6 +127,7 @@ void Scene3D::setup()
     this->lightingModels.push_back(std::make_shared<Shader>(phong, "Phong"));
     this->lightingModels.push_back(std::make_shared<Shader>(blinn_phong, "Blinn-Phong"));
     this->lightingModels.push_back(std::make_shared<Shader>(gooch, "Gooch"));
+    this->lightingModels.push_back(std::make_shared<Shader>(toon, "Toon"));
 
     this->selectedLightingModel = this->lightingModels[0];
 }
@@ -154,18 +165,34 @@ void Scene3D::draw()
 
 void Scene3D::drawScene()
 {
-    if (this->selectedLightingModel->GetName() == "Default") { sceneGraph.Draw(); }
-    else
-    {
-        auto light = this->FindLight();
-        if (light)
-        {
-            sceneGraph.Draw(this->selectedLightingModel, light->getPosition());
-        }
+    auto lights = this->FindLights();
+
+    // Determine which lighting model shader to pass down (if any)
+    std::shared_ptr<Shader> shaderToUse = nullptr;
+    if (this->selectedLightingModel->GetName() != "Default") {
+        shaderToUse = this->selectedLightingModel;
     }
 
+    // Pass the lights vector and the chosen shader (or nullptr) to the scene graph draw call.
+    // Node::Draw will decide whether to use the shaderToUse based on the node's material.
+    if (!lights.empty())
+    {
+        sceneGraph.Draw(lights, shaderToUse);
+    }
+    else
+    {
+        // Draw without lights if none are found
+        std::vector<std::shared_ptr<Light>> emptyLights;
+        sceneGraph.Draw(emptyLights, shaderToUse);
+    }
+
+    // Selection box drawing logic remains the same
     if (is_selected)
     {
+        if (auto light = dynamic_pointer_cast<Light>(this->selectedNode->get()->GetInner()); light)
+        {
+            return;
+        }
         selectionMesh.enableColors();
         selectionMesh.setColorForIndices(255, 255, 0);
 
@@ -273,11 +300,11 @@ void Scene3D::DrawModifyLightSliders(const std::shared_ptr<Light>& light)
     {
         if (tempIsEnabled)
         {
-            light->Enable();
+            this->history.executeCommand(std::make_shared<EnableLightCommand>(light, true));
         }
         else
         {
-            light->Disable();
+            this->history.executeCommand(std::make_shared<EnableLightCommand>(light, false));
         }
     }
 
@@ -289,20 +316,23 @@ void Scene3D::DrawModifyLightSliders(const std::shared_ptr<Light>& light)
     bool isAmbientLight = lightType == LightType::AMBIENT;
     if (ImGui::Checkbox("Directional", &isDirectional))
     {
-        light->SetLightType(LightType::DIRECTIONAL);
+        this->history.executeCommand(std::make_shared<SetLightTypeCommand>(light, LightType::DIRECTIONAL));
     }
     ImGui::SameLine();
     if (ImGui::Checkbox("Spotlight", &isSpotlight))
     {
-        light->SetLightType(LightType::SPOT);
+        this->history.executeCommand(std::make_shared<SetLightTypeCommand>(light, LightType::SPOT));
     }
     ImGui::SameLine();
     if (ImGui::Checkbox("Point light", &isPointLight))
     {
-        light->SetLightType(LightType::POINT);
+        this->history.executeCommand(std::make_shared<SetLightTypeCommand>(light, LightType::POINT));
     }
     ImGui::SameLine();
-    if (ImGui::Checkbox("Ambient light", &isAmbientLight)) { light->SetLightType(LightType::AMBIENT); }
+    if (ImGui::Checkbox("Ambient light", &isAmbientLight))
+    {
+        this->history.executeCommand(std::make_shared<SetLightTypeCommand>(light, LightType::AMBIENT));
+    }
 
 
     lightType = light->GetLightType();
@@ -312,46 +342,125 @@ void Scene3D::DrawModifyLightSliders(const std::shared_ptr<Light>& light)
     isPointLight = lightType == LightType::POINT;
     isAmbientLight = lightType == LightType::AMBIENT;
 
+    const ofFloatColor currentDiffuseColor = light->GetDiffuseColor();
+    const ofFloatColor currentSpecularColor = light->GetSpecularColor();
+    const ofFloatColor currentAmbientColor = light->GetAmbientColor();
+
     if (!isAmbientLight)
     {
-        ofFloatColor diffuseColor = light->GetDiffuseColor();
-        float diffuseColorArr[3] = {diffuseColor.r, diffuseColor.g, diffuseColor.b};
-        if (ImGui::ColorEdit3("Diffuse color", diffuseColorArr)) { light->SetDiffuseColor(ofFloatColor(diffuseColorArr[0], diffuseColorArr[1], diffuseColorArr[2])); }
+        if (ImGui::ColorEdit3("Diffuse color##ChangeColor", this->diffuseLight))
+        {
+            light->SetDiffuseColor(ofFloatColor(this->diffuseLight[0], this->diffuseLight[1], this->diffuseLight[2]));
+        }
+        if (ImGui::IsItemActivated())
+        {
+            this->initialDiffuseLight = currentDiffuseColor;
+        }
+        if (ImGui::IsItemDeactivatedAfterEdit())
+        {
+            this->history.executeCommand(std::make_shared<SetLightColorsCommand>(light, ofFloatColor(this->diffuseLight[0], this->diffuseLight[1], this->diffuseLight[2]), currentSpecularColor, currentAmbientColor, this->initialDiffuseLight, currentSpecularColor, currentAmbientColor));
+        }
 
-        ofFloatColor specularColor = light->GetSpecularColor();
-        float specularColorArr[3] = {specularColor.r, specularColor.g, specularColor.b};
-        if (ImGui::ColorEdit3("Specular color", specularColorArr)) { light->SetSpecularColor(ofFloatColor(specularColorArr[0], specularColorArr[1], specularColorArr[2])); }
+        const ofFloatColor currentSpecularColor = light->GetSpecularColor();
+        if (ImGui::ColorEdit3("Specular color##ChangeColor", this->specularLight))
+        {
+            light->SetSpecularColor(ofFloatColor(this->specularLight[0], this->specularLight[1], this->specularLight[2]));
+        }
+        if (ImGui::IsItemActivated())
+        {
+            this->initialSpecularLight = currentSpecularColor;
+        }
+        if (ImGui::IsItemDeactivatedAfterEdit())
+        {
+            this->history.executeCommand(std::make_shared<SetLightColorsCommand>(light, currentDiffuseColor, ofFloatColor(this->specularLight[0], this->specularLight[1], this->specularLight[2]), currentAmbientColor, currentDiffuseColor, this->initialSpecularLight, currentAmbientColor));
+        }
     }
     else
     {
-        ofFloatColor ambientColor = light->GetAmbientColor();
-        float ambientColorArr[3] = {ambientColor.r, ambientColor.g, ambientColor.b};
-        if (ImGui::ColorEdit3("Ambient color", ambientColorArr)) { light->SetAmbientColor(ofFloatColor(ambientColorArr[0], ambientColorArr[1], ambientColorArr[2])); }
+        if (ImGui::ColorEdit3("Ambient color", this->ambientLight)) { light->SetAmbientColor(ofFloatColor(this->ambientLight[0], this->ambientLight[1], this->ambientLight[2])); }
+        if (ImGui::IsItemActivated())
+        {
+            this->initialAmbientLight = currentAmbientColor;
+        }
+        if (ImGui::IsItemDeactivatedAfterEdit())
+        {
+            this->history.executeCommand(std::make_shared<SetLightColorsCommand>(light, currentDiffuseColor, currentSpecularColor, ofFloatColor(this->ambientLight[0], this->ambientLight[1], this->ambientLight[2]), currentDiffuseColor, currentSpecularColor, this->initialAmbientLight));
+        }
     }
 
     if (isSpotlight)
     {
         float spotCutOff = light->GetSpotlightCutOff();
-        if (ImGui::SliderFloat("Spotlight cut off", &spotCutOff, 0, 90))
+        float spotConcentration = light->GetSpotConcentration();
+
+        if (ImGui::SliderFloat("Spotlight cut off", &this->spotCutOff, 0, 90))
         {
-            light->SetSpotlightCutOff(spotCutOff);
+            light->SetSpotlightCutOff(this->spotCutOff);
+        }
+        if (ImGui::IsItemActivated())
+        {
+            this->initialSpotCutOff = spotCutOff;
+        }
+        if (ImGui::IsItemDeactivatedAfterEdit())
+        {
+            this->history.executeCommand(std::make_shared<SetLightSpotCutOffCommand>(light, this->spotCutOff, this->initialSpotCutOff));
         }
 
-        float spotConcentration = light->GetSpotConcentration();
-        if (ImGui::SliderFloat("Spotlight concentration", &spotConcentration, 0, 128))
+        if (ImGui::SliderFloat("Spotlight concentration", &this->spotConcentration, 0, 128))
         {
-            light->SetSpotConcentration(spotConcentration);
+            light->SetSpotConcentration(this->spotConcentration);
+        }
+        if (ImGui::IsItemActivated())
+        {
+            this->initialSpotConcentration = spotConcentration;
+        }
+        if (ImGui::IsItemDeactivatedAfterEdit())
+        {
+            this->history.executeCommand(std::make_shared<SetLightSpotConcentrationCommand>(light, this->spotConcentration, this->initialSpotConcentration));
         }
     }
 
     float attenuationConstant = light->GetAttenuationConstant();
-    if (ImGui::SliderFloat("Attenuation constant", &attenuationConstant, 0, 1)) { light->SetAttenuationConstant(attenuationConstant); }
-
     float attenuationLinear = light->GetAttenuationLinear();
-    if (ImGui::SliderFloat("Attenuation linear", &attenuationLinear, 0, 0.01, "%.5f")) { light->SetAttenuationLinear(attenuationLinear); }
-
     float attenuationQuadratic = light->GetAttenuationQuadratic();
-    if (ImGui::SliderFloat("Attenuation quadratic", &attenuationQuadratic, 0, 0.001, "%.6f")) { light->SetAttenuationQuadratic(attenuationQuadratic); }
+    if (ImGui::SliderFloat("Attenuation constant", &this->lightAttenuation[0], 0, 1))
+    {
+        light->SetAttenuationConstant(this->lightAttenuation[0]);
+    }
+    if (ImGui::IsItemActivated())
+    {
+        initialLightAttenuation = glm::vec3(attenuationConstant, attenuationLinear, attenuationQuadratic);
+    }
+    if (ImGui::IsItemDeactivatedAfterEdit())
+    {
+        this->history.executeCommand(std::make_shared<SetLightAttenuationCommand>(light, glm::vec3(lightAttenuation[0], lightAttenuation[1], lightAttenuation[2]), initialLightAttenuation));
+    }
+
+    if (ImGui::SliderFloat("Attenuation linear", &this->lightAttenuation[1], 0, 0.01, "%.5f"))
+    {
+        light->SetAttenuationLinear(this->lightAttenuation[1]);
+    }
+    if (ImGui::IsItemActivated())
+    {
+        initialLightAttenuation = glm::vec3(attenuationConstant, attenuationLinear, attenuationQuadratic);
+    }
+    if (ImGui::IsItemDeactivatedAfterEdit())
+    {
+        this->history.executeCommand(std::make_shared<SetLightAttenuationCommand>(light, glm::vec3(lightAttenuation[0], lightAttenuation[1], lightAttenuation[2]), initialLightAttenuation));
+    }
+
+    if (ImGui::SliderFloat("Attenuation quadratic", &this->lightAttenuation[2], 0, 0.001, "%.6f"))
+    {
+        light->SetAttenuationQuadratic(this->lightAttenuation[2]);
+    }
+    if (ImGui::IsItemActivated())
+    {
+        initialLightAttenuation = glm::vec3(attenuationConstant, attenuationLinear, attenuationQuadratic);
+    }
+    if (ImGui::IsItemDeactivatedAfterEdit())
+    {
+        this->history.executeCommand(std::make_shared<SetLightAttenuationCommand>(light, glm::vec3(lightAttenuation[0], lightAttenuation[1], lightAttenuation[2]), initialLightAttenuation));
+    }
 }
 
 void Scene3D::DrawModifyCameraNodeSliders(const std::shared_ptr<Node>& node, shared_ptr<ofCamera> camera)
@@ -379,7 +488,14 @@ void Scene3D::DrawModifyNodeSliders(const std::shared_ptr<Node>& node)
     const glm::vec3 currentPosition = inner->getPosition();
     if (ImGui::SliderFloat3("Translate", this->translate, -static_cast<float>(ofGetWidth()), static_cast<float>(ofGetWidth())))
     {
-        inner->setPosition(this->translate[0], this->translate[1], this->translate[2]);
+        if (auto light = std::dynamic_pointer_cast<Light>(inner); light)
+        {
+            light->setPosition(glm::vec3(this->translate[0], this->translate[1], this->translate[2]));
+        }
+        else
+        {
+            inner->setPosition(this->translate[0], this->translate[1], this->translate[2]);
+        }
     }
     if (ImGui::IsItemActivated())
     {
@@ -457,8 +573,46 @@ void Scene3D::DrawModifyMaterialWindow()
         {
             if (ImGui::Button(material->GetName().c_str()))
             {
-                this->history.executeCommand(std::make_shared<SetMaterialCommand>(*this->selectedNode, material));
+                if (material->GetName() == "PBR")
+                {
+                    this->history.executeCommand(std::make_shared<SetMaterialCommand>(*this->selectedNode, std::make_shared<PBRMaterial>("PBR")));
+                }
+                else
+                {
+                    this->history.executeCommand(std::make_shared<SetMaterialCommand>(*this->selectedNode, material));
+                }
             }
+        }
+
+        if (auto pbr_material = std::dynamic_pointer_cast<PBRMaterial>((*this->selectedNode)->GetMaterial()))
+        {
+            ImGui::Separator();
+
+            ImGui::Text("PBR Material");
+            float color_ambient[3] = {pbr_material->material_color_ambient.r / 255.0f, pbr_material->material_color_ambient.g / 255.0f, pbr_material->material_color_ambient.b / 255.0f};
+            if (ImGui::ColorEdit3("Ambient color", color_ambient))
+            {
+                pbr_material->material_color_ambient = glm::vec3(color_ambient[0] * 255.0f, color_ambient[1] * 255.0f, color_ambient[2] * 255.0f);
+            }
+
+            float color_diffuse[3] = {pbr_material->material_color_diffuse.r / 255.0f, pbr_material->material_color_diffuse.g / 255.0f, pbr_material->material_color_diffuse.b / 255.0f};
+            if (ImGui::ColorEdit3("Diffuse color", color_diffuse))
+            {
+                pbr_material->material_color_diffuse = glm::vec3(color_diffuse[0] * 255.0f, color_diffuse[1] * 255.0f, color_diffuse[2] * 255.0f);
+            }
+
+            float color_specular[3] = {pbr_material->material_color_specular.r / 255.0f, pbr_material->material_color_specular.g / 255.0f, pbr_material->material_color_specular.b / 255.0f};
+            if (ImGui::ColorEdit3("Specular color", color_specular))
+            {
+                pbr_material->material_color_specular = glm::vec3(color_specular[0] * 255.0f, color_specular[1] * 255.0f, color_specular[2] * 255.0f);
+            }
+
+            ImGui::SliderFloat("Brightness", &pbr_material->material_brightness, 0.0f, 1.0f);
+            ImGui::SliderFloat("Metallic", &pbr_material->material_metallic, 0.0f, 1.0f);
+            ImGui::SliderFloat("Roughness", &pbr_material->material_roughness, 0.0f, 1.0f);
+            ImGui::SliderFloat("Occlusion", &pbr_material->material_occlusion, 0.0f, 1.0f);
+
+            ImGui::Checkbox("Toggle tone mapping", &pbr_material->tone_mapping_toggle);
         }
         ImGui::End();
     }
@@ -582,7 +736,7 @@ void Scene3D::ShowChildren(const std::shared_ptr<Node>& node)
         {
             IM_ASSERT(payload->DataSize == sizeof(std::shared_ptr<Node>));
 
-            if (std::shared_ptr<Node> payload_node = *static_cast<std::shared_ptr<Node>*>(payload->Data); !payload_node->GetId() == 0) { commandQueue.push(std::make_shared<MoveChildCommand>(payload_node, node)); }
+            if (std::shared_ptr<Node> payload_node = *static_cast<std::shared_ptr<Node>*>(payload->Data); payload_node->GetId() != 0) { commandQueue.push(std::make_shared<MoveChildCommand>(payload_node, node)); }
             else { ofLogError() << "Cannot move the root node"; }
         }
         ImGui::EndDragDropTarget();
@@ -607,22 +761,69 @@ void Scene3D::ShowChildren(const std::shared_ptr<Node>& node)
 void Scene3D::ResetParams(const std::shared_ptr<Node>& node)
 {
     const std::shared_ptr<ofNode>& inner = node->GetInner();
+    if (auto light = std::dynamic_pointer_cast<Light>(inner))
+    {
+        const glm::vec3 currentPosition = light->getPosition();
+        translate[0] = currentPosition.x;
+        translate[1] = currentPosition.y;
+        translate[2] = currentPosition.z;
 
-    const glm::vec3 currentPosition = inner->getPosition();
-    translate[0] = currentPosition.x;
-    translate[1] = currentPosition.y;
-    translate[2] = currentPosition.z;
+        const glm::vec3 currentScale = light->getScale();
+        scale[0] = currentScale.x;
+        scale[1] = currentScale.y;
+        scale[2] = currentScale.z;
 
-    const glm::vec3 currentScale = inner->getScale();
-    scale[0] = currentScale.x;
-    scale[1] = currentScale.y;
-    scale[2] = currentScale.z;
+        const glm::quat currentRotation = light->getOrientationQuat();
+        glm::vec3 eulerRotation = glm::degrees(glm::eulerAngles(currentRotation));
+        rotate[0] = eulerRotation.x;
+        rotate[1] = eulerRotation.y;
+        rotate[2] = eulerRotation.z;
 
-    const glm::quat currentRotation = inner->getOrientationQuat();
-    glm::vec3 eulerRotation = glm::degrees(glm::eulerAngles(currentRotation));
-    rotate[0] = eulerRotation.x;
-    rotate[1] = eulerRotation.y;
-    rotate[2] = eulerRotation.z;
+        const ofFloatColor ambientColor = light->GetAmbientColor();
+        ambientLight[0] = ambientColor.r;
+        ambientLight[1] = ambientColor.g;
+        ambientLight[2] = ambientColor.b;
+
+        const ofFloatColor diffuseColor = light->GetDiffuseColor();
+        diffuseLight[0] = diffuseColor.r;
+        diffuseLight[1] = diffuseColor.g;
+        diffuseLight[2] = diffuseColor.b;
+
+        const ofFloatColor specularColor = light->GetSpecularColor();
+        specularLight[0] = specularColor.r;
+        specularLight[1] = specularColor.g;
+        specularLight[2] = specularColor.b;
+
+        const float constantAttenuation = light->GetAttenuationConstant();
+        const float linearAttenuation = light->GetAttenuationLinear();
+        const float quadraticAttenuation = light->GetAttenuationQuadratic();
+        lightAttenuation[0] = constantAttenuation;
+        lightAttenuation[1] = linearAttenuation;
+        lightAttenuation[2] = quadraticAttenuation;
+
+        const float spotCutOff = light->GetSpotlightCutOff();
+        const float spotConcentration = light->GetSpotConcentration();
+        this->spotCutOff = spotCutOff;
+        this->spotConcentration = spotConcentration;
+    }
+    else
+    {
+        const glm::vec3 currentPosition = inner->getPosition();
+        translate[0] = currentPosition.x;
+        translate[1] = currentPosition.y;
+        translate[2] = currentPosition.z;
+
+        const glm::vec3 currentScale = inner->getScale();
+        scale[0] = currentScale.x;
+        scale[1] = currentScale.y;
+        scale[2] = currentScale.z;
+
+        const glm::quat currentRotation = inner->getOrientationQuat();
+        glm::vec3 eulerRotation = glm::degrees(glm::eulerAngles(currentRotation));
+        rotate[0] = eulerRotation.x;
+        rotate[1] = eulerRotation.y;
+        rotate[2] = eulerRotation.z;
+    }
 
     if (const auto primitive = std::dynamic_pointer_cast<Primitive3D>(node->GetInner()); primitive)
     {
@@ -655,11 +856,16 @@ void Scene3D::mouseReleased(int x, int y, int button)
         // translate
         if (is_selected)
         {
-
-            ofVec3f current_pos = selectedNode->get()->GetInner()->getPosition();
-            glm::vec3 initial = glm::vec3(initialSelectedPosition.x, initialSelectedPosition.y, initialSelectedPosition.z);
             shared_ptr<Node> node = *(this->selectedNode);
-            this->history.executeCommand(std::make_shared<SetPositionCommand>(node, glm::vec3(current_pos[0], current_pos[1], current_pos[2]), initial));
+            if (auto light = std::dynamic_pointer_cast<Light>(node->GetInner()); light)
+            {
+            }
+            else
+            {
+                ofVec3f current_pos = node->GetInner()->getPosition();
+                glm::vec3 initial = glm::vec3(initialSelectedPosition.x, initialSelectedPosition.y, initialSelectedPosition.z);
+                this->history.executeCommand(std::make_shared<SetPositionCommand>(node, glm::vec3(current_pos[0], current_pos[1], current_pos[2]), initial));
+            }
         }
     }
     else if (button == 2)
@@ -683,15 +889,21 @@ void Scene3D::mouseDragged(int x, int y, int button)
         case 0://left
             if (is_selected)
             {
-                ofVec3f current_pos = selectedNode->get()->GetInner()->getGlobalPosition();
+                shared_ptr<Node> node = *(this->selectedNode);
+                if (auto light = dynamic_pointer_cast<Light>(node->GetInner()); light)
+                {
+                }
+                else
+                {
+                    ofVec3f current_pos = node->GetInner()->getPosition();
 
-                ofVec3f current_view_pos = worldToViewPort(current_pos);
+                    ofVec3f current_view_pos = worldToViewPort(current_pos);
 
-                ofVec3f current = ofVec3f(x, y, current_view_pos.z);
+                    ofVec3f current = ofVec3f(x, y, current_view_pos.z);
 
-                ofVec3f new_pos = viewPortToWorld(current);
-
-                selectedNode->get()->GetInner()->setGlobalPosition(new_pos);
+                    ofVec3f new_pos = viewPortToWorld(current);
+                    selectedNode->get()->GetInner()->setGlobalPosition(new_pos);
+                }
             }
 
             break;
@@ -1296,8 +1508,6 @@ void Scene3D::updateViewPorts()
     }
 
     int camNumber = activatedCameras.size();
-    int prev_height = 0;
-    int prev_width = 0;
     if (camNumber >= 3)
     {
         cameras.emplace_back(activatedCameras[0].second.first, pair(ofRectangle(0, 0, ofGetWidth() / 2, ofGetHeight() / 2), activatedCameras[0].second.second));
@@ -1404,4 +1614,20 @@ void Scene3D::updateViewPorts()
         current_viewPort = cameras[0].second.first;
         current_camera_id = activatedCameras[0].first;
     }
+}
+
+std::vector<std::shared_ptr<Light>> Scene3D::FindLights()
+{
+    std::vector<std::shared_ptr<Light>> lights;
+    for (const auto& node : sceneGraph.GetNodes())
+    {
+        if (auto lightNode = std::dynamic_pointer_cast<Light>(node->GetInner()); lightNode)
+        {
+            if (lightNode->GetIsEnabled()) // Only add enabled lights
+            {
+                 lights.push_back(lightNode);
+            }
+        }
+    }
+    return lights;
 }

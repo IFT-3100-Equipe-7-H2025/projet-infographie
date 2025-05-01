@@ -11,6 +11,7 @@
 #include "sceneObjects/SceneObject.h"
 #include "scenegraph/SceneGraph.h"
 #include <ofxAssimpModelLoader.h>
+#include <vector>
 
 class Scene3D : public Scene
 {
@@ -56,21 +57,10 @@ public:
     /*void nextCam();
     void previousCam();*/
 
-    // Finds the first light in the scene graph
+    // Finds the first light in the scene graph -> Finds all lights
     // Returns a shared pointer to the first light found in the scene graph, or nullptr if no light is found.
-    std::shared_ptr<Light> FindLight()
-    {
-        std::shared_ptr<Light> light = nullptr;
-        for (const auto& node: sceneGraph.GetNodes())
-        {
-            if (auto lightNode = std::dynamic_pointer_cast<Light>(node->GetInner()); lightNode)
-            {
-                light = lightNode;
-                return light;
-            }
-        }
-        return light;
-    }
+    // Updated to return a vector of all lights
+    std::vector<std::shared_ptr<Light>> FindLights();
 
 private:
     CommandHistory history;
@@ -89,6 +79,24 @@ private:
 
     float color[4] = {1.0f, 1.0f, 1.0f, 1.0f};
     ofFloatColor initialColor;// Used to store the initial color of the selected node when using the sliders, so that we can undo the change in a single command
+
+    float ambientLight[3] = {0.2f, 0.2f, 0.2f};
+    ofFloatColor initialAmbientLight;// Used to store the initial ambient light color of the selected node when using the sliders, so that we can undo the change in a single command
+
+    float specularLight[3] = {0.5f, 0.5f, 0.5f};
+    ofFloatColor initialSpecularLight;// Used to store the initial specular light color of the selected node when using the sliders, so that we can undo the change in a single command
+
+    float diffuseLight[3] = {0.5f, 0.5f, 0.5f};
+    ofFloatColor initialDiffuseLight;// Used to store the initial diffuse light color of the selected node when using the sliders, so that we can undo the change in a single command
+
+    float lightAttenuation[3] = {1.0f, 0.0f, 0.0f};
+    glm::vec3 initialLightAttenuation;
+
+    float spotCutOff = 45.0f;
+    float initialSpotCutOff;
+
+    float spotConcentration = 128.0f;
+    float initialSpotConcentration;
 
     float fov = 0;
     float initialFov = 0;
@@ -111,13 +119,8 @@ private:
     ofVec3f initialSelectedPosition;
     ofVec3f initialSelectedScale;
 
-
-    int cameraTranslateCount = 0;
-    int cameraRotateCount = 0;
     ofVec3f initialCameraPosition;
     glm::quat initialCameraRotation;
-    float initialCameraFov;
-
 
     ofRectangle onScreenCorners;
     bool is_selected;
@@ -158,10 +161,6 @@ private:
 
     std::vector<std::pair<shared_ptr<ofCamera>, pair<ViewPort, DrawFrustum>>> cameras;
 
-    ofRectangle viewport1;
-    ofRectangle viewport2;
-
-    float backgroundColor[4] = {0.1f, 0.1f, 0.1f, 1.0f};
     std::vector<ofVec3f> getPrimitiveVertices(of3dPrimitive& primitive);
     void focus();
     void drawScene();
@@ -173,7 +172,6 @@ private:
     ofVec3f viewPortToWorld(ofVec3f worldPos) const;
     ofVec3f viewPortToScreen(ofVec3f viewPos) const;
 
-    bool ortho;
     void toggleOrtho();
 
     void storeCameraRotation();
