@@ -2,15 +2,12 @@
 
 #pragma once
 
-#include "SceneObject.h"
 #include "SceneGraph.h"
-#include "rayTracer/RayObjects/ComposedShape.h"
+#include "SceneObject.h"
 #include "ofMain.h"
-#include "rayTracer/Utilities/Vec3.h"
-#include "Material.h"
+#include "rayTracer/RayObjects/ComposedShape.h"
 #include "rayTracer/Utilities/BvhNode.h"
-
-
+#include "rayTracer/Utilities/Vec3.h"
 
 
 using ViewPort = ofRectangle;
@@ -39,8 +36,8 @@ public:
     ofTrueTypeFont font;
 
 
-
-    Camera(): activated(false), drawsFrustum(false), rendering(false) {
+    Camera() : activated(false), drawsFrustum(false), rendering(false)
+    {
         prevImage.allocate(image_width, image_height, OF_IMAGE_COLOR);
         initialize();
         font.load("fonts/JetBrainsMono-Regular.ttf", 12, true, true);
@@ -67,17 +64,20 @@ public:
         backgroundColor2 = color;
     }
 
-    float portionDone() {
-        
+    float portionDone()
+    {
+
         return ((float) (image_width * (last_j + 1) + (last_i + 1))) / (float) (image_width * image_height);
     }
 
-    string timeLeft() {
+    string timeLeft()
+    {
         //return time_leftS;
         current_time = ofGetElapsedTimef();
         elapsed_time = current_time - time_last;
         time_since_start = current_time - time_start;
-        if (elapsed_time < 1.0f) {
+        if (elapsed_time < 1.0f)
+        {
             return time_leftS;
         }
         float perc_dif = portionDone() - elapsed_percent;
@@ -90,7 +90,7 @@ public:
 
         float second_per_perc_recent = elapsed_time / perc_dif;
         float second_per_perc_average = time_since_start / portionDone();
-        float alpha = 0.7f; 
+        float alpha = 0.7f;
         //float second_per_perc = (second_per_perc_recent + second_per_perc_average) / 2.0f;
         //float second_per_perc = second_per_perc_average;
         float second_per_perc = 1.0f / ((alpha / second_per_perc_recent) + ((1.0f - alpha) / second_per_perc_average));
@@ -105,22 +105,22 @@ public:
         if (hours != 0)
         {
             time_leftS += ofToString(hours) + "h ";
-            
         }
 
         time_leftS += ofToString(minutes) + "m ";
         time_leftS += ofToString(seconds) + "s";
-       
-        return time_leftS;
 
+        return time_leftS;
     }
 
 
-    bool doneRendering() {
+    bool doneRendering()
+    {
         return !rendering;
     }
 
-    void reset() {
+    void reset()
+    {
         initialize();
     }
 
@@ -136,11 +136,12 @@ public:
         {
             drawFrustum();
         }
-        
+
         //drawBVH();
     }
 
-    void drawBVH() {
+    void drawBVH()
+    {
         if (drawBvh)
         {
             ofPushStyle();
@@ -150,7 +151,8 @@ public:
         }
     }
 
-    void drawRayTrace() {
+    void drawRayTrace()
+    {
         if (isRayTracing())
         {
             //ofSetColor(clearColor);
@@ -188,9 +190,10 @@ public:
     }
 
 
-    ofImage render(const SceneGraph& sceneGraph) {
+    ofImage render(const SceneGraph& sceneGraph)
+    {
         initialize();
-        
+
         ofPixels& pixels = rayImage.getPixels();
         for (int j = 0; j < image_height; j++)
         {
@@ -226,7 +229,7 @@ public:
                 //color.r = int(intensity.clamp(color.r));
                 //color.g = int(intensity.clamp(color.g));
                 //color.b = int(intensity.clamp(color.b));
-                //pixel_samples_scale* 
+                //pixel_samples_scale*
                 pixels.setColor(i, j, pixel_color);
             }
         }
@@ -252,8 +255,10 @@ public:
         return rayImage;
     }
 
-    void renderPixel(const SceneGraph& sceneGraph) {
-        if (!rendering) {
+    void renderPixel(const SceneGraph& sceneGraph)
+    {
+        if (!rendering)
+        {
             initialize();
             ComposedShape shape(sceneGraph.GetNodes());
             //bvhRoot = make_shared<ComposedShape>(shape);
@@ -276,7 +281,8 @@ public:
             last_i = 0;
             last_j = 0;
         }
-        else if (last_i == image_width) {
+        else if (last_i == image_width)
+        {
             last_j++;
             last_i = 0;
         }
@@ -318,46 +324,54 @@ public:
         //color.r = int(intensity.clamp(color.r));
         //color.g = int(intensity.clamp(color.g));
         //color.b = int(intensity.clamp(color.b));
-        //pixel_samples_scale * 
+        //pixel_samples_scale *
         pixels->setColor(i, j, pixel_color);
-
     }
 
 
-    void setViewPort(ofRectangle p_viewport) {
+    void setViewPort(ofRectangle p_viewport)
+    {
         viewPort = p_viewport;
         setAspect(viewPort.getWidth() / viewPort.getHeight());
     }
 
 
-    ViewPort getViewPort() {
+    ViewPort getViewPort()
+    {
         return viewPort;
     }
 
-    void setAspect(float aspect) {
+    void setAspect(float aspect)
+    {
         aspect_ratio = aspect;
     }
-    bool& isActivated() {
+    bool& isActivated()
+    {
         return activated;
     }
 
-    void activate() {
+    void activate()
+    {
         activated = true;
     }
 
-    void deactivate() {
+    void deactivate()
+    {
         activated = false;
     }
 
-    void viewFrustum() {
+    void viewFrustum()
+    {
         drawsFrustum = true;
     }
-    
-    void hideFrustum() {
+
+    void hideFrustum()
+    {
         drawsFrustum = false;
     }
 
-    bool& FrustumVisible() {
+    bool& FrustumVisible()
+    {
         return drawsFrustum;
     }
 
@@ -376,7 +390,7 @@ public:
         return rayTrace;
     }
 
-    
+
     int& getWidth()
     {
         return new_width;
@@ -435,7 +449,8 @@ private:
     int last_j = 0;
     int last_i = 0;
 
-    void initialize() {
+    void initialize()
+    {
         rendering = false;
         time_start = time_last = ofGetElapsedTimef();
         last_i = 0;
@@ -484,9 +499,8 @@ private:
     }
 
 
-
-
-    Ray getRay(int i, int j) const {
+    Ray getRay(int i, int j) const
+    {
         auto offset = sampleSquare();
         auto pixel_sample = pixel00_location + ((i + offset.x) * pixel_delta_u) + ((j + offset.y) * pixel_delta_v);
 
@@ -494,10 +508,10 @@ private:
         auto ray_direction = pixel_sample - ray_origin;
 
         return Ray(ray_origin, ray_direction);
-
     }
 
-    ofVec3f sampleSquare() const {
+    ofVec3f sampleSquare() const
+    {
         return ofVec3f(random_double() - 0.5, random_double() - 0.5, 0);
     }
 
@@ -510,7 +524,6 @@ private:
 
         // If the ray hits the background, return a color based on the ray direction.
         HitRecord rec;
-
 
 
         if (!hitAnything(r, Interval(0.0001, INFINITY), rec, sceneGraph))
@@ -529,7 +542,8 @@ private:
         ofColor attenuation;
         ofColor emitted = rec.mat->emitted();
 
-        if (!rec.mat->scatter(r, rec, attenuation, scattered)) {
+        if (!rec.mat->scatter(r, rec, attenuation, scattered))
+        {
             return emitted;
         }
 
@@ -544,9 +558,6 @@ private:
         //        (rec.normal.z + 1) * 127.5f);
         //return normal_color;*/
         //return 0.5 * rayColor(Ray(rec.p, direction), depth - 1, sceneGraph);
-
-        
-        
     }
 
     bool hitAnything(const Ray& r, Interval ray_t, HitRecord& rec, const SceneGraph& sceneGraph)

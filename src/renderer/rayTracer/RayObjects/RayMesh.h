@@ -1,23 +1,20 @@
-#ifndef RAYMESH_H
-#define RAYMESH_H
+#pragma once
 
-
-#include "Primitive3D.h"
 #include "ComposedShape.h"
+#include "Primitive3D.h"
 #include "Triangle.h"
-#include "Material.h"
 #include <numbers>
 
 
 class RayMesh : public ComposedShape
 {
 public:
-
     RayMesh(shared_ptr<MaterialContainer> mat, of3dPrimitive primitive) : ComposedShape(size, mat, primitive)
     {
         setShapes();
     }
-    void setShapes() override{
+    void setShapes() override
+    {
         ofMesh mesh = model.getMesh();
         vector<glm::vec3> vertices = mesh.getVertices();
         vector<ofIndexType> indices = mesh.getIndices();// usually u16/u32
@@ -32,8 +29,4 @@ public:
             addShape(make_shared<Triangle>(triangle));
         }
     }
-
 };
-
-
-#endif

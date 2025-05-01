@@ -8,11 +8,11 @@
 #include "createShapes/CreateShapeUI.h"
 #include "createShapes/SharedShapeCreationParams.h"
 #include "ofMain.h"
+#include "renderer/rayTracer/Ray.h"
+#include "renderer/sceneObjects/Camera.h"
 #include "sceneObjects/SceneObject.h"
 #include "scenegraph/SceneGraph.h"
 #include <ofxAssimpModelLoader.h>
-#include "renderer/rayTracer/ray.h"
-#include "renderer/sceneObjects/Camera.h"
 #include <vector>
 
 class Scene3D : public Scene
@@ -209,7 +209,7 @@ private:
     int getCameraTranslationCommands() const;
 
     ofColor rayColor(const Ray& r);
-    
+
     double hitAnything(const Ray& r, Interval ray_t, HitRecord& rec);
 
     ofVec3f unitVector(const ofVec3f& v)

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Material.h"
+#include "ShaderMaterial.h"
 #include "ofMain.h"
 #include "ofShader.h"
 

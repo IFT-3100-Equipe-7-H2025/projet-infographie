@@ -1,9 +1,9 @@
 #include "Node.h"
 
 #include "Light.h"
-#include "material/ShaderMaterial.h"
 #include "material/CubemapMaterial.h"
 #include "material/GalaxyMaterial.h"
+#include "material/ShaderMaterial.h"
 #include "of3dPrimitives.h"
 #include <memory>
 #include <vector>
@@ -68,7 +68,7 @@ void Node::Draw(const std::vector<std::shared_ptr<Light>>& lights, const std::sh
 {
     if (inner)
     {
-        if (material && lightingModel == nullptr && !std::dynamic_pointer_cast<PBRMaterial>(this->material))
+        if (material && lightingModel == nullptr && !std::dynamic_pointer_cast<PBRMaterial>(this->material) && !std::dynamic_pointer_cast<CubemapMaterial>(this->material) && !std::dynamic_pointer_cast<GalaxyMaterial>(this->material))
         {
             material->begin();
         }
@@ -124,24 +124,26 @@ void Node::Draw(const std::vector<std::shared_ptr<Light>>& lights, const std::sh
             material_ptr->SetUniforms(lights);
         }
         else if (auto material_ptr = std::dynamic_pointer_cast<CubemapMaterial>(this->material); material_ptr)
-         {
-             material_ptr->begin();
-             glm::mat4 modelMatrix = inner -> getGlobalTransformMatrix();
-             glm::mat4 viewMatrix = ofGetCurrentMatrix(OF_MATRIX_MODELVIEW);
-             glm::mat4 projMatrix = ofGetCurrentMatrix(OF_MATRIX_PROJECTION);
-             glm::mat4 mvp = projMatrix * viewMatrix * modelMatrix;
-
-             material_ptr->SetUniforms(mvp);
-         }
-         else if (auto material_ptr = std::dynamic_pointer_cast<GalaxyMaterial>(this->material); material_ptr)
         {
+            ofLog() << "CubemapMaterial::begin()";
             material_ptr->begin();
-             glm::mat4 modelMatrix = inner->getGlobalTransformMatrix();
-             glm::mat4 viewMatrix = ofGetCurrentMatrix(OF_MATRIX_MODELVIEW);
-             glm::mat4 projMatrix = ofGetCurrentMatrix(OF_MATRIX_PROJECTION);
-             glm::mat4 mvp = projMatrix * viewMatrix * modelMatrix;
+            glm::mat4 modelMatrix = inner->getGlobalTransformMatrix();
+            glm::mat4 viewMatrix = ofGetCurrentMatrix(OF_MATRIX_MODELVIEW);
+            glm::mat4 projMatrix = ofGetCurrentMatrix(OF_MATRIX_PROJECTION);
+            glm::mat4 mvp = projMatrix * viewMatrix * modelMatrix;
 
-              material_ptr->SetUniforms(mvp);
+            material_ptr->SetUniforms(mvp);
+        }
+        else if (auto material_ptr = std::dynamic_pointer_cast<GalaxyMaterial>(this->material); material_ptr)
+        {
+            ofLog() << "GalaxyMaterial::begin()";
+            material_ptr->begin();
+            glm::mat4 modelMatrix = inner->getGlobalTransformMatrix();
+            glm::mat4 viewMatrix = ofGetCurrentMatrix(OF_MATRIX_MODELVIEW);
+            glm::mat4 projMatrix = ofGetCurrentMatrix(OF_MATRIX_PROJECTION);
+            glm::mat4 mvp = projMatrix * viewMatrix * modelMatrix;
+
+            material_ptr->SetUniforms(mvp);
         }
 
         inner->draw();

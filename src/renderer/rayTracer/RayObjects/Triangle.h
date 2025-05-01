@@ -1,6 +1,4 @@
-
-#ifndef TRIANGLE_H
-#define TRIANGLE_H
+#pragma once
 
 #include "Primitive3D.h"
 #include <cmath>
@@ -8,8 +6,7 @@
 class Triangle : public Primitive3D
 {
 public:
-    Triangle(shared_ptr<ofVec3f>& reference, shared_ptr<ofVec3f>& scale, shared_ptr<ofQuaternion>& orientation, const Vec3& Q, const Vec3& u, const Vec3& v, shared_ptr<MaterialContainer> material) : 
-        ve(v), ue(u), scale(scale), orient(orientation), u(u), v(v), reference(reference), Q(Q), corner(Q)
+    Triangle(shared_ptr<ofVec3f>& reference, shared_ptr<ofVec3f>& scale, shared_ptr<ofQuaternion>& orientation, const Vec3& Q, const Vec3& u, const Vec3& v, shared_ptr<MaterialContainer> material) : ve(v), ue(u), scale(scale), orient(orientation), u(u), v(v), reference(reference), Q(Q), corner(Q)
     {
         mat = material;
         update();
@@ -26,7 +23,7 @@ public:
     }
 
     Triangle(const Triangle& other)
-         : reference(other.reference),
+        : reference(other.reference),
           scale(other.scale),
           orient(other.orient),
           ue(other.ue),
@@ -43,8 +40,8 @@ public:
     }
 
 
-
-    void update() override{
+    void update() override
+    {
         Q = *orient * *scale * corner + *reference;
         u = *orient * ue * *scale;
         v = *orient * ve * *scale;
@@ -61,11 +58,10 @@ public:
         u = *orient * ue * *scale;
         v = *orient * ve * *scale;
 
-        auto rvecMin = ofVec3f(min(min(Q.x, Q.x + u.x), Q.x + v.x), min(min(Q.y, Q.y + u.y), Q.y + v.y), min(min(Q.z, Q.z + u.z), Q.z + v.z));
-        auto rvecMax = ofVec3f(max(max(Q.x, Q.x + u.x), Q.x + v.x), max(max(Q.y, Q.y + u.y), Q.y + v.y), max(max(Q.z, Q.z + u.z), Q.z + v.z));
+        auto rvecMin = ofVec3f(std::min(std::min(Q.x, Q.x + u.x), Q.x + v.x), std::min(std::min(Q.y, Q.y + u.y), Q.y + v.y), std::min(std::min(Q.z, Q.z + u.z), Q.z + v.z));
+        auto rvecMax = ofVec3f(std::max(std::max(Q.x, Q.x + u.x), Q.x + v.x), std::max(std::max(Q.y, Q.y + u.y), Q.y + v.y), std::max(std::max(Q.z, Q.z + u.z), Q.z + v.z));
 
         bbox = AABB(rvecMin, rvecMax);
-
     }
 
     AABB bounding_box() const override { return bbox; }
@@ -77,13 +73,15 @@ public:
         auto denom = normal.dot(r.getDirection());
 
         // No hit if parallel
-        if (std::fabs(denom) < 1e-8) {
+        if (std::fabs(denom) < 1e-8)
+        {
             return false;
         }
 
         // Hit outside interval
         auto t = (D - normal.dot(r.getOrigin())) / denom;
-        if (!ray_t.contains(t)) {
+        if (!ray_t.contains(t))
+        {
             return false;
         }
 
@@ -93,7 +91,6 @@ public:
         {
             return false;
         }
-            
 
 
         rec.t = t;
@@ -103,7 +100,8 @@ public:
         return true;
     }
 
-    bool inTriangle(Vec3 P, Vec3 A, Vec3 B, Vec3 C) {
+    bool inTriangle(Vec3 P, Vec3 A, Vec3 B, Vec3 C)
+    {
         Vec3 v0 = C - A;
         Vec3 v1 = B - A;
         Vec3 v2 = P - A;
@@ -132,7 +130,4 @@ private:
     shared_ptr<ofVec3f> reference;
     shared_ptr<ofVec3f> scale;
     shared_ptr<ofQuaternion> orient;
-
 };
-
-#endif

@@ -1,22 +1,20 @@
-#ifndef PYRAMID_H
-#define PYRAMID_H
+#pragma once
 
-
-#include "Primitive3D.h"
 #include "ComposedShape.h"
+#include "Primitive3D.h"
 #include "Triangle.h"
-#include "Material.h"
 #include <numbers>
 
 
 class Pyramid : public ComposedShape
 {
 public:
-
-    Pyramid(int sides, const Vec3& size, shared_ptr<MaterialContainer> mat, of3dPrimitive primitive) : ComposedShape(size, mat, primitive), sides(sides){
+    Pyramid(int sides, const Vec3& size, shared_ptr<MaterialContainer> mat, of3dPrimitive primitive) : ComposedShape(size, mat, primitive), sides(sides)
+    {
         setShapes();
     }
-    void setShapes() override{
+    void setShapes() override
+    {
         float delta_theta = 2.0f * float(std::numbers::pi) / float(sides);
 
         Vec3 apex(0, -size.y, 0);
@@ -32,7 +30,6 @@ public:
             Vec3 v0 = apex;
             Vec3 v1 = base_next;
             Vec3 v2 = base_i;
-            
         }
 
 
@@ -47,9 +44,6 @@ public:
             shared_ptr<Triangle> triangle = make_shared<Triangle>(center, scale, orientation, baseCenter, base_i, base_next, mat);
             addShape(triangle);
         }
-
-
-
 
 
         //float half_size = size / 2;
@@ -75,8 +69,4 @@ public:
 
 private:
     int sides;
-
 };
-
-
-#endif

@@ -3,12 +3,12 @@
 #ifndef SCENEOBJECT_H
 #define SCENEOBJECT_H
 
-#include "ofMain.h"
-#include "renderer/rayTracer/Ray.h"
-#include "renderer/rayTracer/Interval.h"
 #include "HitRecord.h"
+#include "ofMain.h"
 #include "rayTracer/RayMaterial.h"
-#include "AABB.h"
+#include "rayTracer/Utilities/AABB.h"
+#include "renderer/rayTracer/Interval.h"
+#include "renderer/rayTracer/Ray.h"
 //#include "Material.h"
 
 class SceneObject : public ofNode
@@ -29,7 +29,7 @@ public:
         return transformedVertices;
     }
 
-    
+
     virtual bool hit(const Ray& r, Interval ray_t, HitRecord& rec)
     {
         //ofLog() << "Default no hit" << endl;
@@ -110,9 +110,7 @@ public:
     }
 
 
-
 protected:
     shared_ptr<MaterialContainer> mat;
-
 };
 #endif
