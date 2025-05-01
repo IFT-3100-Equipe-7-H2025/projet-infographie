@@ -8,18 +8,11 @@ void ImportImageScene::setup()
 {
     ofDisableArbTex();
     ofEnableTextureEdgeHack();
-
-    ofLogNotice() << "Avant de loder toneMappingShader!";
-
     toneMapingshader.load("shaders/tone_mapping_vs.glsl", "shaders/tone_mapping_fs.glsl");
 
     if (!toneMapingshader.isLoaded())
     {
-        ofLogError() << "Shader failed to load!";
-    }
-    else
-    {
-        ofLogNotice() << "Shader loaded successfully!";
+        ofLogError() << "toneMapingshader failed to load!";
     }
 }
 

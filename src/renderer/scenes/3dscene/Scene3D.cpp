@@ -26,6 +26,7 @@
 #include <cmath>
 #include <memory>
 #include <numbers>
+#include <material/CubemapMaterial.h>
 
 #include <ranges>
 
@@ -67,6 +68,14 @@ void Scene3D::setup()
     this->registeredMaterials.push_back(std::make_shared<DefaultMaterial>(std::make_shared<ofMaterial>(emissiveMaterial), "Emissive"));
 
     this->registeredMaterials.push_back(std::make_shared<PBRMaterial>("PBR"));
+
+    //cubemap
+    //std::vector<std::string> faces;
+    //cubemapTextureID = LoadCubemap(faces);
+    loadAllCubemaps();
+    this->registeredMaterials.push_back(std::make_shared<CubemapMaterial>(cubemaps["Vatican"], "Cubemap_Vatican"));
+    this->registeredMaterials.push_back(std::make_shared<CubemapMaterial>(cubemaps["Bridge"], "Cubemap_Bridge"));
+    this->registeredMaterials.push_back(std::make_shared<CubemapMaterial>(cubemaps["Planet"], "Cubemap_Planet"));
 
     // Add base light
     auto light = ofLight();
@@ -1404,4 +1413,63 @@ void Scene3D::updateViewPorts()
         current_viewPort = cameras[0].second.first;
         current_camera_id = activatedCameras[0].first;
     }
+}
+
+GLuint Scene3D::LoadCubemap(const std::vector<std::string>& faces)
+{
+    GLuint textureID;
+    glGenTextures(1, &textureID);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
+
+    for (GLuint i = 0; i < faces.size(); i++)
+    {
+        ofImage image;
+        if (!image.load(faces[i]))
+        {
+            ofLogError() << "Failed to load cubemap face: " << faces[i];
+            continue;
+        }
+
+        image.setImageType(OF_IMAGE_COLOR);// force RGB format
+        /*
+        if (i == 2 || i == 3)// i==2: POSITIVE_Y (top), i==3: NEGATIVE_Y (bottom)
+        {
+            image.rotate90(2);
+        }*/
+
+        glTexImage2D(
+                GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0,
+                GL_RGB, image.getWidth(), image.getHeight(), 0,
+                GL_RGB, GL_UNSIGNED_BYTE, image.getPixels().getData());
+    }
+
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+    return textureID;
+}
+
+void Scene3D::loadAllCubemaps()
+{
+    cubemaps["Vatican"] = LoadCubemap({"images/cubemap/vatican/right.jpg",
+                                                  "images/cubemap/vatican/left.jpg",
+                                                  "images/cubemap/vatican/top.jpg",
+                                                  "images/cubemap/vatican/bottom.jpg",
+                                                  "images/cubemap/vatican/front.jpg",
+                                                  "images/cubemap/vatican/back.jpg"});
+    cubemaps["Planet"] = LoadCubemap({"images/cubemap/planet/right.jpg",
+                                                 "images/cubemap/planet/left.jpg",
+                                                 "images/cubemap/planet/top.jpg",
+                                                 "images/cubemap/planet/bottom.jpg",
+                                                 "images/cubemap/planet/front.jpg",
+                                                 "images/cubemap/planet/back.jpg"});
+    cubemaps["Bridge"] = LoadCubemap({"images/cubemap/bridge/right.jpg",
+                                                 "images/cubemap/bridge/left.jpg",
+                                                 "images/cubemap/bridge/top.jpg",
+                                                 "images/cubemap/bridge/bottom.jpg",
+                                                 "images/cubemap/bridge/front.jpg",
+                                                 "images/cubemap/bridge/back.jpg"});
 }

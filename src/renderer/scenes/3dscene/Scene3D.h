@@ -202,4 +202,10 @@ private:
     std::vector<std::shared_ptr<Material>> registeredMaterials;
     std::vector<std::shared_ptr<Shader>> lightingModels;
     std::shared_ptr<Shader> selectedLightingModel;
+
+    GLuint cubemapTextureID;
+    std::map<std::string, GLuint> cubemaps;
+    //ofShader cubemapShader;
+    GLuint LoadCubemap(const std::vector<std::string>& faces);
+    void loadAllCubemaps();
 };
