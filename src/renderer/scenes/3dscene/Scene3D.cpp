@@ -88,7 +88,7 @@ void Scene3D::setup()
     //cam
 
     camera = std::make_shared<Camera>();
-    camera->setPosition(0, 0, -200);
+    camera->setPosition(0, 0, 200);
     camera->lookAt(ofVec3f(0, 0, 0));
     camera->activate();
     camera->hideFrustum();
@@ -97,8 +97,8 @@ void Scene3D::setup()
     cameraMap.emplace(cam_ptr->GetId(), camera);
     updateViewPorts();
 
-    translate_speed = 750;
-    rotate_speed = 75;
+    translate_speed = 1000;
+    rotate_speed = 100;
 
 
 
@@ -152,50 +152,17 @@ void Scene3D::draw()
     this->DrawSelectLightingModelWindow();
 
     for (auto& camera: cameras)
-    {
+    {camera->drawRayTrace();
         camera->begin(camera->getViewPort());
         camera->drawBVH();
+        
         for (auto& camera: cameras)
         {
             camera->customDraw();
         }
         drawScene();
         camera->end();
-         
-        if (camera->isRayTracing()) {
-            //ofSetColor(clearColor);
-            ofSetColor(ofColor(255,255,255));
-            ViewPort viewPort = camera->getViewPort();
-            int new_width = viewPort.getWidth() * camera->getScreenCrop();
-            int new_height = viewPort.getHeight() * camera->getScreenCrop();
-            rayImage = camera->getRayImage();
-            ofDisableDepthTest();
-            rayImage.draw(viewPort.getX() + viewPort.getWidth() - new_width, viewPort.getY(), new_width, new_height);
-            float percent = camera->portionDone() * 100;
-            string time_left = camera->timeLeft();
-            string perc = std::format("Time Left: {} , %: {:.4f}", time_left, percent);
-            ofPushStyle();
-            ofSetColor(0, 255, 0);
-            ofDisableDepthTest();
-
-            ofPushStyle();
-            ofRectangle rectangle(viewPort.getX() + viewPort.getWidth() - static_cast<float>(perc.size() - 1) * 12.0f, viewPort.getY() + new_height - 30.0f,
-                                  static_cast<float>(perc.size() - 1) * 12.0f, 30.0f);
-            ofFill();
-            ofSetColor(ofColor(0, 0, 0));
-            ofDrawRectangle(rectangle);
-            ofPopStyle();
-
-            font.drawString(perc, static_cast<float>(viewPort.getX() + viewPort.getWidth() - static_cast<float>(perc.size() - 1) * 12.0f), viewPort.getY() + new_height - 12.0f);
-            ofEnableDepthTest();
-            
-           
-
-            ofPopStyle();
-
-            ofEnableDepthTest();
-            ofSetColor(0, 255, 0);
-        }
+        camera->drawRayTrace();
         
         ofNoFill();
         ofDrawRectangle(camera->getViewPort());
@@ -1192,7 +1159,7 @@ void Scene3D::keyPressed(int key)
 
 void Scene3D::keyPressed(ofKeyEventArgs& key)
 {
-    ofLog() << "Key pressed: " << key.keycode << " with modifiers: " << key.modifiers;
+    //ofLog() << "Key pressed: " << key.keycode << " with modifiers: " << key.modifiers;
     if (key.hasModifier(OF_KEY_CONTROL))
     {
         switch (charToLower(key.keycode))
@@ -1288,6 +1255,21 @@ void Scene3D::keyReleased(ofKeyEventArgs& key)
                 focus();
                 applyCameraRotation();
                 break;
+            case '1':
+                rayTimeChoice = 0;
+                break;
+            case '2':
+                rayTimeChoice = 1;
+                break;
+            case '3':
+                rayTimeChoice = 2;
+                break;
+            case '4':
+                rayTimeChoice = 3;
+                break;
+            case '5':
+                rayTimeChoice = 4;
+                break;
         }
     }
 }
@@ -1311,13 +1293,29 @@ void Scene3D::update()
 {
     time_current = ofGetElapsedTimef();
     time_elapsed = time_current - time_last;
-    //time_left = std::fmax(0, std::min(1.0f / ofGetFrameRate() - time_elapsed, 1.0f / ofGetTargetFrameRate() - time_elapsed));
-    //time_left = std::fmin(std::fmax(0, (1.0f / ofGetFrameRate()) - time_elapsed), 1.0f / 30.0f);
-    //time_left = (((1.0f / ofGetFrameRate()) - time_elapsed) * 0.98f) * (1.0f / fmax(1.0f, fabs(ofGetFrameRate() - ofGetTargetFrameRate())));
-     time_left = 1.0f / fmax(45.0f, ofGetFrameRate()) - time_elapsed;
-    //time_left = 1.0f / 240.0f;
+    //switch (rayTimeChoice)
+    //{
+    //    case 0:
+    //        time_left = fmax(0, ((1.0f / ofGetFrameRate()) - time_elapsed) * 0.99f);
+    //        break;
+    //    case 1:
+    //        time_left = fmax(0, ((1.0f / ofGetFrameRate()) - time_elapsed) * 0.9f);
+    //        break;
+    //    case 2:
+    //        time_left = fmax(0, ((1.0f / ofGetTargetFrameRate()) - time_elapsed) * 0.9f);
+    //        break;
+    //    case 3:
+    //        time_left = time_elapsed;
+    //        break;
+    //    default:
+    //        time_left = time_elapsed * 0.95f;
+    //        break;
+    //}
+    time_left = time_elapsed * 0.95f;
     time_elapsed_timer = time_current - time_last_timer;
     time_last = time_current;
+
+    exportRayTrace(time_left);
 
     if (time_elapsed_timer > 5)
     {
@@ -1339,9 +1337,9 @@ void Scene3D::update()
      
     }
 
+
     time_elapsed += ofGetElapsedTimef() - time_last;
 
-    exportRayTrace(time_left);
 
     time_last = ofGetElapsedTimef();
 
@@ -1598,13 +1596,14 @@ void Scene3D::exportRayTrace(float time_left)
         float time_last = now;
         float time_elapsed = now - divided_time;
         camera->renderPixel(sceneGraph);
-        while (divided_time > 0 && !camera->doneRendering())
+        while (divided_time > 0.0f && !camera->doneRendering())
         {
             camera->renderPixel(sceneGraph);
             now = ofGetElapsedTimef();
             time_elapsed = now - time_last;
             time_last = now;
             divided_time -= time_elapsed;
+            //ofLog() << "divided time here" << divided_time;
         }
     }
 

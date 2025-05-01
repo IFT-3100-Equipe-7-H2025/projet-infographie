@@ -36,7 +36,7 @@ public:
 
     Primitive3D(Primitive3D& other)
     {
-        ofLog() << "Here for some reason";
+        //ofLog() << "Here for some reason";
         mat = other.mat;
         initialize();
         model = other.model;

@@ -36,12 +36,14 @@ public:
     bool rayTrace = true;
     shared_ptr<ComposedShape> bvhRoot = make_shared<ComposedShape>();
     vector<shared_ptr<Node>> snapshotObjects;
+    ofTrueTypeFont font;
 
 
 
     Camera(): activated(false), drawsFrustum(false), rendering(false) {
         prevImage.allocate(image_width, image_height, OF_IMAGE_COLOR);
         initialize();
+        font.load("fonts/JetBrainsMono-Regular.ttf", 12, true, true);
     }
 
 
@@ -75,21 +77,27 @@ public:
         current_time = ofGetElapsedTimef();
         elapsed_time = current_time - time_last;
         time_since_start = current_time - time_start;
-        if (elapsed_time < 0.5) {
+        if (elapsed_time < 1.0f) {
             return time_leftS;
         }
         float perc_dif = portionDone() - elapsed_percent;
         float perc_left = 1.0f - portionDone();
 
+        if (perc_dif <= 1e-8f || portionDone() <= 1e-8f)
+        {
+            return time_leftS;
+        }
+
         float second_per_perc_recent = elapsed_time / perc_dif;
         float second_per_perc_average = time_since_start / portionDone();
-
+        float alpha = 0.7f; 
         //float second_per_perc = (second_per_perc_recent + second_per_perc_average) / 2.0f;
-        float second_per_perc = second_per_perc_average;
+        //float second_per_perc = second_per_perc_average;
+        float second_per_perc = 1.0f / ((alpha / second_per_perc_recent) + ((1.0f - alpha) / second_per_perc_average));
 
         time_last = current_time;
         elapsed_percent = portionDone();
-        float time_left = perc_left * second_per_perc;
+        float time_left = std::fmax(0, perc_left * second_per_perc);
         float hours = int(time_left / 3600);
         float minutes = int(time_left / 60) - (hours * 60);
         float seconds = int(time_left) - (minutes * 60) - (hours * 3600);
@@ -106,6 +114,7 @@ public:
         return time_leftS;
 
     }
+
 
     bool doneRendering() {
         return !rendering;
@@ -127,6 +136,7 @@ public:
         {
             drawFrustum();
         }
+        
         //drawBVH();
     }
 
@@ -137,6 +147,43 @@ public:
             ofSetColor(ofColor(255, 0, 0));
             bvhRoot->aabbDraw();
             ofPopStyle();
+        }
+    }
+
+    void drawRayTrace() {
+        if (isRayTracing())
+        {
+            //ofSetColor(clearColor);
+            ofSetColor(ofColor(255, 255, 255));
+            ViewPort viewPort = getViewPort();
+            int new_width = viewPort.getWidth() * getScreenCrop();
+            int new_height = viewPort.getHeight() * getScreenCrop();
+            //rayImage = camera->getRayImage();
+            ofDisableDepthTest();
+            prevImage.draw(viewPort.getX() + viewPort.getWidth() - new_width, viewPort.getY(), new_width, new_height);
+            float percent = portionDone() * 100;
+            string time_left = timeLeft();
+            string perc = std::format("Time Left: {} , %: {:.4f}", time_left, percent);
+            ofPushStyle();
+            ofSetColor(0, 255, 0);
+            ofDisableDepthTest();
+
+            ofPushStyle();
+            ofRectangle rectangle(viewPort.getX() + viewPort.getWidth() - static_cast<float>(perc.size() - 1) * 12.0f, viewPort.getY() + new_height - 30.0f,
+                                  static_cast<float>(perc.size() - 1) * 12.0f, 30.0f);
+            ofFill();
+            ofSetColor(ofColor(0, 0, 0));
+            ofDrawRectangle(rectangle);
+            ofPopStyle();
+
+            font.drawString(perc, static_cast<float>(viewPort.getX() + viewPort.getWidth() - static_cast<float>(perc.size() - 1) * 12.0f), viewPort.getY() + new_height - 12.0f);
+            ofEnableDepthTest();
+
+
+            ofPopStyle();
+
+            ofEnableDepthTest();
+            ofSetColor(0, 255, 0);
         }
     }
 
@@ -250,16 +297,16 @@ public:
             blue += color.b;
         }
         pixel_color = ofColor(red / samples_per_pixel, green / samples_per_pixel, blue / samples_per_pixel);
-        ofVec3f pixel_center = pixel00_location + (i * pixel_delta_u) + (j * pixel_delta_v);
-        ofVec3f ray_direction = (pixel_center - center).getNormalized();
-        Ray ray(center, ray_direction);
+        //ofVec3f pixel_center = pixel00_location + (i * pixel_delta_u) + (j * pixel_delta_v);
+        //ofVec3f ray_direction = (pixel_center - center).getNormalized();
+        //Ray ray(center, ray_direction);
 
 
-        static const Interval intensity(0.000, 255.000);
+        //static const Interval intensity(0.000, 255.000);
         //gamma corre
-        auto r = linear_to_gamma(pixel_color.r);
-        auto g = linear_to_gamma(pixel_color.g);
-        auto b = linear_to_gamma(pixel_color.b);
+        //auto r = linear_to_gamma(pixel_color.r);
+        //auto g = linear_to_gamma(pixel_color.g);
+        //auto b = linear_to_gamma(pixel_color.b);
 
         /*  r = int(intensity.clamp(r));
                 g = int(intensity.clamp(g));
@@ -372,7 +419,7 @@ private:
     float current_time;
     float elapsed_time;
     float elapsed_percent;
-    string time_leftS;
+    string time_leftS = "00:00";
     int image_height = 100;
     double pixel_samples_scale;
     ofVec3f center;
@@ -393,6 +440,7 @@ private:
         time_start = time_last = ofGetElapsedTimef();
         last_i = 0;
         last_j = 0;
+        elapsed_percent = 0.0f;
 
         image_width = new_width;
         samples_per_pixel = new_samples;
@@ -400,9 +448,7 @@ private:
 
         image_height = int(image_width / aspect_ratio);
         image_height = (image_height < 1) ? 1 : image_height;
-        //ofLog() << "Allocating" << endl;
         rayImage.allocate(image_width, image_height, OF_IMAGE_COLOR);
-        //ofLog() << "After Allocating" << endl;
         pixels = &rayImage.getPixels();
 
         pixel_samples_scale = 1.0 / samples_per_pixel;

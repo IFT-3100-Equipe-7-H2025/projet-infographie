@@ -118,6 +118,7 @@ private:
     ofTrueTypeFont font;
 
     int cameraRayCount = 0;
+    int rayTimeChoice = 0;
 
     int cameraTranslateCount = 0;
     int cameraRotateCount = 0;
