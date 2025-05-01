@@ -3,17 +3,24 @@
 #include "Light.h"
 #include "of3dPrimitives.h"
 #include <stack>
+#include <vector>
 
-SceneGraph::SceneGraph() : root(std::make_shared<Node>("World", std::make_shared<ofBoxPrimitive>(ofBoxPrimitive(0, 0, 0)))) {}
+SceneGraph::SceneGraph() : root(std::make_shared<Node>("World", std::make_shared<ofBoxPrimitive>(ofBoxPrimitive(0, 0, 0))))
+{
+    nodes.emplace(root->GetId(), root);
+}
 
 void SceneGraph::AddNode(std::shared_ptr<Node> node)
 {
     root->AddChild(std::move(node));
 }
 
-void SceneGraph::Draw(const std::shared_ptr<Shader>& lightingModel, const glm::vec3& lightPosition) const
+void SceneGraph::Draw(const std::vector<std::shared_ptr<Light>>& lights, const std::shared_ptr<Shader>& lightingModel) const
 {
-    root->Draw(lightingModel, lightPosition);
+    if (root)
+    {
+        root->Draw(lights, lightingModel);
+    }
 }
 
 [[nodiscard]] std::shared_ptr<Node> SceneGraph::GetRoot() const
@@ -78,6 +85,40 @@ bool SceneGraph::IsNodeCurrentlyInGraph(NodeId id) const
         }
     }
     return false;
+}
+
+
+SceneGraph SceneGraph::clone() const {
+    SceneGraph copy;
+
+    std::stack<std::shared_ptr<Node>> nodes;
+    std::stack<std::shared_ptr<Node>> nodes_copy;
+
+
+    //std::shared_ptr<Node> root_copy = std::make_shared<Node>(root->GetName(), std::make_shared<ofNode>(*root->GetInner()));
+    std::shared_ptr<Node> root_copy = copy.GetRoot();
+
+    nodes.push(root);
+    nodes_copy.push(root_copy);
+
+    while (!nodes.empty())
+    {
+        std::shared_ptr<Node> current = nodes.top();
+        std::shared_ptr<Node> current_copy = nodes_copy.top();
+        nodes.pop();
+        nodes_copy.pop();
+
+        for (const auto& child: current->GetChildren())
+        {
+            std::shared_ptr<Node> child_copy = std::make_shared<Node>(child->GetName(), std::make_shared<ofNode>(*child->GetInner()));
+            nodes.push(child);
+            nodes_copy.push(child_copy);
+            current_copy->AddChild(child_copy);
+        }
+    }
+
+    //copy.AddNode(root_copy);
+    return copy;
 }
 
 

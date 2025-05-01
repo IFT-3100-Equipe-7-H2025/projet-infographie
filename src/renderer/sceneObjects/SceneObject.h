@@ -1,7 +1,15 @@
 #pragma once
 
-#include "ofMain.h"
+#ifndef SCENEOBJECT_H
+#define SCENEOBJECT_H
 
+#include "ofMain.h"
+#include "renderer/rayTracer/Ray.h"
+#include "renderer/rayTracer/Interval.h"
+#include "HitRecord.h"
+#include "rayTracer/RayMaterial.h"
+#include "AABB.h"
+//#include "Material.h"
 
 class SceneObject : public ofNode
 {
@@ -19,6 +27,13 @@ public:
             transformedVertices.push_back(ofVec3f(transformedVertex.x, transformedVertex.y, transformedVertex.z));
         }
         return transformedVertices;
+    }
+
+    
+    virtual bool hit(const Ray& r, Interval ray_t, HitRecord& rec)
+    {
+        //ofLog() << "Default no hit" << endl;
+        return false;
     }
 
     std::pair<ofVec3f, ofVec3f> getBoundingVerticesFromVector(std::vector<ofVec3f> vertices)
@@ -78,4 +93,26 @@ public:
 
         return new_mesh;
     }
+
+    shared_ptr<RayMaterial> getMaterial()
+    {
+        return mat->getMaterial();
+    }
+
+    shared_ptr<MaterialContainer> getMaterialContainer()
+    {
+        return mat;
+    }
+
+    void setMaterial(shared_ptr<RayMaterial> material)
+    {
+        mat->setMaterial(material);
+    }
+
+
+
+protected:
+    shared_ptr<MaterialContainer> mat;
+
 };
+#endif

@@ -1,10 +1,12 @@
 #pragma once
 #include "3dscene/commands/CommandHistory.h"
 #include "SharedShapeCreationParams.h"
+#include "imgui.h"
 
 class CreateShapeUI
 {
 public:
+    virtual ~CreateShapeUI() = default;
     CreateShapeUI(std::shared_ptr<SharedShapeCreationParams> sharedParams, CommandHistory& history) : sharedParams(std::move(sharedParams)), history(history) {}
     virtual void Draw() = 0;
 

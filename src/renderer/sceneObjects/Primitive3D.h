@@ -2,17 +2,74 @@
 
 #include "SceneObject.h"
 #include "ofMain.h"
+#include "renderer/rayTracer/Ray.h"
+#include "rayTracer/RayMaterial.h"
+
+#include <rayTracer/Utilities/AABB.h>
+
 
 class Primitive3D : public SceneObject
 {
 public:
+    shared_ptr<ofVec3f> center;
+    shared_ptr<ofVec3f> scale;
+    shared_ptr<ofQuaternion> orientation;
+
+
+    Primitive3D() {}
+
     Primitive3D(of3dPrimitive primitive)
     {
+        mat = make_shared<MaterialContainer>(make_shared<Lambert>(ofColor(5, 50, 255)));
+        ofLog() << "Material created!";
         model = primitive;
+        initialize();
+    }
+
+    Primitive3D(of3dPrimitive primitive, shared_ptr<MaterialContainer> material)
+    {
+        mat = material;
+        ofLog() << "Material created!";
+        model = primitive;
+        initialize();
+    }
+
+
+    Primitive3D(Primitive3D& other)
+    {
+        //ofLog() << "Here for some reason";
+        mat = other.mat;
+        initialize();
+        model = other.model;
+        center = other.center;
+        scale = other.scale;
+        orientation = other.orientation;
+
+    }
+
+    void copy(Primitive3D& other)
+    {
+        model = other.model;
+        center = other.center;
+        scale = other.scale;
+        orientation = other.orientation;
+        mat = other.mat;
+    }
+
+    void initialize()
+    {
+        center = make_shared<ofVec3f>(getGlobalPosition());
+        scale = make_shared<ofVec3f>(getScale());
+        orientation = make_shared<ofQuaternion>(getOrientationQuat());
     }
 
     void customDraw() override
     {
+        //ofLog() << "In primitive custom draw";
+
+        if (model.getMesh().getNumVertices() == 0 || !isVisible) {
+            return;
+        }
         if (wireFrame)
         {
             model.drawWireframe();
@@ -21,6 +78,85 @@ public:
         {
             model.draw();
         }
+    }
+    virtual void update() {}
+
+    virtual void aabbDraw(ofMatrix4x4 transform) {
+        ofPushMatrix();
+        ofPushStyle();
+        ofSetColor(ofColor(0, 255, 0));
+        ofMesh boxMesh;
+        AABB bbox_t = bbox;
+        //ofMatrix4x4 transform = getGlobalTransformMatrix();
+        bbox_t.transform(transform.getInverse());
+        boxMesh.setMode(ofPrimitiveMode::OF_PRIMITIVE_LINE_STRIP);
+        boxMesh.addVertex(ofVec3f(bbox_t.x.min, bbox_t.y.min, bbox_t.z.min));
+        boxMesh.addVertex(ofVec3f(bbox_t.x.min, bbox_t.y.min, bbox_t.z.max));
+        boxMesh.addVertex(ofVec3f(bbox_t.x.min, bbox_t.y.max, bbox_t.z.max));
+        boxMesh.addVertex(ofVec3f(bbox_t.x.min, bbox_t.y.max, bbox_t.z.min));
+
+
+        boxMesh.addVertex(ofVec3f(bbox_t.x.min, bbox_t.y.min, bbox_t.z.min));
+        boxMesh.addVertex(ofVec3f(bbox_t.x.max, bbox_t.y.min, bbox_t.z.min));
+        boxMesh.addVertex(ofVec3f(bbox_t.x.max, bbox_t.y.max, bbox_t.z.min));
+        boxMesh.addVertex(ofVec3f(bbox_t.x.min, bbox_t.y.max, bbox_t.z.min));
+        boxMesh.addVertex(ofVec3f(bbox_t.x.min, bbox_t.y.min, bbox_t.z.min));
+
+        boxMesh.addVertex(ofVec3f(bbox_t.x.min, bbox_t.y.min, bbox_t.z.min));
+        boxMesh.addVertex(ofVec3f(bbox_t.x.max, bbox_t.y.min, bbox_t.z.min));
+        boxMesh.addVertex(ofVec3f(bbox_t.x.max, bbox_t.y.min, bbox_t.z.max));
+        boxMesh.addVertex(ofVec3f(bbox_t.x.min, bbox_t.y.min, bbox_t.z.max));
+
+        boxMesh.addVertex(ofVec3f(bbox_t.x.max, bbox_t.y.min, bbox_t.z.max));
+        boxMesh.addVertex(ofVec3f(bbox_t.x.max, bbox_t.y.min, bbox_t.z.min));
+        boxMesh.addVertex(ofVec3f(bbox_t.x.max, bbox_t.y.min, bbox_t.z.max));
+        boxMesh.addVertex(ofVec3f(bbox_t.x.max, bbox_t.y.max, bbox_t.z.max));
+        boxMesh.addVertex(ofVec3f(bbox_t.x.max, bbox_t.y.max, bbox_t.z.min));
+        boxMesh.addVertex(ofVec3f(bbox_t.x.max, bbox_t.y.min, bbox_t.z.min));
+        boxMesh.addVertex(ofVec3f(bbox_t.x.min, bbox_t.y.min, bbox_t.z.min));
+
+        boxMesh.addVertex(ofVec3f(bbox_t.x.min, bbox_t.y.min, bbox_t.z.max));
+        boxMesh.addVertex(ofVec3f(bbox_t.x.max, bbox_t.y.min, bbox_t.z.max));
+        boxMesh.addVertex(ofVec3f(bbox_t.x.max, bbox_t.y.max, bbox_t.z.max));
+        boxMesh.addVertex(ofVec3f(bbox_t.x.min, bbox_t.y.max, bbox_t.z.max));
+        boxMesh.addVertex(ofVec3f(bbox_t.x.min, bbox_t.y.min, bbox_t.z.max));
+        boxMesh.addVertex(ofVec3f(bbox_t.x.min, bbox_t.y.min, bbox_t.z.min));
+
+        boxMesh.addVertex(ofVec3f(bbox_t.x.min, bbox_t.y.max, bbox_t.z.min));
+        boxMesh.addVertex(ofVec3f(bbox_t.x.max, bbox_t.y.max, bbox_t.z.min));
+        boxMesh.addVertex(ofVec3f(bbox_t.x.max, bbox_t.y.max, bbox_t.z.max));
+        boxMesh.addVertex(ofVec3f(bbox_t.x.min, bbox_t.y.max, bbox_t.z.max));
+
+
+        boxMesh.draw();
+        ofPopStyle();
+        ofPopMatrix();
+    }
+
+    bool updateSettings()
+    {
+        time_current = ofGetElapsedTimef();
+        time_elapsed = time_current - time_last;
+
+        ofVec3f new_position = getGlobalPosition();
+        ofVec3f new_scale = getScale();
+        ofQuaternion new_orientation = getOrientationQuat();
+        if (*center == new_position && *scale == new_scale && *orientation == new_orientation || time_elapsed < 0.5)
+        {
+            return false;
+        }
+        time_last = time_current;
+
+        //else
+        //{
+        //    ofLog() << "Primitive3D update";
+        //    //calculateBbox(); an idea to update the bbox
+
+        //}
+        *center = new_position;
+        *scale = new_scale;
+        *orientation = new_orientation;
+        return true;
     }
 
     std::pair<ofVec3f, ofVec3f> getBoundingVertices() override
@@ -58,8 +194,41 @@ public:
         return this->color;
     }
 
+    void setVisible(bool on)
+    {
+        this->isVisible = on;
+    }
+
+    bool* getVisible()
+    {
+        return &this->isVisible;
+    }
+
+    ofMesh getMesh() {
+        return model.getMesh();
+    }
+
+    of3dPrimitive getModel() {
+        return model;
+    }
+
+     virtual AABB bounding_box() const
+    {
+        return bbox;
+    };
+
 private:
+    bool isVisible = true;
+    float time_current;
+    float time_elapsed;
+
+    float time_last = 0;
+
+protected:
     of3dPrimitive model;
     bool wireFrame = false;
     ofFloatColor color = ofFloatColor(1.0f, 1.0f, 1.0f, 1.0f);
+    AABB bbox;
+
+    
 };

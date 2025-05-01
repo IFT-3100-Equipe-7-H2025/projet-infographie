@@ -6,6 +6,7 @@
 #include "material/GalaxyMaterial.h"
 #include "of3dPrimitives.h"
 #include <memory>
+#include <vector>
 
 Node::Node(std::string name, std::shared_ptr<ofNode> node) : inner(std::move(node)), name(std::move(name)), id(nextId++)
 {}
@@ -63,50 +64,64 @@ bool Node::Delete()
 }
 
 // NOLINTNEXTLINE(misc-no-recursion)
-void Node::Draw(const std::shared_ptr<Shader>& lightingModel, const glm::vec3& lightPosition) const
+void Node::Draw(const std::vector<std::shared_ptr<Light>>& lights, const std::shared_ptr<Shader>& lightingModel) const
 {
     if (inner)
     {
-        if (material && lightingModel == nullptr)
+        if (material && lightingModel == nullptr && !std::dynamic_pointer_cast<PBRMaterial>(this->material))
         {
             material->begin();
         }
-        if (auto material_ptr = std::dynamic_pointer_cast<DefaultMaterial>(this->material); lightingModel && material_ptr)
+        else if (auto material_ptr = std::dynamic_pointer_cast<DefaultMaterial>(this->material); lightingModel && material_ptr)
         {
             lightingModel->begin();
 
-            // For Lambert, Gouraud, Phong and Blinn-Phong
-            auto ambientColor = material_ptr->GetMaterial()->getAmbientColor();
-            auto diffuseColor = material_ptr->GetMaterial()->getDiffuseColor();
-            auto specularColor = material_ptr->GetMaterial()->getSpecularColor();
-            auto shininess = material_ptr->GetMaterial()->getShininess();
-
+            glm::vec3 lightPosition = lights.empty() ? glm::vec3(0.0f) : lights[0]->getGlobalPosition();
             glm::mat4 viewMatrix = ofGetCurrentMatrix(OF_MATRIX_MODELVIEW);
             glm::vec4 lightPosInViewSpace = viewMatrix * glm::vec4(lightPosition, 1.0);
-            lightingModel->setUniform3f("color_ambient", ambientColor.r, ambientColor.g, ambientColor.b);
-            lightingModel->setUniform3f("color_diffuse", diffuseColor.r, diffuseColor.g, diffuseColor.b);
-            lightingModel->setUniform3f("color_specular", specularColor.r, specularColor.g, specularColor.b);
-            lightingModel->setUniform1f("brightness", shininess);
-            lightingModel->setUniform3f("light_position", lightPosInViewSpace);
 
             // For Gooch
-            glm::mat4 model = inner->getGlobalTransformMatrix();
-            glm::mat3 normalMat = glm::inverseTranspose(glm::mat3(model));
-            lightingModel->setUniformMatrix4f("modelMatrix", model);
-            lightingModel->setUniformMatrix3f("normalMatrix", normalMat);
-            lightingModel->setUniform3f("uLightPos", lightPosition);
-            lightingModel->setUniform3f("uSurfaceColor", 1.0, 0.5, 1.0);
-            lightingModel->setUniform3f("uWarmColor", 1.0, 0.6, 0.0);
-            lightingModel->setUniform3f("uCoolColor", 0.0, 0.0, 1.0);
-            lightingModel->setUniform1f("uAlpha", 0.25f);
-            lightingModel->setUniform1f("uBeta", 0.25f);
+            if (lightingModel->GetName() == "Gooch")
+            {
+                glm::mat4 model = inner->getGlobalTransformMatrix();
+                glm::mat3 normalMat = glm::inverseTranspose(glm::mat3(model));
+                lightingModel->setUniformMatrix4f("modelMatrix", model);
+                lightingModel->setUniformMatrix3f("normalMatrix", normalMat);
+                lightingModel->setUniform3f("uLightPos", lightPosition);
+                lightingModel->setUniform3f("uSurfaceColor", 1.0, 0.5, 1.0);
+                lightingModel->setUniform3f("uWarmColor", 1.0, 0.6, 0.0);
+                lightingModel->setUniform3f("uCoolColor", 0.0, 0.0, 1.0);
+                lightingModel->setUniform1f("uAlpha", 0.25f);
+                lightingModel->setUniform1f("uBeta", 0.25f);
+            }
+            // For Toon
+            else if (lightingModel->GetName() == "Toon")
+            {
+                lightingModel->setUniform3f("lightPosEye", lightPosInViewSpace);
+                lightingModel->setUniform3f("baseColor", glm::vec3(0.55f, 0.27f, 0.07f));// cocoa
+                lightingModel->setUniform1i("bandCount", 3);                             // 2-5 works nicely
+                lightingModel->setUniform1f("rimWidth", 0.25f);
+                lightingModel->setUniform1f("rimPower", 1.8f);
+            }
+            // For Lambert, Gouraud, Phong and Blinn-Phong
+            else
+            {
+                auto ambientColor = material_ptr->GetMaterial()->getAmbientColor();
+                auto diffuseColor = material_ptr->GetMaterial()->getDiffuseColor();
+                auto specularColor = material_ptr->GetMaterial()->getSpecularColor();
+                auto shininess = material_ptr->GetMaterial()->getShininess();
+
+                lightingModel->setUniform3f("color_ambient", ambientColor.r, ambientColor.g, ambientColor.b);
+                lightingModel->setUniform3f("color_diffuse", diffuseColor.r, diffuseColor.g, diffuseColor.b);
+                lightingModel->setUniform3f("color_specular", specularColor.r, specularColor.g, specularColor.b);
+                lightingModel->setUniform1f("brightness", shininess);
+                lightingModel->setUniform3f("light_position", glm::vec3(lightPosInViewSpace));
+            }
         }
         else if (auto material_ptr = std::dynamic_pointer_cast<PBRMaterial>(this->material); material_ptr)
         {
             material_ptr->begin();
-            glm::mat4 viewMatrix = ofGetCurrentMatrix(OF_MATRIX_MODELVIEW);
-            glm::vec4 lightPosInViewSpace = viewMatrix * glm::vec4(lightPosition, 1.0);
-            material_ptr->SetUniforms(lightPosInViewSpace);
+            material_ptr->SetUniforms(lights);
         }
         else if (auto material_ptr = std::dynamic_pointer_cast<CubemapMaterial>(this->material); material_ptr)
          {
@@ -130,14 +145,14 @@ void Node::Draw(const std::shared_ptr<Shader>& lightingModel, const glm::vec3& l
 
         inner->draw();
         if (lightingModel) { lightingModel->end(); }
-        if (material && lightingModel == nullptr)
+        if (material && (lightingModel == nullptr || std::dynamic_pointer_cast<PBRMaterial>(this->material)))
         {
             material->end();
         }
     }
     for (const auto& child: children)
     {
-        child->Draw(lightingModel);
+        child->Draw(lights, lightingModel);
     }
 }
 

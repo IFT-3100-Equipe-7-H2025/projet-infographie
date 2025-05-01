@@ -5,6 +5,7 @@
 #include "Light.h"
 #include "imgui.h"
 #include "ofAppRunner.h"
+#include "Camera.h"
 
 class CreateCameraUI : public CreateShapeUI
 {
@@ -19,7 +20,7 @@ public:
         {
             if (ImGui::Button("Add"))
             {
-                auto camera = std::make_shared<ofCamera>();
+                auto camera = std::make_shared<Camera>();
                 camera->setPosition(0, 0, -200);
                 camera->lookAt(ofVec3f(0, 0, 0));
                 auto cam_ptr = std::make_shared<Node>("Camera", camera);
