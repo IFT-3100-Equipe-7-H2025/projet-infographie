@@ -47,9 +47,9 @@ public:
 
 
     void update() override{
-        Q = *orient * *scale * corner + *reference;
-        u = *orient * ue * *scale;
-        v = *orient * ve * *scale;
+        Q = *orient * (*scale * corner) + *reference;//*orient *
+        u = *orient * (*scale * ue);
+        v = *orient * (*scale * ve);
         auto n = u.getCrossed(v);
         normal = unit_vector(n);
         D = normal.dot(Q);
@@ -59,10 +59,6 @@ public:
 
     void calculateBbox()
     {
-        Q = *orient * *scale * corner + *reference;
-        u = *orient * ue * *scale;
-        v = *orient * ve * *scale;
-
         auto rvecMin = ofVec3f(min(min(Q.x, Q.x + u.x), Q.x + v.x), min(min(Q.y, Q.y + u.y), Q.y + v.y), min(min(Q.z, Q.z + u.z), Q.z + v.z));
         auto rvecMax = ofVec3f(max(max(Q.x, Q.x + u.x), Q.x + v.x), max(max(Q.y, Q.y + u.y), Q.y + v.y), max(max(Q.z, Q.z + u.z), Q.z + v.z));
 

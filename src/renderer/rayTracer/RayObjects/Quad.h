@@ -19,9 +19,11 @@ public:
 
     void update() override
     {
-        Q = *orient * *scale * corner + *reference;
-        u = *orient * ue * *scale;
-        v = *orient * ve * *scale;
+        Q = *orient * (*scale * corner) + *reference;
+        u = *orient * (*scale * ue);
+        v = *orient * (*scale * ve);
+
+
         auto n = u.getCrossed(v);
         normal = unit_vector(n);
         D = normal.dot(Q);
