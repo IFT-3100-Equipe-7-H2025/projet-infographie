@@ -1,6 +1,4 @@
-
-#ifndef QUAD_H
-#define QUAD_H
+#pragma once
 
 #include "Primitive3D.h"
 #include "rayTracer/Utilities/Vec3.h"
@@ -9,8 +7,7 @@
 class Quad : public Primitive3D
 {
 public:
-    Quad(shared_ptr<ofVec3f> reference, shared_ptr<ofVec3f> scale, shared_ptr<ofQuaternion> orientation, const Vec3& Q, const Vec3& u, const Vec3& v, shared_ptr<MaterialContainer> material) : 
-        ve(v), ue(u), scale(scale), orient(orientation), u(u), v(v), reference(reference), Q(Q), corner(Q)
+    Quad(shared_ptr<ofVec3f> reference, shared_ptr<ofVec3f> scale, shared_ptr<ofQuaternion> orientation, const Vec3& Q, const Vec3& u, const Vec3& v, shared_ptr<MaterialContainer> material) : ve(v), ue(u), scale(scale), orient(orientation), u(u), v(v), reference(reference), Q(Q), corner(Q)
     {
         mat = material;
         update();
@@ -35,13 +32,15 @@ public:
         update();
         auto denom = normal.dot(r.getDirection());
 
-        if (std::fabs(denom) < 1e-8) {
+        if (std::fabs(denom) < 1e-8)
+        {
             return false;
         }
 
         // Hit outside interval
         auto t = (D - normal.dot(r.getOrigin())) / denom;
-        if (!ray_t.contains(t)) {
+        if (!ray_t.contains(t))
+        {
             return false;
         }
 
@@ -54,10 +53,11 @@ public:
         auto alpha = w.dot(planar_hitpt_vec.getCrossed(v));
         auto beta = w.dot(u.getCrossed(planar_hitpt_vec));
 
-        if (!is_interior(alpha, beta, rec)) {
+        if (!is_interior(alpha, beta, rec))
+        {
             return false;
         }
-           
+
         rec.t = t;
         rec.p = intersection;
         rec.mat = mat->getMaterial();
@@ -65,12 +65,13 @@ public:
         return true;
     }
 
-    virtual bool is_interior(double a, double b, HitRecord& rec) const {
+    virtual bool is_interior(double a, double b, HitRecord& rec) const
+    {
         Interval unit_interval = Interval(0, 1);
 
         if (!unit_interval.contains(a) || !unit_interval.contains(b))
             return false;
-        
+
         rec.u = a;
         rec.v = b;
 
@@ -87,7 +88,4 @@ private:
     shared_ptr<ofVec3f> reference;
     shared_ptr<ofVec3f> scale;
     shared_ptr<ofQuaternion> orient;
-
 };
-
-#endif

@@ -1,18 +1,14 @@
-#ifndef CUBE_H
-#define CUBE_H
+#pragma once
 
-
-#include "Primitive3D.h"
 #include "ComposedShape.h"
+#include "Primitive3D.h"
 #include "Quad.h"
-#include "Material.h"
 #include "rayTracer/RayMaterial.h"
 
 
 class Cube : public ComposedShape
 {
 public:
-
     Cube(const Vec3& size, shared_ptr<MaterialContainer> mat, of3dPrimitive primitive) : ComposedShape(size, mat, primitive)
     {
         setShapes();
@@ -25,7 +21,8 @@ public:
         Vec3 back(0, 0, -size.z);
         Vec3 temp(0, 0, 0);
 
-        for (int j = 0; j < 2; j++) {
+        for (int j = 0; j < 2; j++)
+        {
             for (int i = 0; i < 3; i++)
             {
                 shared_ptr<Quad> newQuad = make_shared<Quad>(center, scale, orientation, half_size, down, right, mat);
@@ -41,9 +38,4 @@ public:
             half_size = -half_size;
         }
     }
-
-
 };
-
-
-#endif

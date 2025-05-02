@@ -1,10 +1,11 @@
+#pragma once
+#include "Light.h"
 #include "Shader.h"
 #include "material/Material.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <memory>
 #include <vector>
-#include "Light.h"
 
 class ShaderMaterial : public Material
 {
@@ -42,6 +43,7 @@ class PBRMaterial : public ShaderMaterial
 {
 private:
     static const int MAX_LIGHTS = 4;
+
 public:
     explicit PBRMaterial(std::string name) : ShaderMaterial(std::make_shared<Shader>(), std::move(name))
     {
@@ -73,7 +75,7 @@ public:
 
         material->setUniform3f("material_fresnel_ior", material_fresnel_ior);
 
-        int numLightsToUse = std::min((int)lights.size(), MAX_LIGHTS);
+        int numLightsToUse = std::min((int) lights.size(), MAX_LIGHTS);
         material->setUniform1i("num_lights", numLightsToUse);
 
         std::vector<glm::vec3> lightPositions;
@@ -82,7 +84,8 @@ public:
 
         glm::mat4 viewMatrix = ofGetCurrentMatrix(OF_MATRIX_MODELVIEW);
 
-        for (int i = 0; i < numLightsToUse; ++i) {
+        for (int i = 0; i < numLightsToUse; ++i)
+        {
             glm::vec4 lightPosWorld = glm::vec4(lights[i]->getGlobalPosition(), 1.0);
             glm::vec4 lightPosView = viewMatrix * lightPosWorld;
             lightPositions.push_back(glm::vec3(lightPosView));
@@ -93,22 +96,26 @@ public:
             lightIntensities.push_back(1.0f);
         }
 
-        for (int i = numLightsToUse; i < MAX_LIGHTS; ++i) {
+        for (int i = numLightsToUse; i < MAX_LIGHTS; ++i)
+        {
             lightPositions.push_back(glm::vec3(0.0f));
             lightColors.push_back(glm::vec3(0.0f));
             lightIntensities.push_back(0.0f);
         }
 
         // Set array uniforms using glm::value_ptr
-        if (!lightPositions.empty()) {
-             material->setUniform3fv("light_positions", glm::value_ptr(lightPositions[0]), numLightsToUse);
+        if (!lightPositions.empty())
+        {
+            material->setUniform3fv("light_positions", glm::value_ptr(lightPositions[0]), numLightsToUse);
         }
-       if (!lightColors.empty()) {
+        if (!lightColors.empty())
+        {
             material->setUniform3fv("light_colors", glm::value_ptr(lightColors[0]), numLightsToUse);
-       }
+        }
         // The 1fv uniform for intensities is likely correct as it expects float*
-        if (!lightIntensities.empty()) {
-             material->setUniform1fv("light_intensities", lightIntensities.data(), numLightsToUse);
+        if (!lightIntensities.empty())
+        {
+            material->setUniform1fv("light_intensities", lightIntensities.data(), numLightsToUse);
         }
 
         material->setUniform1f("tone_mapping_exposure", tone_mapping_exposure);

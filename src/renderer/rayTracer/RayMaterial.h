@@ -2,28 +2,26 @@
 #ifndef RAYMATERIAL_H
 #define RAYMATERIAL_H
 #include "HitRecord.h"
-#include "Utilities/Vec3.h"
 #include "Ray.h"
+#include "Utilities/Vec3.h"
 
 
 enum matType
 {
     MetalT,
     GlassT,
-    LambertT, 
+    LambertT,
     DiffuseLightT
 };
 
-const char* materialLabels[] = {
+constexpr inline char* materialLabels[] = {
         "Metal",
         "Glass",
         "Lambert",
         "Emissive"};
 
 // avoids float precision issues with ray hitting the same surface it comes from
-const float EPSILON = 1e-1f;
-
-
+constexpr inline float EPSILON = 1e-1f;
 
 
 class RayMaterial
@@ -118,8 +116,6 @@ class Lambert : public RayMaterial
     {
         return std::make_shared<Lambert>(*this);
     }
-
-
 };
 
 
@@ -141,9 +137,6 @@ public:
     {
         return std::make_shared<Metal>(*this);
     }
-
-
-
 };
 
 
@@ -171,14 +164,14 @@ public:
             direction = reflect(unit_direction, rec.normal);
             scattered = Ray(rec.p + rec.normal * EPSILON, direction);
         }
-        else {
+        else
+        {
             //refract
             direction = refract(unit_direction, rec.normal, ri);
             scattered = Ray(rec.p - rec.normal * EPSILON, direction);
         }
 
 
-        
         return true;
     }
 
@@ -212,9 +205,7 @@ public:
     }
 
 private:
-
 };
-
 
 
 inline matType getMaterialType(shared_ptr<RayMaterial> material)

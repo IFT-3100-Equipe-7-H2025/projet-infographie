@@ -1,11 +1,10 @@
 #pragma once
-#pragma once
 #include "3dscene/commands/AddShapeChildToNodeCommand.h"
+#include "Camera.h"
 #include "CreateShapeUI.h"
 #include "Light.h"
 #include "imgui.h"
 #include "ofAppRunner.h"
-#include "Camera.h"
 
 class CreateCameraUI : public CreateShapeUI
 {
@@ -16,7 +15,7 @@ public:
     {
         if (sharedParams->selectedNode == nullptr) { return; }
 
-        if ( ImGui::TreeNode("Add camera") )
+        if (ImGui::TreeNode("Add camera"))
         {
             if (ImGui::Button("Add"))
             {

@@ -1,10 +1,9 @@
-﻿#pragma once
-#ifndef BVHNODE_H
-#define BVHNODE_H
+#pragma once
 
+#include "Primitive3D.h"
 #include "Vec3.h"
+#include "rayTracer/RayObjects/ComposedShape.h"
 
-#include "PrimitiveCreator.h"
 
 class BvhNode : public Primitive3D
 {
@@ -12,10 +11,10 @@ public:
     int depth;
     BvhNode() {}
 
-        
-    BvhNode(ComposedShape& composed, int depth_p) :BvhNode(composed.objects, 0, composed.objects.size(), depth_p) 
+
+    BvhNode(ComposedShape& composed, int depth_p) : BvhNode(composed.objects, 0, composed.objects.size(), depth_p)
     {
-        //Primitive3D(composed);    
+        //Primitive3D(composed);
         copy(composed);
         model = composed.getModel();
     }
@@ -35,32 +34,37 @@ public:
         //int axis = random_int(0, 2);
 
         //ofLog() << "depth : " << depth_p;
-        auto comparator = (axis == 0)   ? box_x_compare 
+        auto comparator = (axis == 0)   ? box_x_compare
                           : (axis == 1) ? box_y_compare
                                         : box_z_compare;
 
         object_span = end - start;
-   
+
         //ofLog() << "Size : " << objects.size();
         //ofLog() << "object_span : " << object_span;
-        if (object_span == 0) {
+        if (object_span == 0)
+        {
             return;
         }
-        else if (object_span == 1) {
+        else if (object_span == 1)
+        {
             groups.push_back(objects[start]);
         }
-        else if (object_span == 2) {
+        else if (object_span == 2)
+        {
             groups.push_back(objects[start]);
             groups.push_back(objects[start + 1]);
         }
-        else if (depth <= 0) {
+        else if (depth <= 0)
+        {
             //ofLog() << "Depth == 0";
             for (int i = start; i < end; i++)
             {
                 groups.push_back(objects[i]);
             }
         }
-        else {
+        else
+        {
             sort(begin(objects) + start, begin(objects) + end, comparator);
 
             auto mid = start + object_span / 2;
@@ -69,10 +73,10 @@ public:
             groups.push_back(node1);
             groups.push_back(node2);
         }
-       
     }
 
-    void update() override {
+    void update() override
+    {
         bbox = AABB();
         for (auto& object: groups)
         {
@@ -91,7 +95,8 @@ public:
         Primitive3D::aabbDraw(transform);
     }
 
-    bool hit(const Ray& r, Interval ray_t, HitRecord& rec) override {
+    bool hit(const Ray& r, Interval ray_t, HitRecord& rec) override
+    {
         if (!bbox.hit(r, ray_t))
             return false;
 
@@ -139,5 +144,3 @@ private:
     vector<int> indices;
     size_t object_span;
 };
-
-#endif

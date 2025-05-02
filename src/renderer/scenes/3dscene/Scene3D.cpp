@@ -28,16 +28,18 @@
 #include "of3dPrimitives.h"
 #include "ofAppRunner.h"
 #include "ofGraphics.h"
-#include "renderer/sceneObjects/ImportModel.h"
-#include <cmath>
-#include <memory>
-#include <numbers>
 #include "renderer/rayTracer/Ray.h"
 #include "renderer/rayTracer/RayObjects/Cube.h"
-#include "Material.h"
+#include "renderer/sceneObjects/ImportModel.h"
+#include <cmath>
+#include <material/CubemapMaterial.h>
+#include <material/GalaxyMaterial.h>
+#include <memory>
+#include <numbers>
+
+#include <algorithm>
 #include <ranges>
 #include <vector>
-#include <algorithm>
 
 Scene3D::Scene3D() : history(CommandHistory()),
                      sceneGraph(SceneGraph()),
@@ -77,6 +79,13 @@ void Scene3D::setup()
 
     this->registeredMaterials.push_back(std::make_shared<PBRMaterial>("PBR"));
 
+    this->registeredMaterials.push_back(std::make_shared<GalaxyMaterial>("Galaxy"));
+
+    loadAllCubemaps();
+    this->registeredMaterials.push_back(std::make_shared<CubemapMaterial>(cubemaps["Vatican"], "Cubemap_Vatican"));
+    this->registeredMaterials.push_back(std::make_shared<CubemapMaterial>(cubemaps["Bridge"], "Cubemap_Bridge"));
+    this->registeredMaterials.push_back(std::make_shared<CubemapMaterial>(cubemaps["Planet"], "Cubemap_Planet"));
+
     // Add base light
     auto light = ofLight();
     light.enable();
@@ -105,7 +114,6 @@ void Scene3D::setup()
 
     translate_speed = 1000;
     rotate_speed = 100;
-
 
 
     auto aspect_ratio = 16.0 / 9.0;
@@ -162,10 +170,11 @@ void Scene3D::draw()
     this->DrawSelectLightingModelWindow();
 
     for (auto& camera: cameras)
-    {camera->drawRayTrace();
+    {
+        camera->drawRayTrace();
         camera->begin(camera->getViewPort());
         camera->drawBVH();
-        
+
         for (auto& camera: cameras)
         {
             camera->customDraw();
@@ -173,7 +182,7 @@ void Scene3D::draw()
         drawScene();
         camera->end();
         camera->drawRayTrace();
-        
+
         ofNoFill();
         ofDrawRectangle(camera->getViewPort());
     }
@@ -191,11 +200,11 @@ void Scene3D::drawScene()
 
     // Determine which lighting model shader to pass down (if any)
     std::shared_ptr<Shader> shaderToUse = nullptr;
-    if ( this->selectedLightingModel->GetName() != "Default" ) { shaderToUse = this->selectedLightingModel; }
+    if (this->selectedLightingModel->GetName() != "Default") { shaderToUse = this->selectedLightingModel; }
 
     // Pass the lights vector and the chosen shader (or nullptr) to the scene graph draw call.
     // Node::Draw will decide whether to use the shaderToUse based on the node's material.
-    if ( !lights.empty() ) { sceneGraph.Draw(lights, shaderToUse); }
+    if (!lights.empty()) { sceneGraph.Draw(lights, shaderToUse); }
     else
     {
         // Draw without lights if none are found
@@ -206,7 +215,7 @@ void Scene3D::drawScene()
     // Selection box drawing logic remains the same
     if (is_selected)
     {
-        if ( auto light = dynamic_pointer_cast<Light>(this->selectedNode->get()->GetInner()); light ) { return; }
+        if (auto light = dynamic_pointer_cast<Light>(this->selectedNode->get()->GetInner()); light) { return; }
         selectionMesh.enableColors();
         selectionMesh.setColorForIndices(255, 255, 0);
 
@@ -253,7 +262,8 @@ void Scene3D::DrawSelectedNodeWindow()
             {
                 this->DrawModifyLightSliders(light);
             }
-            if (this->selectedNode->get()->GetName() == "World 0") {
+            if (this->selectedNode->get()->GetName() == "World 0")
+            {
                 ImGui::Text("World node");
                 float color[4] = {clearColor.r / 255.0f, clearColor.g / 255.0f, clearColor.b / 255.0f, clearColor.a / 255.0f};
                 ImGui::ColorEdit4("World Color", color);
@@ -335,7 +345,6 @@ void Scene3D::DrawSelectedNodeWindow()
                 if (ImGui::Combo("Ray Material", &selected, materialLabels, 4))
                 {
                     sharedParams->mat = static_cast<matType>(selected);
-
                 }
 
                 for (auto& createShapeUI: this->createShapeUIs)
@@ -385,7 +394,7 @@ void Scene3D::DrawModifyLightSliders(const std::shared_ptr<Light>& light)
         this->history.executeCommand(std::make_shared<SetLightTypeCommand>(light, LightType::POINT));
     }
     ImGui::SameLine();
-    if ( ImGui::Checkbox("Ambient light", &isAmbientLight) ) { this->history.executeCommand(std::make_shared<SetLightTypeCommand>(light, LightType::AMBIENT)); }
+    if (ImGui::Checkbox("Ambient light", &isAmbientLight)) { this->history.executeCommand(std::make_shared<SetLightTypeCommand>(light, LightType::AMBIENT)); }
 
 
     lightType = light->GetLightType();
@@ -401,9 +410,9 @@ void Scene3D::DrawModifyLightSliders(const std::shared_ptr<Light>& light)
 
     if (!isAmbientLight)
     {
-        if ( ImGui::ColorEdit3("Diffuse color##ChangeColor", this->diffuseLight) ) { light->SetDiffuseColor(ofFloatColor(this->diffuseLight[0], this->diffuseLight[1], this->diffuseLight[2])); }
-        if ( ImGui::IsItemActivated() ) { this->initialDiffuseLight = currentDiffuseColor; }
-        if ( ImGui::IsItemDeactivatedAfterEdit() ) { this->history.executeCommand(std::make_shared<SetLightColorsCommand>(light, ofFloatColor(this->diffuseLight[0], this->diffuseLight[1], this->diffuseLight[2]), currentSpecularColor, currentAmbientColor, this->initialDiffuseLight, currentSpecularColor, currentAmbientColor)); }
+        if (ImGui::ColorEdit3("Diffuse color##ChangeColor", this->diffuseLight)) { light->SetDiffuseColor(ofFloatColor(this->diffuseLight[0], this->diffuseLight[1], this->diffuseLight[2])); }
+        if (ImGui::IsItemActivated()) { this->initialDiffuseLight = currentDiffuseColor; }
+        if (ImGui::IsItemDeactivatedAfterEdit()) { this->history.executeCommand(std::make_shared<SetLightColorsCommand>(light, ofFloatColor(this->diffuseLight[0], this->diffuseLight[1], this->diffuseLight[2]), currentSpecularColor, currentAmbientColor, this->initialDiffuseLight, currentSpecularColor, currentAmbientColor)); }
 
         const ofFloatColor currentSpecularColor = light->GetSpecularColor();
         if (ImGui::ColorEdit3("Specular color##ChangeColor", this->specularLight))
@@ -556,7 +565,8 @@ void Scene3D::DrawModifyCameraNodeSliders(const std::shared_ptr<Node>& node, sha
         {
             camera->saveImage();
         }
-        if (ImGui::Button("Reset Render")) {
+        if (ImGui::Button("Reset Render"))
+        {
             camera->reset();
         }
     }
@@ -667,7 +677,8 @@ void Scene3D::DrawModifyNodeSliders(const std::shared_ptr<Node>& node)
         else if (type == matType::GlassT)
         {
             float refraction = primitive->getMaterial()->getRefractionIndex();
-            if (ImGui::SliderFloat("Change Refract", &refraction, 0.1f, 10.0f)) {
+            if (ImGui::SliderFloat("Change Refract", &refraction, 0.1f, 10.0f))
+            {
                 primitive->setMaterial(make_shared<Dielectric>(refraction));
             }
         }
@@ -687,8 +698,6 @@ void Scene3D::DrawModifyNodeSliders(const std::shared_ptr<Node>& node)
             ImGui::SliderFloat("Change Intensity", &intensity, 0.1f, 10.0f);
             primitive->setMaterial(make_shared<DiffuseLight>(color, intensity));
         }
-
-
     }
 }
 
@@ -1021,7 +1030,6 @@ void Scene3D::mouseDragged(int x, int y, int button)
     switch (button)
     {
         case 0://left
-            //ofLog() << "Moving";
             if (is_selected)
             {
                 shared_ptr<Node> node = *(this->selectedNode);
@@ -1043,7 +1051,6 @@ void Scene3D::mouseDragged(int x, int y, int button)
 
             break;
         case 2://right
-            //ofLog() << "Scaling";
             if (is_selected)
             {
                 ofVec3f current_pos = selectedNode->get()->GetInner()->getPosition();
@@ -1528,13 +1535,14 @@ void Scene3D::update()
         //ofLog() << "target frame rate" << ofGetTargetFrameRate() << " frame rate : " << ofGetFrameRate() << endl;
         //ofLog() << "Time elapsed draw" << time_elapsed_draw << " Time Left : " << time_left << endl;
 
-        for (auto& camera : cameras) {
+        for (auto& camera: cameras)
+        {
             cameraRayCount = 0;
-            if (camera->isRayTracing()) {
+            if (camera->isRayTracing())
+            {
                 cameraRayCount++;
             }
         }
-     
     }
 
 
@@ -1716,9 +1724,9 @@ void Scene3D::divideCamera(int first, int last, int x1, int y1, int width, int h
         divideCamera(first, first, x1, y1, halfWidth, halfHeight, activatedCameras);
         divideCamera(first + 1, first + 1, halfWidth + x1, y1, halfWidth, halfHeight, activatedCameras);
         divideCamera(last, last, x1, halfHeight + y1, width, halfHeight, activatedCameras);
-
     }
-    else {
+    else
+    {
         //devide into 4 groups
         int mid = floor((first + last) / 2);
         int topmid = floor((first + mid) / 2);
@@ -1728,8 +1736,6 @@ void Scene3D::divideCamera(int first, int last, int x1, int y1, int width, int h
         divideCamera(topmid + 1, mid, halfWidth + x1, y1, halfWidth, halfHeight, activatedCameras);
         divideCamera(mid + 1, bottommid, x1, halfHeight + y1, halfWidth, halfHeight, activatedCameras);
         divideCamera(bottommid + 1, last, halfWidth + x1, y1 + halfHeight, halfWidth, halfHeight, activatedCameras);
-            
-
     }
 }
 
@@ -1783,12 +1789,15 @@ void Scene3D::exportRayTrace(float time_left)
 {
     float current_time = ofGetElapsedTimef();
     float elapsed_time = 0;
-    if (cameraRayCount == 0) {
+    if (cameraRayCount == 0)
+    {
         return;
     }
-    
-    for (auto& camera : cameras) {
-        if (!camera->isRayTracing()) {
+
+    for (auto& camera: cameras)
+    {
+        if (!camera->isRayTracing())
+        {
             continue;
         }
         float divided_time = time_left / (float) cameraRayCount;
@@ -1806,14 +1815,15 @@ void Scene3D::exportRayTrace(float time_left)
             //ofLog() << "divided time here" << divided_time;
         }
     }
-
 }
 
 
-ofColor Scene3D::rayColor(const Ray& r) {
+ofColor Scene3D::rayColor(const Ray& r)
+{
     HitRecord rec;
 
-    if (hitAnything(r, Interval(0, INFINITY), rec)) {
+    if (hitAnything(r, Interval(0, INFINITY), rec))
+    {
         ofColor normal_color = ofColor(
                 (rec.normal.x + 1) * 127.5f,
                 (rec.normal.y + 1) * 127.5f,
@@ -1824,12 +1834,11 @@ ofColor Scene3D::rayColor(const Ray& r) {
     auto unit_direction = r.getDirection().getNormalized();
     auto a = 0.5 * (unit_direction.y + 1.0);
     return (1.0 - a) * ofColor(255, 255, 255) + a * ofColor(127, 200, 255);
-
-
 }
 
 
-double Scene3D::hitAnything(const Ray& r, Interval ray_t, HitRecord& rec) {
+double Scene3D::hitAnything(const Ray& r, Interval ray_t, HitRecord& rec)
+{
     HitRecord temp_rec;
     double closest_so_far = ray_t.max;
     bool hit_anything = false;
@@ -1846,7 +1855,6 @@ double Scene3D::hitAnything(const Ray& r, Interval ray_t, HitRecord& rec) {
                 rec = temp_rec;
             }
         }
-
     }
     if (hit_anything)
     {
@@ -1858,15 +1866,69 @@ double Scene3D::hitAnything(const Ray& r, Interval ray_t, HitRecord& rec) {
 std::vector<std::shared_ptr<Light>> Scene3D::FindLights()
 {
     std::vector<std::shared_ptr<Light>> lights;
-    for (const auto& node : sceneGraph.GetNodes())
+    for (const auto& node: sceneGraph.GetNodes())
     {
         if (auto lightNode = std::dynamic_pointer_cast<Light>(node->GetInner()); lightNode)
         {
-            if (lightNode->GetIsEnabled()) // Only add enabled lights
+            if (lightNode->GetIsEnabled())// Only add enabled lights
             {
-                 lights.push_back(lightNode);
+                lights.push_back(lightNode);
             }
         }
     }
     return lights;
+}
+
+GLuint Scene3D::LoadCubemap(const std::vector<std::string>& faces)
+{
+    GLuint textureID;
+    glGenTextures(1, &textureID);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
+
+    for (GLuint i = 0; i < faces.size(); i++)
+    {
+        ofImage image;
+        if (!image.load(faces[i]))
+        {
+            ofLogError() << "Failed to load cubemap face: " << faces[i];
+            continue;
+        }
+
+        image.setImageType(OF_IMAGE_COLOR);
+
+        glTexImage2D(
+                GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0,
+                GL_RGB, image.getWidth(), image.getHeight(), 0,
+                GL_RGB, GL_UNSIGNED_BYTE, image.getPixels().getData());
+    }
+
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+    return textureID;
+}
+
+void Scene3D::loadAllCubemaps()
+{
+    cubemaps["Vatican"] = LoadCubemap({"images/cubemap/vatican/right.jpg",
+                                       "images/cubemap/vatican/left.jpg",
+                                       "images/cubemap/vatican/top.jpg",
+                                       "images/cubemap/vatican/bottom.jpg",
+                                       "images/cubemap/vatican/front.jpg",
+                                       "images/cubemap/vatican/back.jpg"});
+    cubemaps["Planet"] = LoadCubemap({"images/cubemap/planet/right.jpg",
+                                      "images/cubemap/planet/left.jpg",
+                                      "images/cubemap/planet/top.jpg",
+                                      "images/cubemap/planet/bottom.jpg",
+                                      "images/cubemap/planet/front.jpg",
+                                      "images/cubemap/planet/back.jpg"});
+    cubemaps["Bridge"] = LoadCubemap({"images/cubemap/bridge/right.jpg",
+                                      "images/cubemap/bridge/left.jpg",
+                                      "images/cubemap/bridge/top.jpg",
+                                      "images/cubemap/bridge/bottom.jpg",
+                                      "images/cubemap/bridge/front.jpg",
+                                      "images/cubemap/bridge/back.jpg"});
 }

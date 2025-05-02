@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include <cmath>
 #include <cstdlib>
 #include <iostream>
@@ -24,14 +24,17 @@ inline double random_double(double min, double max)
     return min + (max - min) * random_double();
 }
 
-inline double linear_to_gamma(double linear_component) {
-    if (linear_component > 0) {
+inline double linear_to_gamma(double linear_component)
+{
+    if (linear_component > 0)
+    {
         return sqrt(linear_component);
     }
 
     return 0;
 }
 
-inline int random_int(int min, int max) {
+inline int random_int(int min, int max)
+{
     return int(random_double(min, max + 1));
 }

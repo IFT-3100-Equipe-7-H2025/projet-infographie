@@ -1,8 +1,7 @@
 #pragma once
 
-#include "scenegraph/Node.h"
-#include "Material.h"
 #include "rayTracer/RayMaterial.h"
+#include "scenegraph/Node.h"
 
 #include <memory>
 
@@ -17,4 +16,3 @@ struct SharedShapeCreationParams
     matType mat = LambertT;
     std::shared_ptr<std::shared_ptr<Node>> selectedNode = std::make_shared<std::shared_ptr<Node>>(nullptr);
 };
-

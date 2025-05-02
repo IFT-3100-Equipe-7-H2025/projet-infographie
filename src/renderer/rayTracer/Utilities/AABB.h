@@ -1,9 +1,7 @@
-﻿#pragma once
-#ifndef AABB_H
-#define AABB_H
+#pragma once
 
-#include "rayTracer/Interval.h"
 #include "Vec3.h"
+#include "rayTracer/Interval.h"
 #include "rayTracer/Ray.h"
 
 class AABB
@@ -13,11 +11,13 @@ public:
 
     AABB() {}
 
-    AABB(const Interval& x, const Interval& y, const Interval& z) : x(x), y(y), z(z) {
+    AABB(const Interval& x, const Interval& y, const Interval& z) : x(x), y(y), z(z)
+    {
         pad_to_minimums();
     }
 
-    AABB(const Vec3& a, const Vec3& b) {
+    AABB(const Vec3& a, const Vec3& b)
+    {
 
         x = (a[0] <= b[0]) ? Interval(a[0], b[0]) : Interval(b[0], a[0]);
         y = (a[1] <= b[1]) ? Interval(a[1], b[1]) : Interval(b[1], a[1]);
@@ -29,7 +29,7 @@ public:
     {
         x = Interval(box0.x, box1.x);
         y = Interval(box0.y, box1.y);
-        z = Interval(box0.z, box1.z);  
+        z = Interval(box0.z, box1.z);
         pad_to_minimums();
     }
 
@@ -56,7 +56,8 @@ public:
         z = Interval(z.min * scale[2], z.max * scale[2]);
     }
 
-    const Interval& axis_interval(int n) const {
+    const Interval& axis_interval(int n) const
+    {
         if (n == 1) return y;
         if (n == 2) return z;
         return x;
@@ -74,7 +75,8 @@ public:
 
     static const AABB empty, universe;
 
-    bool hit(const Ray& r, Interval ray_t) const {
+    bool hit(const Ray& r, Interval ray_t) const
+    {
         const Vec3& ray_orig = r.getOrigin();
         const Vec3& ray_dir = r.getDirection();
         //ofLog() << x.min << y.min << z.min;
@@ -112,10 +114,7 @@ private:
         if (y.size() < delta) y = y.expand(delta);
         if (z.size() < delta) z = z.expand(delta);
     }
-    
 };
 
-const AABB AABB::empty = AABB(Interval::empty, Interval::empty, Interval::empty);
-const AABB AABB::universe = AABB(Interval::universe, Interval::universe, Interval::universe);
-
-#endif
+const inline AABB AABB::empty = AABB(Interval::empty, Interval::empty, Interval::empty);
+const inline AABB AABB::universe = AABB(Interval::universe, Interval::universe, Interval::universe);
