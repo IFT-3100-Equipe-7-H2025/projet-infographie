@@ -1,6 +1,4 @@
 ﻿#pragma once
-#ifndef RAYMATERIAL_H
-#define RAYMATERIAL_H
 #include "HitRecord.h"
 #include "Ray.h"
 #include "Utilities/Vec3.h"
@@ -14,11 +12,12 @@ enum matType
     DiffuseLightT
 };
 
-constexpr inline char* materialLabels[] = {
+constexpr inline const char* materialLabels[] = {
         "Metal",
         "Glass",
         "Lambert",
-        "Emissive"};
+        "Emissive"
+};
 
 // avoids float precision issues with ray hitting the same surface it comes from
 constexpr inline float EPSILON = 1e-1f;
@@ -254,6 +253,3 @@ struct MaterialContainer
         return std::make_shared<MaterialContainer>(newMat);
     }
 };
-
-
-#endif
