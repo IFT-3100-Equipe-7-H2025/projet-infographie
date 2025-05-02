@@ -1038,7 +1038,8 @@ void Scene3D::mouseDragged(int x, int y, int button)
                 }
                 else
                 {
-                    ofVec3f current_pos = node->GetInner()->getPosition();
+                    //ofVec3f current_pos = node->GetInner()->getPosition();
+                    ofVec3f current_pos = node->GetInner()->getGlobalPosition();
 
                     ofVec3f current_view_pos = worldToViewPort(current_pos);
 
@@ -1051,6 +1052,7 @@ void Scene3D::mouseDragged(int x, int y, int button)
 
             break;
         case 2://right
+            ofLog() << "Right mouse button pressed";
             if (is_selected)
             {
                 ofVec3f current_pos = selectedNode->get()->GetInner()->getPosition();
