@@ -20,7 +20,7 @@ public:
 
     Primitive3D(of3dPrimitive primitive)
     {
-        mat = make_shared<MaterialContainer>(make_shared<Lambert>(ofColor(5, 50, 255)));
+        mat = make_shared<MaterialContainer>(make_shared<Lambert>(Vec3(5, 50, 255)));
         ofLog() << "Material created!";
         model = primitive;
         initialize();

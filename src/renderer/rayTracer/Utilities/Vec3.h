@@ -1,16 +1,26 @@
-#pragma once
+﻿#pragma once
 
 #include "ofMain.h"
 #include "utility.h"
+#include "Utility.h"
 
 class Vec3 : public ofVec3f
 {
 public:
     Vec3() {}
+    Vec3(ofColor color) : ofVec3f((float) color.r / 255.0f, (float) color.g / 255.0f, (float) color.b / 255.0f) {}
 
     Vec3(ofVec3f vec) : ofVec3f(vec.x, vec.y, vec.z) {}
 
     Vec3(double x, double y, double z) : ofVec3f(x, y, z) {}
+    
+    ofColor toColor() const
+    {
+        float r = std::clamp(x * 255.0f, 0.0f, 255.0f);
+        float g = std::clamp(y * 255.0f, 0.0f, 255.0f);
+        float b = std::clamp(z * 255.0f, 0.0f, 255.0f);
+        return ofColor(r, g, b);
+    }
 
 
     double length_squared() const

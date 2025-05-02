@@ -289,17 +289,9 @@ void Scene3D::DrawSelectedNodeWindow()
                     updateViewPorts();
                 }
 
-                bool& rayTrace = cameraMap.at(id).lock()->isRayTracing();
-                if (ImGui::Checkbox("Show Ray Trace", &rayTrace))
-                {
-                    updateViewPorts();
-                }
+                
 
-                bool& useBvh = cameraMap.at(id).lock()->getUseBvh();
-                ImGui::Checkbox("Use BVH for scene", &useBvh);
-
-                bool& drawBvh = cameraMap.at(id).lock()->getDrawBvh();
-                ImGui::Checkbox("Draw BVH", &drawBvh);
+                
 
                 bool tempOrtho = camera->getOrtho();
                 if (ImGui::Checkbox("Orthogonal Projection", &tempOrtho))
@@ -325,8 +317,9 @@ void Scene3D::DrawSelectedNodeWindow()
             {
                 ImGui::Checkbox("Use BVH", &sharedParams->useBVH);
                 ImGui::ColorEdit4("Color", sharedParams->color);
-                ofFloatColor color(sharedParams->color[0], sharedParams->color[1], sharedParams->color[2], sharedParams->color[3]);
-
+                Vec3 color(sharedParams->color[0], sharedParams->color[1], sharedParams->color[2]);
+                //ofFloatColor color(sharedParams->color[0], sharedParams->color[1], sharedParams->color[2], sharedParams->color[3]);
+                
                 sharedParams->material->getMaterial()->setColor(color);
 
                 if (sharedParams->mat == matType::GlassT)
@@ -345,13 +338,12 @@ void Scene3D::DrawSelectedNodeWindow()
                 }
                 else if (sharedParams->mat == matType::DiffuseLightT)
                 {
-                    sharedParams->material = make_shared<MaterialContainer>(make_shared<DiffuseLight>(DiffuseLight(color)));
+                    sharedParams->material = make_shared<MaterialContainer>(make_shared<DiffuseLight>(DiffuseLight(color, 1.0f)));
                 }
 
                 int selected = static_cast<int>(sharedParams->mat);
-                if (ImGui::Combo("Choose Material", &selected, materialLabels, 4))
+                if (ImGui::Combo("Ray Material", &selected, materialLabels, 4))
                 {
-                    ofLog() << "Choosing material" << endl;
                     sharedParams->mat = static_cast<matType>(selected);
                 }
 
@@ -527,7 +519,7 @@ void Scene3D::DrawModifyLightSliders(const std::shared_ptr<Light>& light)
 void Scene3D::DrawModifyCameraNodeSliders(const std::shared_ptr<Node>& node, shared_ptr<Camera> camera)
 {
     const std::shared_ptr<ofNode>& inner = node->GetInner();
-
+    NodeId id = this->selectedNode->get()->GetId();
     // Fov
     const float current_fov = camera->getFov();
     if (ImGui::SliderFloat("FOV", &this->fov, 0, 180))
@@ -538,22 +530,34 @@ void Scene3D::DrawModifyCameraNodeSliders(const std::shared_ptr<Node>& node, sha
     {
         this->initialFov = current_fov;
     }
-    if (camera->isRayTracing())
+    bool& rayTrace = cameraMap.at(id).lock()->isRayTracing();
+    if (ImGui::Checkbox("Ray Tracing", &rayTrace))
     {
+        updateViewPorts();
+    }
+    
+    if (camera->isRayTracing()) {
+        ImGui::Text("Ray Tracing");
+        bool& useBvh = cameraMap.at(id).lock()->getUseBvh();
+        ImGui::Checkbox("Use BVH for scene", &useBvh);
+
+        bool& drawBvh = cameraMap.at(id).lock()->getDrawBvh();
+        ImGui::Checkbox("Draw BVH", &drawBvh);
+
         ImGui::SliderInt("Samples", &camera->getSamples(), 1, 4000);
 
         ImGui::SliderInt("Depth", &camera->getDepth(), 1, 100);
-        ImGui::SliderInt("Resolution", &camera->getWidth(), 10, 4000);
-        ImGui::SliderFloat("Portion of Screen", &camera->getScreenCrop(), 0.05, 1);
+        ImGui::SliderInt("Width (px)", &camera->getWidth(), 10, 4000);
+        ImGui::SliderFloat("Screen %", &camera->getScreenCrop(), 0.05, 1);
         ofColor color1 = camera->getAmbient1();
         float colorf[4] = {color1.r / 255.0f, color1.g / 255.0f, color1.b / 255.0f, color1.a / 255.0f};
-        if (ImGui::ColorEdit4("Ambient 1##ChangeColor", colorf))
+        if (ImGui::ColorEdit4("Upper Light##ChangeColor", colorf))
         {
             camera->setAmbient1(ofColor(colorf[0] * 255, colorf[1] * 255, colorf[2] * 255, colorf[3] * 255));
         }
         ofColor color2 = camera->getAmbient2();
         float colorf2[4] = {color2.r / 255.0f, color2.g / 255.0f, color2.b / 255.0f, color2.a / 255.0f};
-        if (ImGui::ColorEdit4("Ambient 2##ChangeColor", colorf2))
+        if (ImGui::ColorEdit4("Lower Light##ChangeColor", colorf2))
         {
             camera->setAmbient2(ofColor(colorf2[0] * 255, colorf2[1] * 255, colorf2[2] * 255, colorf2[3] * 255));
         }
@@ -667,7 +671,7 @@ void Scene3D::DrawModifyNodeSliders(const std::shared_ptr<Node>& node)
             }
             else if (mat == matType::DiffuseLightT)
             {
-                primitive->setMaterial(make_shared<DiffuseLight>(color));
+                primitive->setMaterial(make_shared<DiffuseLight>(color, 1.0f));
             }
         }
         else if (type == matType::GlassT)
@@ -690,7 +694,9 @@ void Scene3D::DrawModifyNodeSliders(const std::shared_ptr<Node>& node)
         }
         else if (type == matType::DiffuseLightT)
         {
-            primitive->setMaterial(make_shared<DiffuseLight>(color));
+            float intensity = primitive->getMaterial()->getIntensity();
+            ImGui::SliderFloat("Change Intensity", &intensity, 0.1f, 10.0f);
+            primitive->setMaterial(make_shared<DiffuseLight>(color, intensity));
         }
     }
 }
@@ -1520,14 +1526,14 @@ void Scene3D::update()
 
     if (time_elapsed_timer > 5)
     {
-        // ofLog() << "Target Fps" << ofGetTargetFrameRate() << endl;
-        // ofLog() << "Real Fps" << ofGetFrameRate() << endl;
+        //ofLog() << "Target Fps" << ofGetTargetFrameRate() << endl;
+        //ofLog() << "Real Fps" << ofGetFrameRate() << endl;
 
         time_last_timer = time_current;
-        // ofLog() << "Time elapsed" << time_elapsed << " Time Left : " << time_left << endl;
-        // ofLog() << "Time elapsed draw" << time_elapsed_draw << " Time Left : " << time_left << endl;
-        // ofLog() << "target frame rate" << ofGetTargetFrameRate() << " frame rate : " << ofGetFrameRate() << endl;
-        // ofLog() << "Time elapsed draw" << time_elapsed_draw << " Time Left : " << time_left << endl;
+        //ofLog() << "Time elapsed" << time_elapsed << " Time Left : " << time_left << endl;
+        //ofLog() << "Time elapsed draw" << time_elapsed_draw << " Time Left : " << time_left << endl;
+        //ofLog() << "target frame rate" << ofGetTargetFrameRate() << " frame rate : " << ofGetFrameRate() << endl;
+        //ofLog() << "Time elapsed draw" << time_elapsed_draw << " Time Left : " << time_left << endl;
 
         for (auto& camera: cameras)
         {

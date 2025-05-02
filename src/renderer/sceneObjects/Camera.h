@@ -23,8 +23,8 @@ public:
     int max_depth = 4;
     int new_depth = 4;
     float screenCrop = 0.2;
-    ofColor backgroundColor1 = ofColor(0, 77, 98);
-    ofColor backgroundColor2 = ofColor(255, 200, 250);
+    Vec3 backgroundColor1 = Vec3(0, 0.3f, 0.4f);
+    Vec3 backgroundColor2 = Vec3(1.0f, 0.8f, 1.0f);
     ofImage rayImage;
     ofImage prevImage;
     bool useBvh = true;
@@ -46,12 +46,12 @@ public:
 
     ofColor getAmbient1()
     {
-        return backgroundColor1;
+        return backgroundColor1.toColor();
     }
 
     ofColor getAmbient2()
     {
-        return backgroundColor2;
+        return backgroundColor2.toColor();
     }
 
     void setAmbient1(ofColor color)
@@ -189,76 +189,8 @@ public:
         }
     }
 
-
-    ofImage render(const SceneGraph& sceneGraph)
-    {
-        initialize();
-
-        ofPixels& pixels = rayImage.getPixels();
-        for (int j = 0; j < image_height; j++)
-        {
-            std::clog << "\r Scanlines remaining: " << (image_height - j) << ' ' << std::flush;
-            for (int i = 0; i < image_width; i++)
-            {
-                ofColor pixel_color(0, 0, 0);
-                for (int sample = 0; sample < samples_per_pixel; sample++)
-                {
-                    Ray r = getRay(i, j);
-                    ofColor color = rayColor(r, max_depth, sceneGraph);
-                    pixel_color += color;
-                }
-                pixel_color /= samples_per_pixel;
-                ofVec3f pixel_center = pixel00_location + (i * pixel_delta_u) + (j * pixel_delta_v);
-                ofVec3f ray_direction = (pixel_center - center).getNormalized();
-                Ray ray(center, ray_direction);
-
-
-                static const Interval intensity(0.000, 255.000);
-                //gamma corre
-                auto r = linear_to_gamma(pixel_color.r);
-                auto g = linear_to_gamma(pixel_color.g);
-                auto b = linear_to_gamma(pixel_color.b);
-
-                /*  r = int(intensity.clamp(r));
-                g = int(intensity.clamp(g));
-                b = int(intensity.clamp(b));*/
-
-                //pixel_color.set(r, g, b);
-
-
-                //color.r = int(intensity.clamp(color.r));
-                //color.g = int(intensity.clamp(color.g));
-                //color.b = int(intensity.clamp(color.b));
-                //pixel_samples_scale*
-                pixels.setColor(i, j, pixel_color);
-            }
-        }
-        rayImage.update();
-
-        return rayImage;
-    }
-
-    ofImage renderPixels(const SceneGraph& sceneGraph)
-    {
-        initialize();
-
-        for (int j = 0; j < image_height; j++)
-        {
-            std::clog << "\r Scanlines remaining: " << (image_height - j) << ' ' << std::flush;
-            for (int i = 0; i < image_width; i++)
-            {
-                writePixel(i, j, sceneGraph);
-            }
-        }
-        rayImage.update();
-
-        return rayImage;
-    }
-
-    void renderPixel(const SceneGraph& sceneGraph)
-    {
-        if (!rendering)
-        {
+    void renderPixel(const SceneGraph& sceneGraph) {
+        if (!rendering) {
             initialize();
             ComposedShape shape(sceneGraph.GetNodes());
             //bvhRoot = make_shared<ComposedShape>(shape);
@@ -290,19 +222,30 @@ public:
 
     void writePixel(int i, int j, const SceneGraph& sceneGraph)
     {
-        ofColor pixel_color(0, 0, 0);
+        Vec3 pixel_color(0, 0, 0);
         float red = 0;
         float green = 0;
         float blue = 0;
         for (int sample = 0; sample < samples_per_pixel; sample++)
         {
             Ray r = getRay(i, j);
-            ofColor color = rayColor(r, max_depth, sceneGraph);
-            red += color.r;
-            green += color.g;
-            blue += color.b;
+            Vec3 color = rayColor(r, max_depth, sceneGraph);
+            red += color[0];
+            green += color[1];
+            blue += color[2];
         }
-        pixel_color = ofColor(red / samples_per_pixel, green / samples_per_pixel, blue / samples_per_pixel);
+
+        pixel_color = Vec3(red / samples_per_pixel, green / samples_per_pixel, blue / samples_per_pixel);
+
+        //pixel_color[0] = pixel_color[0] / (pixel_color[0] + 1.0f);
+        //pixel_color[1] = pixel_color[1] / (pixel_color[1] + 1.0f);
+        //pixel_color[2] = pixel_color[2] / (pixel_color[2] + 1.0f);
+
+
+        //pixel_color[0] = std::pow(pixel_color[0], 1.0f / 2.2f);
+        //pixel_color[1] = std::pow(pixel_color[1], 1.0f / 2.2f);
+        //pixel_color[2] = std::pow(pixel_color[2], 1.0f / 2.2f);
+        
         //ofVec3f pixel_center = pixel00_location + (i * pixel_delta_u) + (j * pixel_delta_v);
         //ofVec3f ray_direction = (pixel_center - center).getNormalized();
         //Ray ray(center, ray_direction);
@@ -324,8 +267,14 @@ public:
         //color.r = int(intensity.clamp(color.r));
         //color.g = int(intensity.clamp(color.g));
         //color.b = int(intensity.clamp(color.b));
-        //pixel_samples_scale *
-        pixels->setColor(i, j, pixel_color);
+        //pixel_samples_scale * 
+        //if (red > 0.9f)
+        //{
+        //    ofLog() << "Pixel color" << pixel_color << endl;
+        //    ofLog() << "ofColor color" << pixel_color.toColor() << endl;
+        //}
+        pixels->setColor(i, j, pixel_color.toColor());
+
     }
 
 
@@ -466,7 +415,7 @@ private:
         rayImage.allocate(image_width, image_height, OF_IMAGE_COLOR);
         pixels = &rayImage.getPixels();
 
-        pixel_samples_scale = 1.0 / samples_per_pixel;
+        pixel_samples_scale = 1.0 / float(samples_per_pixel);
 
         center = getGlobalPosition();
 
@@ -515,11 +464,11 @@ private:
         return ofVec3f(random_double() - 0.5, random_double() - 0.5, 0);
     }
 
-    ofColor rayColor(const Ray& r, int depth, const SceneGraph& sceneGraph)
+    Vec3 rayColor(const Ray& r, int depth, const SceneGraph& sceneGraph)
     {
         if (depth <= 0)
         {
-            return ofColor(0, 0, 0);
+            return Vec3(0, 0, 0);
         }
 
         // If the ray hits the background, return a color based on the ray direction.
@@ -539,20 +488,21 @@ private:
 
 
         Ray scattered;
-        ofColor attenuation;
-        ofColor emitted = rec.mat->emitted();
+        Vec3 attenuation;
+        Vec3 emitted = rec.mat->emitted();
 
         if (!rec.mat->scatter(r, rec, attenuation, scattered))
         {
             return emitted;
         }
 
-        ofColor scatterColor = attenuation * rayColor(scattered, depth - 1, sceneGraph);
-        return emitted * 5 + scatterColor;
-        //return ofColor(0, 0, 0);
+        //Vec3 scatterColor = rayColor(scattered, depth - 1, sceneGraph);
+        Vec3 scatterColor = attenuation * rayColor(scattered, depth - 1, sceneGraph);
+        return emitted + scatterColor;
+        //return Vec3(0, 0, 0);
         ////Vec3 direction = random_on_hemisphere(rec.normal);
         //Vec3 direction = rec.normal + random_unit_vector();
-        ///*ofColor normal_color = ofColor(
+        ///*Vec3 normal_color = Vec3(
         //        (rec.normal.x + 1) * 127.5f,
         //        (rec.normal.y + 1) * 127.5f,
         //        (rec.normal.z + 1) * 127.5f);
