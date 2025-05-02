@@ -1,6 +1,12 @@
 #include "PrimitiveCreator.h"
+#include "util.h"
 #include <cmath>
+#include <exception>
 #include <numbers>
+#include <string>
+
+
+using std::exception;
 
 
 of3dPrimitive PrimitiveCreator::createTriangle()
@@ -417,4 +423,172 @@ of3dPrimitive PrimitiveCreator::createPyramid(int sides, float width, float heig
     }
 
     return of3dPrimitive{pyramid};
+}
+
+of3dPrimitive PrimitiveCreator::createSurface(float starting_u, float end_u, float starting_v, float end_v, int resolution, std::string x, std::string y, std::string z)
+{
+    ofMesh surface;
+    surface.setMode(OF_PRIMITIVE_TRIANGLES);
+
+    auto x_uv = parseLambda(x);
+    auto y_uv = parseLambda(y);
+    auto z_uv = parseLambda(z);
+
+    // Store vertices in flat list for consistent indexing
+    std::vector<ofPoint> vertices;
+    vertices.reserve((resolution + 1) * (resolution + 1));
+
+    // Generate vertices
+    for (int i = 0; i <= resolution; ++i)
+    {
+        float u = ofLerp(starting_u, end_u, static_cast<float>(i) / resolution);
+        for (int j = 0; j <= resolution; ++j)
+        {
+            float v = ofLerp(starting_v, end_v, static_cast<float>(j) / resolution);
+            float x_val = x_uv(u, v);
+            float y_val = y_uv(u, v);
+            float z_val = z_uv(u, v);
+            vertices.emplace_back(x_val, y_val, z_val);
+        }
+    }
+
+    for (int i = 0; i < resolution; ++i)
+    {
+        for (int j = 0; j < resolution; ++j)
+        {
+            int cols = resolution + 1;
+            int idx0 = i * cols + j;
+            int idx1 = (i + 1) * cols + j;
+            int idx2 = (i + 1) * cols + (j + 1);
+            int idx3 = i * cols + (j + 1);
+
+            // Get positions
+            ofPoint v0 = vertices[idx0];
+            ofPoint v1 = vertices[idx1];
+            ofPoint v2 = vertices[idx2];
+            ofPoint v3 = vertices[idx3];
+
+            // Triangle 1: v0, v1, v2
+            ofVec3f n1 = ((v1 - v0).cross(v2 - v0)).normalize();
+            size_t startIndex1 = surface.getNumVertices();
+            surface.addVertex(v0);
+            surface.addNormal(n1);
+            surface.addVertex(v1);
+            surface.addNormal(n1);
+            surface.addVertex(v2);
+            surface.addNormal(n1);
+            surface.addIndex(startIndex1 + 0);
+            surface.addIndex(startIndex1 + 1);
+            surface.addIndex(startIndex1 + 2);
+
+            // Triangle 2: v0, v2, v3
+            ofVec3f n2 = ((v2 - v0).cross(v3 - v0)).normalize();
+            size_t startIndex2 = surface.getNumVertices();
+            surface.addVertex(v0);
+            surface.addNormal(n2);
+            surface.addVertex(v2);
+            surface.addNormal(n2);
+            surface.addVertex(v3);
+            surface.addNormal(n2);
+            surface.addIndex(startIndex2 + 0);
+            surface.addIndex(startIndex2 + 1);
+            surface.addIndex(startIndex2 + 2);
+        }
+    }
+
+    return of3dPrimitive{surface};
+}
+
+of3dPrimitive PrimitiveCreator::createWall(
+        const std::string& heightmapPath,
+        float wallWidth,
+        float wallHeight,
+        float wallDepth,
+        float heightmapScale,
+        int resX,
+        int resY)
+{
+    // Load texture and heightmap images
+    //ofTexture tex;
+    //if (!ofLoadImage(tex, texturePath))
+    //{
+    //    ofLogError("createWall") << "Failed to load texture: " << texturePath;
+    //}
+    ofImage heightImage;
+    if (!heightImage.load(heightmapPath))
+    {
+        ofLogError("createWall") << "Failed to load heightmap: " << heightmapPath;
+    }
+    ofLogNotice() << "Image type: " << heightImage.getImageType();
+    ofLogNotice() << "Num channels: " << heightImage.getPixels().getNumChannels();
+    ofLogNotice() << "Pixel format: " << heightImage.getPixels().getPixelFormat();
+    heightImage.setImageType(OF_IMAGE_GRAYSCALE);// ensure we get brightness
+
+    ofMesh mesh;
+    mesh.setMode(OF_PRIMITIVE_TRIANGLES);
+    int numVertsX = resX + 1;
+    int numVertsY = resY + 1;
+
+    for (int j = 0; j < numVertsY; j++)
+    {
+        for (int i = 0; i < numVertsX; i++)
+        {
+            float x = (float) i / float(resX) * wallWidth;
+            float y = (float) j / float(resY) * wallHeight;
+            float u = (float) i / float(resX);
+            float v = (float) j / float(resY);
+            int px = int(u * (heightImage.getWidth() - 1));
+            int py = int(v * (heightImage.getHeight() - 1));
+            float brightness = heightImage.getColor(px, py).getBrightness() / 255.0f;
+            float z = brightness * heightmapScale;
+            mesh.addVertex(glm::vec3(x, y, z));
+            mesh.addNormal(glm::vec3(0, 0, 0));// placeholder normal
+            mesh.addTexCoord(glm::vec2(u, v));
+        }
+    }
+
+    // Create triangle indices
+    for (int j = 0; j < resY; j++)
+    {
+        for (int i = 0; i < resX; i++)
+        {
+            int i0 = i + j * numVertsX;
+            int i1 = (i + 1) + j * numVertsX;
+            int i2 = i + (j + 1) * numVertsX;
+            int i3 = (i + 1) + (j + 1) * numVertsX;
+            mesh.addIndex(i0);
+            mesh.addIndex(i1);
+            mesh.addIndex(i2);
+            mesh.addIndex(i1);
+            mesh.addIndex(i3);
+            mesh.addIndex(i2);
+        }
+    }
+
+    {
+        vector<glm::vec3> normals(mesh.getNumVertices(), glm::vec3(0));
+        for (int k = 0; k < mesh.getNumIndices(); k += 3)
+        {
+            int ia = mesh.getIndex(k);
+            int ib = mesh.getIndex(k + 1);
+            int ic = mesh.getIndex(k + 2);
+            glm::vec3 v0 = mesh.getVertex(ia);
+            glm::vec3 v1 = mesh.getVertex(ib);
+            glm::vec3 v2 = mesh.getVertex(ic);
+            glm::vec3 faceNormal = glm::normalize(glm::cross(v1 - v0, v2 - v0));
+            normals[ia] += faceNormal;
+            normals[ib] += faceNormal;
+            normals[ic] += faceNormal;
+        }
+        // Normalize the summed vertex normals
+        for (auto& n: normals)
+        {
+            n = glm::normalize(n);
+        }
+        mesh.clearNormals();
+        mesh.addNormals(normals);
+    }
+
+
+    return of3dPrimitive{mesh};
 }

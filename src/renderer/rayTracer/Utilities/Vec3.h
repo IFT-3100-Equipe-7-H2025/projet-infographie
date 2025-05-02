@@ -2,7 +2,6 @@
 
 #include "ofMain.h"
 #include "utility.h"
-#include "Utility.h"
 
 class Vec3 : public ofVec3f
 {
@@ -13,7 +12,7 @@ public:
     Vec3(ofVec3f vec) : ofVec3f(vec.x, vec.y, vec.z) {}
 
     Vec3(double x, double y, double z) : ofVec3f(x, y, z) {}
-    
+
     ofColor toColor() const
     {
         float r = std::clamp(x * 255.0f, 0.0f, 255.0f);

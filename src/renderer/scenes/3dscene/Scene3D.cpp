@@ -16,6 +16,8 @@
 #include "3dscene/createShapes/CreateLightUI.h"
 #include "3dscene/createShapes/CreatePyramidUI.h"
 #include "3dscene/createShapes/CreateSphereUI.h"
+#include "3dscene/createShapes/CreateSurfaceUI.h"
+#include "3dscene/createShapes/CreateWallUI.h"
 #include "Light.h"
 #include "MoveChildCommand.h"
 #include "SceneObject.h"
@@ -58,8 +60,10 @@ void Scene3D::setup()
     this->createShapeUIs.emplace_back(std::make_unique<CreateSphereUI>(CreateSphereUI(this->sharedParams, this->history)));
     this->createShapeUIs.emplace_back(std::make_unique<CreateLightUI>(CreateLightUI(this->sharedParams, this->history)));
     this->createShapeUIs.emplace_back(std::make_unique<CreateLasagnaUI>(CreateLasagnaUI(this->sharedParams, this->history)));
+    this->createShapeUIs.emplace_back(std::make_unique<CreateSurfaceUI>(CreateSurfaceUI(this->sharedParams, this->history)));
     this->createShapeUIs.push_back(std::make_unique<CreatePyramidUI>(CreatePyramidUI(this->sharedParams, this->history)));
     this->createShapeUIs.emplace_back(std::make_unique<CreateCameraUI>(CreateCameraUI(this->sharedParams, this->history)));
+    this->createShapeUIs.emplace_back(std::make_unique<CreateWallUI>(CreateWallUI(this->sharedParams, this->history)));
 
     this->registeredMaterials.push_back(DEFAULT_MATERIAL);
 
@@ -1260,6 +1264,11 @@ int Scene3D::charToLower(int key)
 void Scene3D::keyPressed(int key)
 {
     key = charToLower(key);
+    ImGuiIO& io = ImGui::GetIO();
+    if (io.WantCaptureKeyboard)
+    {
+        return;
+    }
 
     switch (key)
     {
@@ -1369,6 +1378,11 @@ void Scene3D::keyPressed(int key)
 void Scene3D::keyPressed(ofKeyEventArgs& key)
 {
     //ofLog() << "Key pressed: " << key.keycode << " with modifiers: " << key.modifiers;
+    ImGuiIO& io = ImGui::GetIO();
+    if (io.WantCaptureKeyboard)
+    {
+        return;
+    }
     if (key.hasModifier(OF_KEY_CONTROL))
     {
         switch (charToLower(key.keycode))
@@ -1389,6 +1403,11 @@ void Scene3D::keyPressed(ofKeyEventArgs& key)
 
 void Scene3D::keyReleased(ofKeyEventArgs& key)
 {
+    ImGuiIO& io = ImGui::GetIO();
+    if (io.WantCaptureKeyboard)
+    {
+        return;
+    }
     key.key = charToLower(key.key);
     if (key.modifiers == 0)
     {

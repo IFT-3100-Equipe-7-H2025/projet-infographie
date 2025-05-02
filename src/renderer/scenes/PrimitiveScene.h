@@ -1,18 +1,25 @@
 #pragma once
 #include "Scene.h"
-#include "ofMain.h"
 #include "imgui.h"
+#include "ofMain.h"
+#include "ofPoint.h"
 #include <vector>
 
-enum class PrimitiveType {
+enum class PrimitiveType
+{
     Point,
     Ligne,
     Carre,
     Rectangle,
-    Triangle
+    Triangle,
+    Delauney,
+    P1,
+    P2,
+    Midpoints
 };
 
-struct Primitive {
+struct Primitive
+{
     PrimitiveType type;
     std::vector<ofVec2f> points;
     float strokeThickness;
@@ -20,7 +27,9 @@ struct Primitive {
     float fillColor[4];
 };
 
-class PrimitiveScene : public Scene {
+
+class PrimitiveScene : public Scene
+{
 public:
     void draw() override;
     void mousePressed(int x, int y, int button) override;
@@ -37,6 +46,11 @@ public:
 private:
     std::vector<Primitive> primitives;
     std::vector<Primitive> redoStack;
+    std::vector<ofPoint> delauneyPoints;
+    std::optional<ofPoint> p1;
+    std::optional<ofPoint> p2;
+    std::vector<ofPoint> midpoints;
+    bool imguiClick = false;
 
     bool adding = false;
     PrimitiveType selectedType = PrimitiveType::Point;
@@ -49,10 +63,11 @@ private:
 
     float currentStrokeThickness = 2.0f;
     float currentStrokeColor[4] = {0.0f, 0.0f, 0.0f, 1.0f};
-    float currentFillColor[4]   = {1.0f, 1.0f, 1.0f, 1.0f};
+    float currentFillColor[4] = {1.0f, 1.0f, 1.0f, 1.0f};
     float backgroundColor[4] = {0.1f, 0.1f, 0.1f, 1.0f};
 
     bool modeHSBActivated = false;
+
     float hueContour = 0.0f;
     float satContour = 0.0f;
     float briContour = 0.0f;
@@ -63,9 +78,13 @@ private:
     float satBG = 0.0f;
     float briBG = 0.0f;
 
-    static void drawThickLine(const ofVec2f & p1, const ofVec2f & p2, float thickness, ofColor color);
+    static void drawThickLine(const ofVec2f& p1, const ofVec2f& p2, float thickness, ofColor color);
 
     static void drawThickPolygon(const std::vector<ofVec2f>& vertices, float thickness, ofColor color);
 
     static void colorUpdate(float currentColor[4], ofColor hsbColor);
+
+    static ofPoint catmull_rom(const ofPoint& p0, const ofPoint& p1, const ofPoint& p2, const ofPoint& p3, float t);
+
+    static std::vector<ofPoint> generate_catmull_rom_spline(const std::vector<ofPoint>& points, int samples_per_segment);
 };
