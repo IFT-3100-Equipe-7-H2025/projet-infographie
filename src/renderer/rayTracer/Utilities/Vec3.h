@@ -2,7 +2,6 @@
 
 #include "ofMain.h"
 #include "utility.h"
-#include "Utility.h"
 
 class Vec3 : public ofVec3f
 {
