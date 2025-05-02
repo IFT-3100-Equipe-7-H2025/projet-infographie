@@ -30,27 +30,27 @@ class RayMaterial
 {
 public:
 
-    RayMaterial(ofColor color, float fuzz, float refraction) : albedo(color), fuzz(fuzz), refraction_index(refraction)
+    RayMaterial(Vec3 color, float fuzz, float refraction, float intensity) : albedo(color), fuzz(fuzz), refraction_index(refraction), intensity(intensity)
     {
     }
 
     virtual ~RayMaterial() = default;
 
-    virtual bool scatter(const Ray& ray_in, const HitRecord& rec, ofColor& attenuation, Ray& scattered) const {
+    virtual bool scatter(const Ray& ray_in, const HitRecord& rec, Vec3& attenuation, Ray& scattered) const {
         //ofLog() << "Scattering wrong" << endl;
         return false;
     }
 
-    virtual ofColor emitted() const
+    virtual Vec3 emitted() const
     {
-        return ofColor(0, 0, 0);
+        return Vec3(0, 0, 0);
     }
 
-    void setColor(ofColor color) {
+    void setColor(Vec3 color) {
         albedo = color;
     }
 
-    ofColor getColor()
+    Vec3 getColor()
     {
         return albedo;
     }
@@ -65,6 +65,11 @@ public:
         return refraction_index;
     }
 
+    float getIntensity()
+    {
+        return intensity;
+    }
+
     void setFuzz(double p_fuzz)
     {
         fuzz = p_fuzz;
@@ -75,22 +80,28 @@ public:
         refraction_index = p_refraction_index;
     }
 
+    void setIntensity(float p_intensity)
+    {
+        intensity = p_intensity;
+    }
+
     virtual std::shared_ptr<RayMaterial> clone() const = 0;
 
 protected:
-    ofColor albedo = ofColor(255, 255, 255);
+    Vec3 albedo = Vec3(1.0f, 1.0f, 1.0f);
     double fuzz = 0.0;
     double refraction_index = 1.0;
+    float intensity = 1.0f;
 };
 
 class Lambert : public RayMaterial
 {
     public:
-    Lambert(const ofColor& p_albedo) : RayMaterial(p_albedo, 0.0, 1.0)
+    Lambert(const Vec3& p_albedo) : RayMaterial(p_albedo, 0.0, 1.0, 1.0f)
     {
     }
 
-    bool scatter(const Ray& r_in, const HitRecord& rec, ofColor& attenuation, Ray& scattered) const override
+    bool scatter(const Ray& r_in, const HitRecord& rec, Vec3& attenuation, Ray& scattered) const override
     {
         Vec3 scatter_direction = rec.normal + random_unit_vector();
         if (scatter_direction.near_zero())
@@ -115,10 +126,10 @@ class Lambert : public RayMaterial
 class Metal : public RayMaterial
 {
 public:
-    Metal(const ofColor& p_albedo, double p_fuzz) : RayMaterial(p_albedo, p_fuzz, 1.0) {}
+    Metal(const Vec3& p_albedo, double p_fuzz) : RayMaterial(p_albedo, p_fuzz, 1.0, 1.0f) {}
 
 
-    bool scatter(const Ray& r_in, const HitRecord& rec, ofColor& attenuation, Ray& scattered) const override
+    bool scatter(const Ray& r_in, const HitRecord& rec, Vec3& attenuation, Ray& scattered) const override
     {
         Vec3 reflected = reflect(r_in.getDirection(), rec.normal);
         reflected = unit_vector(reflected) + (fuzz * random_unit_vector());
@@ -139,16 +150,16 @@ public:
 class Dielectric : public RayMaterial
 {
 public:
-    Dielectric(double p_refraction_index) : RayMaterial(ofColor(255, 255, 255), 0.0, p_refraction_index) {}
+    Dielectric(double p_refraction_index) : RayMaterial(Vec3(1.0, 1.0, 1.0), 0.0, p_refraction_index, 1.0f) {}
 
-    bool scatter(const Ray& r_in, const HitRecord& rec, ofColor& attenuation, Ray& scattered)
+    bool scatter(const Ray& r_in, const HitRecord& rec, Vec3& attenuation, Ray& scattered)
             const override
     {
         Vec3 unit_direction = unit_vector(r_in.getDirection());
 
         double cos_theta = std::fmin(rec.normal.dot(-unit_direction), 1.0);
         double sin_theta = std::sqrt(1.0 - cos_theta * cos_theta);
-        attenuation = ofColor(255, 255, 255);
+        attenuation = Vec3(1.0, 1.0, 1.0);
         double ri = rec.front_face ? (1.0 / refraction_index) : refraction_index;
 
         bool cannot_refract = ri * sin_theta > 1.0;
@@ -188,11 +199,11 @@ private:
 class DiffuseLight : public RayMaterial
 {
 public:
-    DiffuseLight(ofColor color) : RayMaterial(color, 0.0, 0) {}
+    DiffuseLight(Vec3 color, float intense) : RayMaterial(color, 0.0, 0.0f, intense) {}
 
-    ofColor emitted()  const override 
+    Vec3 emitted()  const override 
     {
-        return albedo;
+        return albedo * intensity;
     }
 
     std::shared_ptr<RayMaterial> clone() const override
