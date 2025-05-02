@@ -11,7 +11,7 @@ Projet infographie -- Équipe 7 -- IFT-3100
 4. Open the `projectGenerator` tool in the `/projectGenerator` folder of your openframeworks installation.
 5. Go to the `create / update` tab.
 6. Click on `import` and select the folder in which you cloned this repository (located at `/apps/projet-infographie` of your oF install folder if the repository folder was not renamed).
-7. Add the `ofxImGui` and `ofxAssimpModelLoader` addons.
+7. Add the `ofxImGui` and `ofxAssimpModelLoader` and `ofxDelaunay` addons.
 8. Click on `update` to generate the project files (Visual Studio solution).
 9. Delete the `ofApp.h` and `ofApp.cpp` files in the `src` folder of the generated project.
 10. Build and run the project.
@@ -66,7 +66,7 @@ git clone https://github.com/obviousjim/ofxDelaunay
 
 12. Click on `import` and select the folder in which you cloned this repository (located at `/apps/projet-infographie` of your oF install folder if the repository folder was not renamed).
 
-13. Add the ofxImGui and ofxAssimpModelLoader addons.
+13. Add the ofxImGui and ofxAssimpModelLoader and ofxDelaunay addons.
 
 14. Make sure the platforms is set to `Linux 64 (VS Code/Make)`.
 
