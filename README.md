@@ -6,14 +6,15 @@ Projet infographie -- Équipe 7 -- IFT-3100
 
 ### Steps (for Windows):
 1. Clone the [`ofxImGui`](https://github.com/jvcleave/ofxImGui) repository inside your `/addons` folder of your openframeworks installation.
-2. Clone this repository in the `/apps` folder of your openframeworks installation.
-3. Open the `projectGenerator` tool in the `/projectGenerator` folder of your openframeworks installation.
-4. Go to the `create / update` tab.
-5. Click on `import` and select the folder in which you cloned this repository (located at `/apps/projet-infographie` of your oF install folder if the repository folder was not renamed).
-6. Add the `ofxImGui` and `ofxAssimpModelLoader` addons.
-7. Click on `update` to generate the project files (Visual Studio solution).
-8. Delete the `ofApp.h` and `ofApp.cpp` files in the `src` folder of the generated project.
-9. Build and run the project.
+2. Clone the [`ofxDelaunay`](https://github.com/obviousjim/ofxDelaunay) repository inside your `/addons` folder of your openframeworks installation.
+3. Clone this repository in the `/apps` folder of your openframeworks installation.
+4. Open the `projectGenerator` tool in the `/projectGenerator` folder of your openframeworks installation.
+5. Go to the `create / update` tab.
+6. Click on `import` and select the folder in which you cloned this repository (located at `/apps/projet-infographie` of your oF install folder if the repository folder was not renamed).
+7. Add the `ofxImGui` and `ofxAssimpModelLoader` addons.
+8. Click on `update` to generate the project files (Visual Studio solution).
+9. Delete the `ofApp.h` and `ofApp.cpp` files in the `src` folder of the generated project.
+10. Build and run the project.
 
 ### Steps (for Ubuntu):
 1. download [openframeworks](https://openframeworks.cc/download/), on Kubuntu 24.04 (and probably other recent debian based distros) the OF Nightly Release version is required because of the problem shown at step 3
@@ -52,29 +53,34 @@ you need to install the [nightly version of openframeworks](https://github.com/o
 git clone -b develop https://github.com/jvcleave/ofxImGui.git
 ```
 
-8. Clone [this repository](https://github.com/IFT-3100-Equipe-7-H2025/projet-infographie) in the `/apps` folder of your openframeworks installation.
+8. Clone the [`ofxDelaunay`](https://github.com/obviousjim/ofxDelaunay) repository inside your `/addons` folder of your openframeworks installation. 
+```sh
+git clone https://github.com/obviousjim/ofxDelaunay
+```
 
-9. Open the `projectGenerator` tool in the `projectGenerator-linux64` folder at the root of your openframeworks folder.
+9. Clone [this repository](https://github.com/IFT-3100-Equipe-7-H2025/projet-infographie) in the `/apps` folder of your openframeworks installation.
 
-10. Go to the `create / update` tab.
+10. Open the `projectGenerator` tool in the `projectGenerator-linux64` folder at the root of your openframeworks folder.
 
-11. Click on `import` and select the folder in which you cloned this repository (located at `/apps/projet-infographie` of your oF install folder if the repository folder was not renamed).
+11. Go to the `create / update` tab.
 
-12. Add the ofxImGui and ofxAssimpModelLoader addons.
+12. Click on `import` and select the folder in which you cloned this repository (located at `/apps/projet-infographie` of your oF install folder if the repository folder was not renamed).
 
-13. Make sure the platforms is set to `Linux 64 (VS Code/Make)`.
+13. Add the ofxImGui and ofxAssimpModelLoader addons.
 
-13. Click on update to generate the project files.
+14. Make sure the platforms is set to `Linux 64 (VS Code/Make)`.
 
-14. If they were created, delete the `ofApp.h` and `ofApp.cpp` files in the `src` folder of the generated project.
+15. Click on update to generate the project files.
 
-15. Setup it up with qtcreator if you want. I personally tested it directly with the makefile running these commands:
+16. If they were created, delete the `ofApp.h` and `ofApp.cpp` files in the `src` folder of the generated project.
+
+17. Setup it up with qtcreator if you want. I personally tested it directly with the makefile running these commands:
 ```sh
 make -j4
 make run
 ```
 
-16. If you want to use vscode, you can do the following setup:
+18. If you want to use vscode, you can do the following setup:
 - Install `compiledb` with pip:
 ```sh
 pip install compiledb
