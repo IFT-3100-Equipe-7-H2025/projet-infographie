@@ -15,7 +15,7 @@ void ImportImageScene::setup()
     edgeDetectShader.load("shaders/filter.vert", "shaders/edgeDetection_filter.frag");
     negateShader.load("shaders/filter.vert", "shaders/negate_filter.frag");
 
-    shaderLabels = {"Default", "Tone Mapping", "Sharpen", "Toon", "Edge Detect", "Negate"};
+    shaderLabels = {"Default", "Tone Mapping", "Sharpening", "Toon Shading", "Edge Detect", "Negate"};
     shaderIDs = {0, 1, 2, 3, 4, 5};
 }
 
@@ -29,7 +29,7 @@ void ImportImageScene::draw()
     if (ImGui::Button("Generate new images")) { this->GenerateNewImages(); }
 
     const char* preview = shaderLabels[currentIndex].c_str();
-    if (ImGui::BeginCombo("Shader Type", preview))
+    if (ImGui::BeginCombo("Filter Type", preview))
     {
         for (int i = 0; i < shaderLabels.size(); ++i)
         {
