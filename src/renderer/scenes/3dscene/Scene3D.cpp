@@ -542,13 +542,13 @@ void Scene3D::DrawModifyCameraNodeSliders(const std::shared_ptr<Node>& node, sha
         ImGui::SliderFloat("Screen %", &camera->getScreenCrop(), 0.05, 1);
         ofColor color1 = camera->getAmbient1();
         float colorf[4] = {color1.r / 255.0f, color1.g / 255.0f, color1.b / 255.0f, color1.a / 255.0f};
-        if (ImGui::ColorEdit4("Ambient 1##ChangeColor", colorf))
+        if (ImGui::ColorEdit4("Upper Light##ChangeColor", colorf))
         {
             camera->setAmbient1(ofColor(colorf[0] * 255, colorf[1] * 255, colorf[2] * 255, colorf[3] * 255));
         }
         ofColor color2 = camera->getAmbient2();
         float colorf2[4] = {color2.r / 255.0f, color2.g / 255.0f, color2.b / 255.0f, color2.a / 255.0f};
-        if (ImGui::ColorEdit4("Ambient 2##ChangeColor", colorf2))
+        if (ImGui::ColorEdit4("Lower Light##ChangeColor", colorf2))
         {
             camera->setAmbient2(ofColor(colorf2[0] * 255, colorf2[1] * 255, colorf2[2] * 255, colorf2[3] * 255));
         }
