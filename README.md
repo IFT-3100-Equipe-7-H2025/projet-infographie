@@ -1,5 +1,52 @@
 Projet infographie -- Équipe 7 -- IFT-3100
 
+# 🎬 Demo
+---
+### 1. 3D Primitives
+<img src="images/Primitive3D.png" height="150" />
+<img src="images/LasagnePrimitive.png" height="150" />
+
+#### Different primitives implemented: sphere, cube, pyramid, lasagna
+
+### 2. Parametric curves
+<img src="images/CourbeParamétriqueEx.png" height="150" />
+
+#### Catmull-Rom curve implemented
+
+### 3. Camera
+<img src="images/CaméraEx.png" height="150" />
+
+#### Use of one or multiple cameras in the scene
+
+### 4. BVH
+<img src="images/BvhEx.png" height="150" />
+
+#### BVH implemented to optimise ray tracing
+
+### 5. Lighting
+<img src="images/LumEx.png" height="150" />
+
+#### Different lighting techniques
+
+### 6. Textures
+<img src="images/TextureEx.png" height="150" />
+
+#### Various texture types, including this procedural texture
+
+### 8. Ray Tracing
+<img src="images/rayEx1.png" height="150" />
+<img src="images/RayEx2.png" height="150" />
+<img src="images/rayEx3.png" height="150" />
+<img src="images/rayEx4.png" height="150" />
+
+#### Ray tracing implemented with different materials (with reflection, refraction and diffusion)
+
+### 9. Histogram
+<img src="images/HistogrammeEx.png" height="150" />
+
+#### Histogram implemented for imported images
+
+
 ## Instructions to run the project
 ### Requirements:
 - [openframeworks 0.12.x](https://openframeworks.cc/download/) (recommended Visual Studio on Windows, Xcode on MacOS, qtcreator on Linux)
